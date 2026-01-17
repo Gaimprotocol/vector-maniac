@@ -14,6 +14,7 @@ const Index = () => {
   const [waitingForLandscape, setWaitingForLandscape] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [survivalModeStarted, setSurvivalModeStarted] = useState(false);
+  const [vectorManiacStarted, setVectorManiacStarted] = useState(false);
   const [bonusMapsEnabled, setBonusMapsEnabled] = useState(() => {
     return localStorage.getItem('bonusMapsEnabled') !== 'false';
   });
@@ -106,6 +107,7 @@ const Index = () => {
   const handleGameEnd = useCallback(() => {
     setGameStarted(false);
     setSurvivalModeStarted(false);
+    setVectorManiacStarted(false);
     setWaitingForLandscape(false);
     // Unlock orientation
     try {
@@ -134,6 +136,17 @@ const Index = () => {
       setGameStarted(true);
     } else {
       setSurvivalModeStarted(true);
+      setWaitingForLandscape(true);
+    }
+  }, [isLandscape, primeAudio]);
+
+  const handleVectorManiacStart = useCallback(() => {
+    primeAudio();
+    if (isLandscape) {
+      setVectorManiacStarted(true);
+      setGameStarted(true);
+    } else {
+      setVectorManiacStarted(true);
       setWaitingForLandscape(true);
     }
   }, [isLandscape, primeAudio]);
@@ -298,6 +311,22 @@ const Index = () => {
               onClick={hasSurvivalMode() ? handleSurvivalStart : () => navigate('/shop')}
             >
               {hasSurvivalMode() ? '♾️ SURVIVAL MODE' : '🔒 SURVIVAL MODE'}
+            </button>
+
+            {/* Vector Maniac button */}
+            <button
+              className={`font-pixel text-[11px] border-2 rounded-full px-8 py-2 mb-3 
+                         transition-all duration-300 
+                         text-magenta border-magenta/50 hover:border-magenta hover:bg-magenta/10 active:bg-magenta/20
+                         ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+              style={{ 
+                boxShadow: '0 0 20px rgba(255, 0, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.05)',
+                animationDelay: '150ms',
+                animationFillMode: 'backwards',
+              }}
+              onClick={handleVectorManiacStart}
+            >
+              🎯 VECTOR MANIAC
             </button>
 
             {/* Secondary buttons - single row in landscape, stacked in portrait */}
@@ -476,6 +505,7 @@ const Index = () => {
             autoStart={gameStarted} 
             onGameEnd={handleGameEnd}
             survivalMode={survivalModeStarted}
+            vectorManiacMode={vectorManiacStarted}
             startMusicRef={startMusicRef}
             externalPendingRewards={getPendingRewardsList()}
             externalActiveRewardsList={getActiveRewardsList()}
