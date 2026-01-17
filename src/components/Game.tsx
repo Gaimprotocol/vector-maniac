@@ -24,6 +24,7 @@ interface GameProps {
   autoStart?: boolean;
   onGameEnd?: () => void;
   survivalMode?: boolean;
+  vectorManiacMode?: boolean;
   startMusicRef?: React.MutableRefObject<HTMLAudioElement | null>;
   // External reward system props (from Index.tsx)
   externalPendingRewards?: any[];
@@ -34,7 +35,8 @@ interface GameProps {
 export const Game: React.FC<GameProps> = ({ 
   autoStart = false, 
   onGameEnd, 
-  survivalMode = false, 
+  survivalMode = false,
+  vectorManiacMode = false, 
   startMusicRef,
   externalPendingRewards,
   externalActiveRewardsList,
@@ -88,13 +90,15 @@ export const Game: React.FC<GameProps> = ({
   useEffect(() => {
     if (autoStart && !hasAutoStarted.current && gameData.state === 'menu') {
       hasAutoStarted.current = true;
-      if (survivalMode) {
+      if (vectorManiacMode) {
+        setGameData(prev => startVectorManiac(prev));
+      } else if (survivalMode) {
         setGameData(prev => startSurvivalGame(prev));
       } else {
         setGameData(prev => startGame(prev));
       }
     }
-  }, [autoStart, survivalMode, gameData.state]);
+  }, [autoStart, survivalMode, vectorManiacMode, gameData.state]);
 
   // Get the current soundtrack file
   const currentSoundtrackFile = getStoredSoundtrackFile();

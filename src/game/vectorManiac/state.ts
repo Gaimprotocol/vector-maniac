@@ -16,7 +16,7 @@ export function createDefaultStats(): PlayerStats {
   };
 }
 
-export function createVectorState(): VectorState {
+export function createVectorManiacState(): VectorState {
   const centerX = VM_CONFIG.arenaWidth / 2;
   const centerY = VM_CONFIG.arenaHeight / 2;
   
