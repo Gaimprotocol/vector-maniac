@@ -274,13 +274,11 @@ export function updateGame(data: GameData, input: InputState, deltaTime: number)
     };
     newData.vectorManiacState = updateVectorManiac(newData.vectorManiacState, vmInput);
     
-    // Check if game over or victory
-    if (newData.vectorManiacState.phase === 'gameOver') {
-      newData.state = 'gameover';
-      newData.score = Math.floor(newData.vectorManiacState.score);
-    } else if (newData.vectorManiacState.phase === 'victory') {
-      // Victory stays in vectorManiac state to show victory screen
-    }
+    // Update score in main game data (for high score tracking)
+    newData.score = Math.floor(newData.vectorManiacState.score);
+    
+    // Don't change state - vectorManiac handles its own game over/victory phases
+    // The VectorManiacEndScreen component will show when phase is 'gameOver' or 'victory'
     
     return newData;
   }
