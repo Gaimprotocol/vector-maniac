@@ -193,6 +193,7 @@ export function createInitialGameData(): GameData {
     pilotRunnerState: null,
     paratrooperState: null,
     forwardFlightState: null,
+    vectorManiacState: null,
     isHyperspace: false,
     hyperspaceTimer: 0,
     hyperspaceExitTimer: 0,
