@@ -6,13 +6,16 @@ import { MenuScreen } from './MenuScreen';
 import { PauseScreen } from './PauseScreen';
 import { GameOverScreen } from './GameOverScreen';
 import { TouchControls } from './TouchControls';
+import { PortalChoiceModal } from './PortalChoiceModal';
+import { UpgradePickModal } from './UpgradePickModal';
 import { useTouchInput } from '@/game/useTouchInput';
 import { useGameLoop } from '@/game/useGameLoop';
 import { useEquipment } from '@/hooks/useEquipment';
 import { useRewardedAds } from '@/hooks/useRewardedAds';
 import { usePurchases } from '@/hooks/usePurchases';
 import { getStoredSoundtrackFile } from '@/hooks/useSoundtrack';
-import { createInitialGameData, startGame, startSurvivalGame, pauseGame } from '@/game/gameLogic';
+import { createInitialGameData, startGame, startSurvivalGame, startVectorManiac, pauseGame } from '@/game/gameLogic';
+import { selectPortal, selectUpgrade } from '@/game/vectorManiac/gameLogic';
 import { GameData } from '@/game/types';
 import { primeAudioContext, setSfxMuted as setGlobalSfxMuted } from '@/game/utils';
 import { fadeOut, fadeIn, fadeOutAllExcept } from '@/utils/audioTransitions';
@@ -259,7 +262,7 @@ export const Game: React.FC<GameProps> = ({
 
   // Handle pause input
   useEffect(() => {
-    const activeStates = ['playing', 'paused', 'bunker', 'rover', 'underwater', 'arena', 'survival', 'pilotRunner', 'paratrooper', 'forwardFlight'];
+    const activeStates = ['playing', 'paused', 'bunker', 'rover', 'underwater', 'arena', 'survival', 'pilotRunner', 'paratrooper', 'forwardFlight', 'vectorManiac'];
     if (inputState.pause && activeStates.includes(gameData.state)) {
       if (gameData.state === 'paused') {
         setGameData(prev => ({ ...prev, state: prev.previousState || 'playing' }));
@@ -347,6 +350,12 @@ export const Game: React.FC<GameProps> = ({
     onGameEnd?.();
   }, [onGameEnd]);
 
+  const handleStartVectorManiac = useCallback(() => {
+    setHasUsedAdContinue(false);
+    resetSessionAdCount();
+    setGameData(prev => startVectorManiac(prev));
+  }, [resetSessionAdCount]);
+
 
   const isNewHighScore = gameData.state === 'gameover' && gameData.score >= gameData.highScore && gameData.score > 0;
 
@@ -368,7 +377,7 @@ export const Game: React.FC<GameProps> = ({
         />
 
         {/* HUD overlay */}
-        {(gameData.state === 'playing' || gameData.state === 'bunker' || gameData.state === 'rover' || gameData.state === 'underwater' || gameData.state === 'arena' || gameData.state === 'pilotRunner' || gameData.state === 'paratrooper' || gameData.state === 'forwardFlight') && (
+        {(gameData.state === 'playing' || gameData.state === 'bunker' || gameData.state === 'rover' || gameData.state === 'underwater' || gameData.state === 'arena' || gameData.state === 'pilotRunner' || gameData.state === 'paratrooper' || gameData.state === 'forwardFlight' || gameData.state === 'vectorManiac') && (
           <GameUI 
             gameData={gameData} 
             activeRewards={externalActiveRewardsList || getActiveRewardsList()}
@@ -382,6 +391,7 @@ export const Game: React.FC<GameProps> = ({
           <MenuScreen 
             highScore={gameData.highScore} 
             onStart={handleStart}
+            onStartVectorManiac={handleStartVectorManiac}
             startMusicRef={startMusicRef}
           />
         )}
@@ -429,6 +439,51 @@ export const Game: React.FC<GameProps> = ({
           />
         )}
 
+        {/* Vector Maniac portal choice */}
+        {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'portalChoice' && (
+          <PortalChoiceModal
+            segment={gameData.vectorManiacState.currentSegment - 1}
+            onChooseSafe={() => {
+              setGameData(prev => ({
+                ...prev,
+                vectorManiacState: selectPortal(prev.vectorManiacState, 'safe'),
+              }));
+            }}
+            onChooseRisk={() => {
+              setGameData(prev => ({
+                ...prev,
+                vectorManiacState: selectPortal(prev.vectorManiacState, 'risk'),
+              }));
+            }}
+          />
+        )}
+
+        {/* Vector Maniac upgrade pick */}
+        {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'upgradePick' && (
+          <UpgradePickModal
+            picksRemaining={gameData.vectorManiacState.upgradesPending}
+            totalPicks={gameData.vectorManiacState.portalChoice === 'risk' ? 2 : 1}
+            currentUpgrades={{}}
+            onSelectUpgrade={(upgradeId) => {
+              setGameData(prev => ({
+                ...prev,
+                vectorManiacState: selectUpgrade(prev.vectorManiacState, upgradeId),
+              }));
+            }}
+          />
+        )}
+
+        {/* Vector Maniac game over */}
+        {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'gameOver' && (
+          <GameOverScreen
+            score={Math.floor(gameData.vectorManiacState.score)}
+            highScore={gameData.highScore}
+            rescuedCount={gameData.vectorManiacState.salvageCount}
+            isNewHighScore={gameData.vectorManiacState.score > gameData.highScore}
+            onRestart={handleStartVectorManiac}
+            onQuit={handleQuit}
+          />
+        )}
 
       </div>
     </div>

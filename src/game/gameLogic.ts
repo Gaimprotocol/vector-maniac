@@ -244,6 +244,17 @@ export function startSurvivalGame(data: GameData): GameData {
   };
 }
 
+export function startVectorManiac(data: GameData): GameData {
+  const { createVectorManiacState } = require('./vectorManiac');
+  const vectorManiacState = createVectorManiacState();
+  return {
+    ...createInitialGameData(),
+    state: 'vectorManiac',
+    vectorManiacState,
+    highScore: data.highScore,
+  };
+}
+
 export function pauseGame(data: GameData): GameData {
   return {
     ...data,
@@ -252,6 +263,28 @@ export function pauseGame(data: GameData): GameData {
 }
 
 export function updateGame(data: GameData, input: InputState, deltaTime: number): GameData {
+  // Handle Vector Maniac mode
+  if (data.state === 'vectorManiac' && data.vectorManiacState) {
+    const { updateVectorManiac } = require('./vectorManiac');
+    let newData = { ...data };
+    const vmInput = {
+      touchX: input.touchX,
+      touchY: input.touchY,
+      isTouching: input.isTouching,
+    };
+    newData.vectorManiacState = updateVectorManiac(newData.vectorManiacState, vmInput);
+    
+    // Check if game over or victory
+    if (newData.vectorManiacState.phase === 'gameOver') {
+      newData.state = 'gameover';
+      newData.score = Math.floor(newData.vectorManiacState.score);
+    } else if (newData.vectorManiacState.phase === 'victory') {
+      // Victory stays in vectorManiac state to show victory screen
+    }
+    
+    return newData;
+  }
+  
   // Handle survival mode
   if (data.state === 'survival' && data.survivalState) {
     let newData = { ...data };

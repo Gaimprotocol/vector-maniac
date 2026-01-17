@@ -13,6 +13,7 @@ import { SHIP_SKINS } from '@/hooks/useEquipment';
 import { renderPilotRunner, PilotRunnerState } from '@/game/pilotRunner';
 import { renderParatrooper, ParatrooperState } from '@/game/paratrooper';
 import { renderForwardFlight, ForwardFlightState } from '@/game/forwardFlight';
+import { renderVectorManiac, VectorState } from '@/game/vectorManiac';
 import { getStoredMegaShipId, hasStealthMode, hasBlueProjectiles } from '@/hooks/useMegaShips';
 
 interface GameCanvasProps {
@@ -194,6 +195,12 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
       // Render forward flight (deep drill) scene
       if (gameData.state === 'forwardFlight' && gameData.forwardFlightState) {
         renderForwardFlight(ctx, gameData.forwardFlightState as ForwardFlightState, GAME_CONFIG);
+        return;
+      }
+      
+      // Render Vector Maniac top-down arena
+      if (gameData.state === 'vectorManiac' && gameData.vectorManiacState) {
+        renderVectorManiac(ctx, gameData.vectorManiacState as VectorState);
         return;
       }
 
