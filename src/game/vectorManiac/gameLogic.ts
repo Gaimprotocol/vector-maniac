@@ -1,6 +1,6 @@
 // Vector Maniac Game Logic
 
-import { VectorState, VectorEnemy, VectorProjectile } from './types';
+import { VectorState, VectorEnemy, VectorProjectile, VECTOR_UPGRADES } from './types';
 import { VM_CONFIG } from './constants';
 import { 
   createDrone, 
@@ -44,6 +44,11 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
     case 'waveComplete':
       newState = updateWaveCompletePhase(newState);
       break;
+    case 'portalChoice':
+    case 'upgradePick':
+      // These phases are handled by UI - just update particles
+      newState.particles = updateParticles(newState.particles);
+      break;
     case 'gameOver':
     case 'victory':
       // These phases are handled by UI overlays
@@ -57,6 +62,9 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
   
   return newState;
 }
+
+// Alias for external use
+export const updateVectorManiac = updateVectorState;
 
 function updateEnteringPhase(state: VectorState): VectorState {
   let newState = { ...state };
@@ -612,12 +620,76 @@ function completeWave(state: VectorState): VectorState {
     // Victory!
     newState.phase = 'victory';
     newState.score += 5000; // Victory bonus
+  } else if (isLastWaveInSegment(state.currentWave)) {
+    // Segment complete - show portal choice
+    newState.phase = 'portalChoice';
+    newState.currentSegment++;
+    newState.score += 1000 * state.currentSegment;
   } else {
-    // Wave complete
+    // Wave complete - continue to next wave
     newState.phase = 'waveComplete';
     newState.phaseTimer = VM_CONFIG.waveTransitionTime;
     newState.score += 500 * state.currentWave;
   }
   
   return newState;
+}
+
+// Handle portal choice selection
+export function selectPortal(state: VectorState, choice: 'safe' | 'risk'): VectorState {
+  let newState = { ...state };
+  
+  newState.portalChoice = choice;
+  
+  if (choice === 'safe') {
+    newState.upgradesPending = 1;
+    newState.difficultyMultiplier *= 1.05;
+  } else {
+    newState.upgradesPending = 2;
+    newState.difficultyMultiplier *= 1.15;
+  }
+  
+  newState.phase = 'upgradePick';
+  newState.availableUpgrades = getRandomUpgrades(3);
+  
+  return newState;
+}
+
+// Handle upgrade selection
+export function selectUpgrade(state: VectorState, upgradeId: string): VectorState {
+  let newState = { ...state };
+  
+  // Find and apply the upgrade
+  const upgrade = VECTOR_UPGRADES.find(u => u.id === upgradeId);
+  if (upgrade) {
+    newState.stats = upgrade.apply(newState.stats);
+    
+    // Apply shield upgrade to current shields
+    if (upgradeId === 'shield') {
+      newState.shields++;
+    }
+  }
+  
+  newState.upgradesPending--;
+  
+  if (newState.upgradesPending <= 0) {
+    // All upgrades picked - continue to next wave
+    newState.currentWave++;
+    newState.enemiesSpawned = 0;
+    newState.enemiesDefeated = 0;
+    newState.enemiesInWave = getEnemiesForWave(newState.currentWave);
+    newState.spawnTimer = 60;
+    newState.phase = 'playing';
+    newState.portalChoice = null;
+  } else {
+    // More upgrades to pick - refresh available upgrades
+    newState.availableUpgrades = getRandomUpgrades(3);
+  }
+  
+  return newState;
+}
+
+function getRandomUpgrades(count: number) {
+  const shuffled = [...VECTOR_UPGRADES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
 }

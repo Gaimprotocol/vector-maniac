@@ -5,10 +5,11 @@ import { usePurchases } from '@/hooks/usePurchases';
 interface MenuScreenProps {
   highScore: number;
   onStart: () => void;
+  onStartVectorManiac?: () => void;
   startMusicRef?: React.MutableRefObject<HTMLAudioElement | null>;
 }
 
-export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, startMusicRef }) => {
+export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onStartVectorManiac, startMusicRef }) => {
   const navigate = useNavigate();
   const { hasGoldenSkin } = usePurchases();
   const [entered, setEntered] = useState(false);
@@ -160,6 +161,21 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, star
         >
           START MISSION
         </button>
+
+        {/* Vector Maniac button */}
+        {onStartVectorManiac && (
+          <button
+            className="font-pixel text-sm text-magenta border-2 border-magenta/50 rounded-full px-12 py-3 mb-4 
+                       transition-all duration-300 hover:border-magenta hover:bg-magenta/10 active:bg-magenta/20"
+            style={{ 
+              boxShadow: '0 0 20px rgba(255, 0, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.05)',
+            }}
+            onTouchEnd={(e) => { e.preventDefault(); onStartVectorManiac(); }}
+            onClick={onStartVectorManiac}
+          >
+            VECTOR MANIAC
+          </button>
+        )}
 
         {/* Secondary buttons row */}
         <div className="flex gap-3 mb-4">

@@ -63,8 +63,71 @@ export interface VectorUpgrade {
   name: string;
   description: string;
   icon: string;
+  maxStack?: number;
   apply: (stats: PlayerStats) => PlayerStats;
 }
+
+// Available upgrades
+export const VECTOR_UPGRADES: VectorUpgrade[] = [
+  {
+    id: 'magnetRange',
+    name: 'Magnet+',
+    description: '+20% salvage magnet range',
+    icon: '🧲',
+    apply: (stats) => ({ ...stats, magnetRange: stats.magnetRange * 1.2 }),
+  },
+  {
+    id: 'fireRate',
+    name: 'Rapid Fire',
+    description: '+12% fire rate',
+    icon: '🔥',
+    apply: (stats) => ({ ...stats, fireRate: stats.fireRate * 0.88 }),
+  },
+  {
+    id: 'bulletSpeed',
+    name: 'Velocity',
+    description: '+15% bullet speed',
+    icon: '💨',
+    apply: (stats) => ({ ...stats, bulletSpeed: stats.bulletSpeed * 1.15 }),
+  },
+  {
+    id: 'damage',
+    name: 'Power',
+    description: '+10% damage',
+    icon: '💥',
+    apply: (stats) => ({ ...stats, damage: stats.damage * 1.1 }),
+  },
+  {
+    id: 'pierce',
+    name: 'Pierce',
+    description: '+1 bullet penetration',
+    icon: '🎯',
+    maxStack: 3,
+    apply: (stats) => ({ ...stats, pierce: stats.pierce + 1 }),
+  },
+  {
+    id: 'shield',
+    name: 'Shield',
+    description: '+1 extra hit protection',
+    icon: '🛡️',
+    maxStack: 3,
+    apply: (stats) => ({ ...stats, shields: stats.shields + 1 }),
+  },
+  {
+    id: 'salvageBonus',
+    name: 'Scavenger',
+    description: '+20% salvage value',
+    icon: '💎',
+    apply: (stats) => ({ ...stats, salvageBonus: stats.salvageBonus * 1.2 }),
+  },
+  {
+    id: 'speed',
+    name: 'Thrusters',
+    description: '+10% movement speed',
+    icon: '🚀',
+    apply: (stats) => ({ ...stats, speed: stats.speed * 1.1 }),
+  },
+];
 
 export interface PlayerStats {
   fireRate: number;        // Lower = faster
