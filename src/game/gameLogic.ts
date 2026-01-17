@@ -27,6 +27,8 @@ import {
   ForwardFlightState
 } from './forwardFlight';
 
+import { createVectorManiacState, updateVectorManiac } from './vectorManiac';
+
 // Bonus level schedule - each bonus level appears at specific map numbers
 // This prevents overlapping and ensures proper spacing with main game between bonus levels
 // Pattern: 1 bonus level followed by 3 regular maps, then next bonus level
@@ -245,7 +247,6 @@ export function startSurvivalGame(data: GameData): GameData {
 }
 
 export function startVectorManiac(data: GameData): GameData {
-  const { createVectorManiacState } = require('./vectorManiac');
   const vectorManiacState = createVectorManiacState();
   return {
     ...createInitialGameData(),
@@ -265,7 +266,6 @@ export function pauseGame(data: GameData): GameData {
 export function updateGame(data: GameData, input: InputState, deltaTime: number): GameData {
   // Handle Vector Maniac mode
   if (data.state === 'vectorManiac' && data.vectorManiacState) {
-    const { updateVectorManiac } = require('./vectorManiac');
     let newData = { ...data };
     const vmInput = {
       touchX: input.touchX,
@@ -273,13 +273,13 @@ export function updateGame(data: GameData, input: InputState, deltaTime: number)
       isTouching: input.isTouching,
     };
     newData.vectorManiacState = updateVectorManiac(newData.vectorManiacState, vmInput);
-    
+
     // Update score in main game data (for high score tracking)
     newData.score = Math.floor(newData.vectorManiacState.score);
-    
+
     // Don't change state - vectorManiac handles its own game over/victory phases
     // The VectorManiacEndScreen component will show when phase is 'gameOver' or 'victory'
-    
+
     return newData;
   }
   
