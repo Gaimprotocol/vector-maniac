@@ -112,7 +112,7 @@ export interface FallingDebris extends Entity {
   debrisType?: 'rock' | 'ice' | 'lava' | 'metal';
 }
 
-export type GameState = 'menu' | 'playing' | 'paused' | 'gameover' | 'bunker' | 'rover' | 'underwater' | 'arena' | 'survival' | 'pilotRunner' | 'paratrooper' | 'forwardFlight';
+export type GameState = 'menu' | 'playing' | 'paused' | 'gameover' | 'bunker' | 'rover' | 'underwater' | 'arena' | 'survival' | 'pilotRunner' | 'paratrooper' | 'forwardFlight' | 'vectorManiac';
 
 export interface GameData {
   state: GameState;
@@ -153,6 +153,7 @@ export interface GameData {
   pilotRunnerState: any | null;
   paratrooperState: any | null;
   forwardFlightState: any | null;
+  vectorManiacState: any | null;
   // Hyperspace
   isHyperspace: boolean;
   hyperspaceTimer: number;

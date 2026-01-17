@@ -75,7 +75,8 @@ export function useGameLoop({ gameData, setGameData, inputState, adRewardChecker
       gameData.state === 'survival' ||
       gameData.state === 'pilotRunner' ||
       gameData.state === 'paratrooper' ||
-      gameData.state === 'forwardFlight'
+      gameData.state === 'forwardFlight' ||
+      gameData.state === 'vectorManiac'
     ) {
       frameRef.current = requestAnimationFrame(gameLoop);
     }
