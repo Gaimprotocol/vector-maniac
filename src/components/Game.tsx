@@ -5,6 +5,7 @@ import { GameUI } from './GameUI';
 import { MenuScreen } from './MenuScreen';
 import { PauseScreen } from './PauseScreen';
 import { GameOverScreen } from './GameOverScreen';
+import { VectorManiacEndScreen } from './VectorManiacEndScreen';
 import { TouchControls } from './TouchControls';
 import { PortalChoiceModal } from './PortalChoiceModal';
 import { UpgradePickModal } from './UpgradePickModal';
@@ -360,6 +361,23 @@ export const Game: React.FC<GameProps> = ({
     setGameData(prev => startVectorManiac(prev));
   }, [resetSessionAdCount]);
 
+  // Handle continue for Vector Maniac after watching ad
+  const handleVectorManiacContinue = useCallback(() => {
+    setHasUsedAdContinue(true);
+    setGameData(prev => {
+      if (!prev.vectorManiacState) return prev;
+      return {
+        ...prev,
+        vectorManiacState: {
+          ...prev.vectorManiacState,
+          phase: 'playing',
+          health: prev.vectorManiacState.maxHealth,
+          invulnerableTimer: 120, // 2 seconds of invulnerability
+        },
+      };
+    });
+  }, []);
+
 
   const isNewHighScore = gameData.state === 'gameover' && gameData.score >= gameData.highScore && gameData.score > 0;
 
@@ -479,11 +497,27 @@ export const Game: React.FC<GameProps> = ({
 
         {/* Vector Maniac game over */}
         {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'gameOver' && (
-          <GameOverScreen
-            score={Math.floor(gameData.vectorManiacState.score)}
+          <VectorManiacEndScreen
+            isVictory={false}
+            score={gameData.vectorManiacState.score}
+            salvageCount={gameData.vectorManiacState.salvageCount}
+            wave={gameData.vectorManiacState.currentWave}
             highScore={gameData.highScore}
-            rescuedCount={gameData.vectorManiacState.salvageCount}
-            isNewHighScore={gameData.vectorManiacState.score > gameData.highScore}
+            onRestart={handleStartVectorManiac}
+            onQuit={handleQuit}
+            onContinue={handleVectorManiacContinue}
+            canContinueWithAd={!hasUsedAdContinue}
+          />
+        )}
+
+        {/* Vector Maniac victory */}
+        {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'victory' && (
+          <VectorManiacEndScreen
+            isVictory={true}
+            score={gameData.vectorManiacState.score}
+            salvageCount={gameData.vectorManiacState.salvageCount}
+            wave={9}
+            highScore={gameData.highScore}
             onRestart={handleStartVectorManiac}
             onQuit={handleQuit}
           />
