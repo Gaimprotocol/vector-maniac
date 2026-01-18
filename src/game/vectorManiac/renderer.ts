@@ -696,27 +696,47 @@ function renderParticles(ctx: CanvasRenderingContext2D, state: VectorState): voi
 
 function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth } = VM_CONFIG;
+  const theme = getMapTheme(state.currentMap);
   
   // Top bar
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  ctx.fillRect(0, 0, arenaWidth, 30);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillRect(0, 0, arenaWidth, 40);
   
-  ctx.font = 'bold 14px monospace';
   ctx.textBaseline = 'middle';
   
-  // Wave indicator
-  ctx.fillStyle = '#ffffff';
+  // Map and Level indicator (left side)
+  ctx.fillStyle = theme.accentColor;
+  ctx.font = 'bold 12px monospace';
   ctx.textAlign = 'left';
-  ctx.fillText(`WAVE ${state.currentWave}/9`, 10, 15);
+  ctx.fillText(`MAP ${state.currentMap}/${VM_CONFIG.totalMaps}`, 10, 12);
   
-  // Score
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillText(`LEVEL ${state.currentLevel}`, 10, 28);
+  
+  // Wave indicator (next to map)
+  ctx.fillStyle = '#ffff00';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText(`WAVE ${state.currentWave}/${state.wavesInMap}`, 110, 20);
+  
+  // Score (center)
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(`SCORE: ${Math.floor(state.score)}`, arenaWidth / 2, 15);
+  ctx.fillText(`SCORE: ${Math.floor(state.score)}`, arenaWidth / 2, 20);
   
-  // Salvage
+  // Salvage (right)
   ctx.textAlign = 'right';
   ctx.fillStyle = '#00ff88';
-  ctx.fillText(`SALVAGE: ${state.salvageCount}`, arenaWidth - 10, 15);
+  ctx.font = 'bold 12px monospace';
+  ctx.fillText(`💎 ${state.salvageCount}`, arenaWidth - 10, 12);
+  
+  // Boss indicator when active
+  if (state.bossActive) {
+    ctx.fillStyle = '#ff4444';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('⚠ BOSS', arenaWidth - 10, 28);
+  }
   
   // Health bar (bottom left)
   const healthBarWidth = 100;
@@ -752,6 +772,46 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.font = 'bold 16px monospace';
     ctx.textAlign = 'right';
     ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, healthBarY + 4);
+  }
+  
+  // Map name display (when transitioning to new map)
+  if (state.showMapName && state.mapNameTimer > 0) {
+    const theme = getMapTheme(state.currentMap);
+    const alpha = Math.min(1, state.mapNameTimer / 30); // Fade out in last 0.5 seconds
+    const slideIn = Math.min(1, (180 - state.mapNameTimer) / 20); // Slide in during first 0.33 seconds
+    
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    
+    // Dark overlay behind text
+    const centerY = VM_CONFIG.arenaHeight / 2 - 80;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, centerY - 50, arenaWidth, 120);
+    
+    // Map name with slide-in effect
+    const slideOffset = (1 - slideIn) * 100;
+    ctx.translate(slideOffset, 0);
+    
+    // "MAP X" label
+    ctx.fillStyle = theme.accentColor;
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`— MAP ${state.currentMap} —`, arenaWidth / 2, centerY - 15);
+    
+    // Map name (large)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px monospace';
+    ctx.shadowColor = theme.accentColor;
+    ctx.shadowBlur = 20;
+    ctx.fillText(theme.name.toUpperCase(), arenaWidth / 2, centerY + 25);
+    
+    // Level indicator
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#888888';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(`LEVEL ${state.currentLevel} • ${state.wavesInMap} WAVE${state.wavesInMap > 1 ? 'S' : ''}`, arenaWidth / 2, centerY + 55);
+    
+    ctx.restore();
   }
   
   // Active power-ups indicator (top right area)

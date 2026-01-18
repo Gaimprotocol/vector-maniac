@@ -68,6 +68,10 @@ export function createVectorManiacState(): VectorState {
     bossActive: false,
     bossDefeated: false,
     
+    // Map transition display
+    showMapName: true,
+    mapNameTimer: 180, // Show first map name for 3 seconds
+    
     enemiesSpawned: 0,
     enemiesDefeated: 0,
     enemiesInWave: getEnemiesForWave(1, 1),
