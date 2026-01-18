@@ -1,6 +1,6 @@
 // Vector Maniac Entity Creation
 
-import { VectorEnemy, VectorProjectile, VectorParticle, VectorSalvage } from './types';
+import { VectorEnemy, VectorProjectile, VectorParticle, VectorSalvage, VectorPowerUp, PowerUpType } from './types';
 import { VM_CONFIG } from './constants';
 import { generateId, randomFromEdge, normalize } from './utils';
 
@@ -173,5 +173,23 @@ export function createSalvage(x: number, y: number, value: number): VectorSalvag
     vy: Math.sin(angle) * speed,
     value,
     magnetized: false,
+  };
+}
+
+export function createPowerUp(x: number, y: number, type?: PowerUpType): VectorPowerUp {
+  const types: PowerUpType[] = ['shield', 'nuke', 'doublePoints', 'doubleShot', 'speedBoost'];
+  const powerUpType = type || types[Math.floor(Math.random() * types.length)];
+  
+  const angle = Math.random() * Math.PI * 2;
+  const speed = 0.5;
+  
+  return {
+    id: generateId(),
+    x,
+    y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    type: powerUpType,
+    life: VM_CONFIG.powerUpLifetime,
   };
 }
