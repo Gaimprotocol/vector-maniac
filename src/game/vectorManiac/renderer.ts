@@ -324,9 +324,6 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
 }
 
 function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  // Draw glowing trail FIRST (behind everything)
-  renderPlayerTrail(ctx, state);
-  
   // Draw power-up auras BEFORE the player (so they appear behind)
   renderPowerUpAuras(ctx, state);
   
@@ -369,49 +366,6 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.stroke();
     ctx.restore();
   }
-}
-
-function renderPlayerTrail(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  if (state.trail.length < 2) return;
-  
-  const trailMaxLength = 12;
-  
-  // Draw glowing trail segments
-  for (let i = 1; i < state.trail.length; i++) {
-    const point = state.trail[i];
-    const prevPoint = state.trail[i - 1];
-    const progress = point.age / trailMaxLength;
-    const alpha = (1 - progress) * 0.6;
-    const width = (1 - progress) * 8 + 2;
-    
-    // Create gradient from cyan to purple
-    const hue = 180 + progress * 60; // Cyan (180) to purple (240)
-    const color = `hsla(${hue}, 100%, 60%, ${alpha})`;
-    
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.lineCap = 'round';
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 15 * (1 - progress);
-    
-    ctx.beginPath();
-    ctx.moveTo(prevPoint.x, prevPoint.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-    ctx.restore();
-  }
-  
-  // Add extra glow at the ship's position
-  ctx.save();
-  ctx.globalAlpha = 0.3;
-  ctx.shadowColor = '#00ffff';
-  ctx.shadowBlur = 20;
-  ctx.fillStyle = '#00ffff';
-  ctx.beginPath();
-  ctx.arc(state.playerX, state.playerY, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
 }
 
 function renderPowerUpAuras(ctx: CanvasRenderingContext2D, state: VectorState): void {

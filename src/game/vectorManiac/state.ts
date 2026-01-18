@@ -36,9 +36,6 @@ export function createVectorManiacState(): VectorState {
     playerAngle: -Math.PI / 2, // Facing up
     targetX: centerX,
     targetY: centerY,
-    playerVelX: 0,
-    playerVelY: 0,
-    trail: [],
     fireTimer: 0,
     health: VM_CONFIG.playerMaxHealth,
     maxHealth: VM_CONFIG.playerMaxHealth,
