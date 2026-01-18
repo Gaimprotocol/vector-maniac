@@ -61,10 +61,10 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         movementTouchId.current = touch.identifier;
         
         // Set target position with offset (ship ahead of finger)
-        // For Vector Maniac (portrait), ship is above finger
+        // For Vector Maniac (portrait), ship is 100px above finger
         const isVectorManiac = gameState === 'vectorManiac';
         const offsetX = isVectorManiac ? 0 : TOUCH_CONFIG.shipOffsetX;
-        const offsetY = isVectorManiac ? -TOUCH_CONFIG.shipOffsetX : TOUCH_CONFIG.shipOffsetY; // Use same distance but upward
+        const offsetY = isVectorManiac ? -100 : TOUCH_CONFIG.shipOffsetY;
         
         onInputChange({
           isTouching: true,
@@ -87,10 +87,10 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         const coords = getCanvasCoords(touch.clientX, touch.clientY);
         
         // Use appropriate offset for game mode
-        // For Vector Maniac (portrait), ship is above finger with same distance as main game
+        // For Vector Maniac (portrait), ship is 100px above finger
         const isVectorManiac = gameState === 'vectorManiac';
         const offsetX = isVectorManiac ? 0 : TOUCH_CONFIG.shipOffsetX;
-        const offsetY = isVectorManiac ? -TOUCH_CONFIG.shipOffsetX : TOUCH_CONFIG.shipOffsetY;
+        const offsetY = isVectorManiac ? -100 : TOUCH_CONFIG.shipOffsetY;
         
         onInputChange({
           touchX: coords.x + offsetX,
