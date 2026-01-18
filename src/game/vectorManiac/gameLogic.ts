@@ -210,7 +210,14 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   newState = checkPowerUpCollisions(newState);
   
   // Check wave completion
-  if (newState.enemiesDefeated >= newState.enemiesInWave && newState.enemies.length === 0) {
+  // For boss waves (last wave of map), complete when boss is defeated
+  // For regular waves, complete when all enemies are defeated
+  const isLastWave = isLastWaveInMap(newState);
+  const waveComplete = isLastWave
+    ? newState.bossDefeated && newState.enemies.length === 0
+    : newState.enemiesDefeated >= newState.enemiesInWave && newState.enemies.length === 0;
+  
+  if (waveComplete) {
     newState = completeWave(newState);
   }
   
@@ -790,8 +797,15 @@ function checkCollisions(state: VectorState): VectorState {
       newState.combo++;
       newState.comboTimer = 120;
       
+      // Check if this was the boss
+      if (enemy.type === 'boss') {
+        newState.bossDefeated = true;
+        newState.bossActive = false;
+      }
+      
       // Score with combo bonus (doubled if power-up active)
-      const baseScore = enemy.type === 'bounty' ? 1000 : 
+      const baseScore = enemy.type === 'boss' ? 2000 :
+                        enemy.type === 'bounty' ? 1000 : 
                         enemy.type === 'elite' ? 200 :
                         enemy.type === 'shooter' ? 100 : 50;
       const pointMultiplier = newState.activePowerUps.doublePoints > 0 ? 2 : 1;
