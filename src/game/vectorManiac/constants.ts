@@ -1,11 +1,10 @@
 // Vector Maniac Constants
 
-import { GAME_CONFIG } from '../constants';
-
+// Portrait mode dimensions (swap width/height for vertical gameplay)
 export const VM_CONFIG = {
-  // Arena bounds
-  arenaWidth: GAME_CONFIG.canvasWidth,
-  arenaHeight: GAME_CONFIG.canvasHeight,
+  // Arena bounds - PORTRAIT MODE
+  arenaWidth: 390,
+  arenaHeight: 844,
   arenaPadding: 30,
   
   // Player
