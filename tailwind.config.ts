@@ -15,6 +15,8 @@ export default {
     extend: {
       fontFamily: {
         pixel: ['"Press Start 2P"', 'monospace'],
+        vector: ['"Orbitron"', 'sans-serif'],
+        tech: ['"Rajdhani"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
