@@ -374,92 +374,214 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   const centerX = arenaWidth / 2;
   const centerY = arenaHeight / 2;
+  const t = state.gameTime;
   
-  // Animated background pulse
-  const pulse = Math.sin(state.gameTime * 0.05) * 0.3 + 0.7;
-  
-  // Dark overlay
-  ctx.fillStyle = `rgba(0, 0, 0, ${0.6 * pulse})`;
+  // Dark overlay with scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
   
-  // Animated scan lines
-  ctx.strokeStyle = `rgba(255, 0, 255, ${0.1 * pulse})`;
+  // Animated horizontal scanlines (CRT effect)
+  ctx.strokeStyle = 'rgba(0, 255, 255, 0.03)';
   ctx.lineWidth = 1;
-  for (let y = (state.gameTime * 2) % 8; y < arenaHeight; y += 8) {
+  for (let y = (t * 3) % 4; y < arenaHeight; y += 4) {
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.lineTo(arenaWidth, y);
     ctx.stroke();
   }
   
-  // Title: "VECTOR MANIAC" with glowing effect
+  // TRON-style perspective grid floor
+  ctx.save();
+  const horizonY = centerY + 100;
+  const gridPulse = Math.sin(t * 0.03) * 0.3 + 0.7;
+  
+  // Horizontal lines (receding)
+  ctx.strokeStyle = `rgba(255, 0, 255, ${0.4 * gridPulse})`;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 12; i++) {
+    const yOffset = i * 25;
+    const fadeAlpha = 1 - (i / 12);
+    ctx.globalAlpha = fadeAlpha * gridPulse;
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY + yOffset);
+    ctx.lineTo(arenaWidth, horizonY + yOffset);
+    ctx.stroke();
+  }
+  
+  // Vertical converging lines
+  ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 * gridPulse})`;
+  for (let i = -6; i <= 6; i++) {
+    const startX = centerX + i * 80;
+    const endX = centerX + i * 15;
+    ctx.globalAlpha = (1 - Math.abs(i) / 8) * gridPulse;
+    ctx.beginPath();
+    ctx.moveTo(startX, arenaHeight);
+    ctx.lineTo(endX, horizonY);
+    ctx.stroke();
+  }
+  ctx.restore();
+  
+  // Animated rotating hexagon frame
+  ctx.save();
+  ctx.translate(centerX, centerY - 40);
+  ctx.rotate(t * 0.01);
+  const hexSize = 120 + Math.sin(t * 0.05) * 10;
+  ctx.strokeStyle = '#ff00ff';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#ff00ff';
+  ctx.shadowBlur = 20;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * hexSize;
+    const y = Math.sin(angle) * hexSize;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Inner counter-rotating hexagon
+  ctx.rotate(-t * 0.02);
+  const innerHexSize = 80 + Math.sin(t * 0.07) * 8;
+  ctx.strokeStyle = '#00ffff';
+  ctx.shadowColor = '#00ffff';
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const x = Math.cos(angle) * innerHexSize;
+    const y = Math.sin(angle) * innerHexSize;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+  
+  // Glowing corner triangles (vector style)
+  const triangleSize = 50;
+  const cornerOffset = 30;
+  ctx.fillStyle = 'rgba(255, 0, 255, 0.3)';
+  ctx.shadowColor = '#ff00ff';
+  ctx.shadowBlur = 15;
+  
+  // Top-left triangle
+  ctx.beginPath();
+  ctx.moveTo(cornerOffset, cornerOffset);
+  ctx.lineTo(cornerOffset + triangleSize, cornerOffset);
+  ctx.lineTo(cornerOffset, cornerOffset + triangleSize);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Top-right triangle
+  ctx.beginPath();
+  ctx.moveTo(arenaWidth - cornerOffset, cornerOffset);
+  ctx.lineTo(arenaWidth - cornerOffset - triangleSize, cornerOffset);
+  ctx.lineTo(arenaWidth - cornerOffset, cornerOffset + triangleSize);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+  ctx.shadowColor = '#00ffff';
+  
+  // Bottom-left triangle
+  ctx.beginPath();
+  ctx.moveTo(cornerOffset, arenaHeight - cornerOffset);
+  ctx.lineTo(cornerOffset + triangleSize, arenaHeight - cornerOffset);
+  ctx.lineTo(cornerOffset, arenaHeight - cornerOffset - triangleSize);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bottom-right triangle
+  ctx.beginPath();
+  ctx.moveTo(arenaWidth - cornerOffset, arenaHeight - cornerOffset);
+  ctx.lineTo(arenaWidth - cornerOffset - triangleSize, arenaHeight - cornerOffset);
+  ctx.lineTo(arenaWidth - cornerOffset, arenaHeight - cornerOffset - triangleSize);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.shadowBlur = 0;
+  
+  // Title: "VECTOR" with hard-edge vector style
   ctx.save();
   ctx.shadowColor = '#ff00ff';
-  ctx.shadowBlur = 30 * pulse;
+  ctx.shadowBlur = 40;
   ctx.fillStyle = '#ff00ff';
-  ctx.font = 'bold 36px monospace';
+  ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('VECTOR', centerX, centerY - 70);
   
+  // Double stroke effect
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  ctx.strokeText('VECTOR', centerX, centerY - 70);
+  
+  // "MANIAC" with cyan glow
   ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 40;
   ctx.fillStyle = '#00ffff';
-  ctx.fillText('MANIAC', centerX, centerY - 30);
+  ctx.fillText('MANIAC', centerX, centerY - 15);
+  ctx.strokeStyle = '#ffffff';
+  ctx.strokeText('MANIAC', centerX, centerY - 15);
   ctx.restore();
   
-  // Subtitle with vector graphics style
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '12px monospace';
-  ctx.fillText('// ARENA SHOOTER //', centerX, centerY + 20);
-  
-  // Animated "GET READY" text
-  const readyPulse = Math.sin(state.gameTime * 0.1) * 0.5 + 0.5;
-  ctx.save();
-  ctx.globalAlpha = readyPulse;
-  ctx.fillStyle = '#ffff00';
-  ctx.font = 'bold 20px monospace';
-  ctx.fillText('< GET READY >', centerX, centerY + 70);
-  ctx.restore();
-  
-  // Instructions
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  // Subtitle with tech style
+  ctx.fillStyle = '#888888';
   ctx.font = '10px monospace';
-  ctx.fillText('Move to shoot • Collect salvage', centerX, centerY + 110);
+  ctx.textAlign = 'center';
+  ctx.fillText('[ TACTICAL ARENA COMBAT SYSTEM v2.0 ]', centerX, centerY + 30);
   
-  // Decorative corner brackets
-  const bracketSize = 30;
-  const margin = 40;
-  ctx.strokeStyle = '#ff00ff';
-  ctx.lineWidth = 2;
+  // Animated "INITIALIZING" / "READY" text
+  const phase = Math.floor(t / 30) % 3;
+  const blink = Math.sin(t * 0.15) > 0;
   
-  // Top-left
-  ctx.beginPath();
-  ctx.moveTo(margin, margin + bracketSize);
-  ctx.lineTo(margin, margin);
-  ctx.lineTo(margin + bracketSize, margin);
-  ctx.stroke();
+  ctx.save();
+  if (blink) {
+    ctx.shadowColor = '#ffff00';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = '#ffff00';
+  } else {
+    ctx.fillStyle = '#ffff0080';
+  }
+  ctx.font = 'bold 18px monospace';
   
-  // Top-right
-  ctx.beginPath();
-  ctx.moveTo(arenaWidth - margin - bracketSize, margin);
-  ctx.lineTo(arenaWidth - margin, margin);
-  ctx.lineTo(arenaWidth - margin, margin + bracketSize);
-  ctx.stroke();
+  const statusTexts = ['>> SYSTEMS ONLINE <<', '>> WEAPONS HOT <<', '>> ENGAGE <<'];
+  ctx.fillText(statusTexts[phase], centerX, centerY + 80);
+  ctx.restore();
   
-  // Bottom-left
+  // Bottom status bar
+  const barY = arenaHeight - 60;
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
+  ctx.fillRect(60, barY, arenaWidth - 120, 30);
   ctx.strokeStyle = '#00ffff';
-  ctx.beginPath();
-  ctx.moveTo(margin, arenaHeight - margin - bracketSize);
-  ctx.lineTo(margin, arenaHeight - margin);
-  ctx.lineTo(margin + bracketSize, arenaHeight - margin);
-  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeRect(60, barY, arenaWidth - 120, 30);
   
-  // Bottom-right
-  ctx.beginPath();
-  ctx.moveTo(arenaWidth - margin - bracketSize, arenaHeight - margin);
-  ctx.lineTo(arenaWidth - margin, arenaHeight - margin);
-  ctx.lineTo(arenaWidth - margin, arenaHeight - margin - bracketSize);
-  ctx.stroke();
+  // Loading bar animation
+  const loadProgress = Math.min(1, t / 60);
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+  ctx.fillRect(62, barY + 2, (arenaWidth - 124) * loadProgress, 26);
+  
+  // Status text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('DRAG TO NAVIGATE // MOVEMENT = FIRE', centerX, barY + 18);
+  
+  // Decorative data streams on sides
+  ctx.font = '8px monospace';
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+  ctx.textAlign = 'left';
+  const dataChars = '01';
+  for (let i = 0; i < 20; i++) {
+    const y = 100 + i * 30 + ((t * 2) % 30);
+    if (y < arenaHeight - 100) {
+      const char = dataChars[Math.floor(Math.random() * 2)];
+      ctx.fillText(char.repeat(8), 15, y);
+      ctx.fillText(char.repeat(8), arenaWidth - 55, y);
+    }
+  }
 }
 
 function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {

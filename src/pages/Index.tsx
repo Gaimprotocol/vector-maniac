@@ -207,68 +207,109 @@ const Index = () => {
       {/* Menu screen - shown in both portrait and landscape when not in game */}
       {!waitingForLandscape && !gameStarted && (
         <div 
-          className="fixed inset-0 flex flex-col items-center justify-center z-50"
+          className="fixed inset-0 flex flex-col items-center justify-center z-50 overflow-hidden"
           style={{ 
-            background: 'radial-gradient(ellipse at center, #0a1628 0%, #050810 70%, #020305 100%)'
+            background: 'linear-gradient(180deg, #000510 0%, #050015 50%, #100520 100%)'
           }}
         >
-          {/* Floating particles */}
+          {/* Animated grid background */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 255, 0.03) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px',
+              animation: 'gridMove 20s linear infinite',
+            }}
+          />
+          
+          {/* Glowing orbs */}
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-20 blur-3xl"
+               style={{ background: 'radial-gradient(circle, #ff00ff 0%, transparent 70%)' }} />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full opacity-20 blur-3xl"
+               style={{ background: 'radial-gradient(circle, #00ffff 0%, transparent 70%)' }} />
+
+          {/* Floating vector particles */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(30)].map((_, i) => (
               <div
                 key={i}
-                className="absolute rounded-full"
+                className="absolute"
                 style={{
-                  width: Math.random() * 3 + 1 + 'px',
-                  height: Math.random() * 3 + 1 + 'px',
+                  width: i % 3 === 0 ? '3px' : '2px',
+                  height: i % 3 === 0 ? '3px' : '2px',
                   left: Math.random() * 100 + '%',
                   top: Math.random() * 100 + '%',
-                  background: i % 3 === 0 ? '#00e5ff' : i % 3 === 1 ? '#ff00ff' : '#ffffff',
-                  opacity: Math.random() * 0.5 + 0.2,
-                  animation: `float ${Math.random() * 10 + 10}s ease-in-out infinite`,
+                  background: i % 2 === 0 ? '#ff00ff' : '#00ffff',
+                  boxShadow: i % 2 === 0 ? '0 0 10px #ff00ff' : '0 0 10px #00ffff',
+                  opacity: Math.random() * 0.8 + 0.2,
+                  animation: `floatParticle ${Math.random() * 15 + 10}s ease-in-out infinite`,
                   animationDelay: `-${Math.random() * 10}s`,
                 }}
               />
             ))}
           </div>
 
-          {/* GAIM STUDIOS with diamonds */}
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-cyan-400 text-xs">◆</span>
-            <p className="font-pixel text-[10px] tracking-[0.3em] text-gray-400">
-              GAIM STUDIOS
-            </p>
-            <span className="text-cyan-400 text-xs">◆</span>
+          {/* Top decorative line */}
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
+            <div className="w-16 h-px bg-gradient-to-r from-transparent to-magenta" />
+            <div className="w-2 h-2 rotate-45 border border-magenta" />
+            <div className="w-16 h-px bg-gradient-to-l from-transparent to-magenta" />
           </div>
 
-          {/* Main title - two tone */}
-          <h1 className="font-pixel text-2xl mb-2 flex flex-col items-center gap-1">
-            <span className="text-magenta" style={{ textShadow: '0 0 22px #ff00ff, 0 0 44px #ff00ff50' }}>
-              VECTOR
-            </span>
-            <span className="text-cyan-400" style={{ textShadow: '0 0 22px #00e5ff, 0 0 44px #00e5ff50' }}>
-              MANIAC
-            </span>
-          </h1>
+          {/* Main title - VECTOR MANIAC */}
+          <div className="relative mb-6">
+            {/* Glitch/shadow layers */}
+            <h1 className="font-pixel text-3xl flex flex-col items-center gap-0 relative">
+              <span 
+                className="text-magenta tracking-[0.2em]"
+                style={{ 
+                  textShadow: '0 0 30px #ff00ff, 0 0 60px #ff00ff, 0 0 90px #ff00ff40',
+                  filter: 'drop-shadow(0 0 2px #ff00ff)',
+                }}
+              >
+                VECTOR
+              </span>
+              <span 
+                className="text-cyan-400 tracking-[0.2em]"
+                style={{ 
+                  textShadow: '0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 90px #00ffff40',
+                  filter: 'drop-shadow(0 0 2px #00ffff)',
+                }}
+              >
+                MANIAC
+              </span>
+            </h1>
+          </div>
 
-          {/* Tagline */}
-          <p className="font-pixel text-[8px] tracking-[0.2em] text-gray-500 mb-8">
-            NAVIGATE THE INFINITE VOID
+          {/* Subtitle */}
+          <p className="font-pixel text-[8px] tracking-[0.3em] text-gray-500 mb-1">
+            ◇ TACTICAL ARENA COMBAT ◇
+          </p>
+          <p className="font-pixel text-[7px] tracking-[0.2em] text-magenta/60 mb-8">
+            [ SYSTEM v2.0 ]
           </p>
 
           {/* ENTER THE GALAXY button - shown first */}
           {!hasEnteredGalaxy && (
             <button
-              className="font-pixel text-xs text-white/80 border border-white/30 rounded-full px-8 py-3 
-                         transition-all duration-500 hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/10"
+              className="font-pixel text-xs border-2 rounded px-10 py-3 relative overflow-hidden
+                         transition-all duration-500 group"
               style={{ 
-                boxShadow: '0 0 30px rgba(0, 229, 255, 0.15)',
-                animation: 'pulse 2s ease-in-out infinite, glow 3s ease-in-out infinite alternate',
+                background: 'linear-gradient(180deg, rgba(255,0,255,0.1) 0%, rgba(0,255,255,0.1) 100%)',
+                borderColor: '#ff00ff',
+                boxShadow: '0 0 30px rgba(255, 0, 255, 0.3), inset 0 0 30px rgba(255, 0, 255, 0.1)',
               }}
               onClick={enterGalaxy}
               onTouchEnd={(e) => { e.preventDefault(); enterGalaxy(); }}
             >
-              ▶ ENTER THE GALAXY
+              <span className="relative z-10 text-white group-hover:text-cyan-400 transition-colors">
+                ▶ INITIALIZE COMBAT
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-magenta/0 via-magenta/20 to-magenta/0 
+                              translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             </button>
           )}
 
@@ -459,25 +500,29 @@ const Index = () => {
           </div>
 
           <style>{`
-            @keyframes float {
-              0%, 100% { transform: translateY(0) translateX(0); }
-              25% { transform: translateY(-20px) translateX(10px); }
-              50% { transform: translateY(-10px) translateX(-10px); }
-              75% { transform: translateY(-30px) translateX(5px); }
+            @keyframes floatParticle {
+              0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+              25% { transform: translateY(-30px) translateX(15px); opacity: 0.8; }
+              50% { transform: translateY(-15px) translateX(-15px); opacity: 0.5; }
+              75% { transform: translateY(-45px) translateX(8px); opacity: 0.9; }
+            }
+            @keyframes gridMove {
+              0% { transform: translateY(0); }
+              100% { transform: translateY(40px); }
             }
             @keyframes glow {
-              0% { box-shadow: 0 0 20px rgba(0, 229, 255, 0.15); }
-              100% { box-shadow: 0 0 40px rgba(0, 229, 255, 0.35), 0 0 60px rgba(255, 0, 255, 0.2); }
+              0% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.2); }
+              100% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.3); }
             }
             @keyframes pop-in {
               0% { 
                 opacity: 0; 
                 transform: scale(0.3);
-                filter: drop-shadow(0 0 30px rgba(0, 229, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.5));
+                filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 60px rgba(0, 255, 255, 0.5));
               }
               50% { 
                 transform: scale(1.1);
-                filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 0, 255, 0.3));
+                filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.6)) drop-shadow(0 0 40px rgba(0, 255, 255, 0.3));
               }
               100% { 
                 opacity: 1; 
