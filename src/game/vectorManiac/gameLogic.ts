@@ -147,29 +147,30 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     ? newState.stats.speed * 1.5 
     : newState.stats.speed;
   
-  // Fire while touching - shoot in facing direction from ship tip
+  // Fire while touching - shoot upward from ship tip (always shoot up)
   if (isShooting && newState.fireTimer <= 0) {
-    // Calculate projectile spawn position at the tip of the ship
+    // Calculate projectile spawn position at the top of the ship
     const tipOffset = VM_CONFIG.playerSize + 8; // Spawn from ship tip
-    const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
-    const spawnY = newState.playerY + Math.sin(newState.playerAngle) * tipOffset;
+    const shootAngle = -Math.PI / 2; // Always shoot upward
+    const spawnX = newState.playerX;
+    const spawnY = newState.playerY - tipOffset; // Top of ship
     
     // Check if double shot is active
     if (newState.activePowerUps.doubleShot > 0) {
       // Shoot two projectiles with slight angle offset
       const spreadAngle = 0.15;
       const projectile1 = createPlayerProjectile(
-        spawnX,
+        spawnX - 8, // Offset left
         spawnY,
-        newState.playerAngle - spreadAngle,
+        shootAngle - spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
       );
       const projectile2 = createPlayerProjectile(
-        spawnX,
+        spawnX + 8, // Offset right
         spawnY,
-        newState.playerAngle + spreadAngle,
+        shootAngle + spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
@@ -179,7 +180,7 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
       const projectile = createPlayerProjectile(
         spawnX,
         spawnY,
-        newState.playerAngle,
+        shootAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
