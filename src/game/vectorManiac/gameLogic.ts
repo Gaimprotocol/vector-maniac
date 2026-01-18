@@ -100,9 +100,12 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   let newState = { ...state };
   
   // Update player position (drag-to-move)
+  // Convert screen-space touch coordinates to world-space by adding camera offset
   if (input.isTouching) {
-    newState.targetX = input.touchX;
-    newState.targetY = input.touchY;
+    const worldTouchX = input.touchX + newState.cameraX - VM_CONFIG.viewportWidth / 2;
+    const worldTouchY = input.touchY + newState.cameraY - VM_CONFIG.viewportHeight / 2;
+    newState.targetX = worldTouchX;
+    newState.targetY = worldTouchY;
   }
   
   // Smooth movement towards target
