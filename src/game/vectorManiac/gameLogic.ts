@@ -113,15 +113,25 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   // Track if player is touching (for shooting)
   const isShooting = input.isTouching;
   
-  if (dist > 2) {
-    // Update player angle to face movement direction
-    const targetAngle = Math.atan2(dy, dx);
-    newState.playerAngle = lerpAngle(newState.playerAngle, targetAngle, 0.15);
+  // Ship follows finger directly, positioned 50px ahead of finger
+  const shipOffset = 50;
+  const targetX = newState.targetX;
+  const targetY = newState.targetY - shipOffset; // Ship is 50px above finger
+  
+  const toTargetX = targetX - newState.playerX;
+  const toTargetY = targetY - newState.playerY;
+  const distToTarget = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
+  
+  if (distToTarget > 2) {
+    // Move directly towards target position
+    const moveSpeed = Math.min(newState.stats.speed, distToTarget * 0.2);
+    const dir = normalize(toTargetX, toTargetY);
+    newState.playerX += dir.x * moveSpeed;
+    newState.playerY += dir.y * moveSpeed;
     
-    // Move in the direction the ship is facing (360 degree movement)
-    const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
-    newState.playerX += Math.cos(newState.playerAngle) * moveSpeed;
-    newState.playerY += Math.sin(newState.playerAngle) * moveSpeed;
+    // Update angle to face movement direction (for visual rotation)
+    const targetAngle = Math.atan2(toTargetY, toTargetX);
+    newState.playerAngle = lerpAngle(newState.playerAngle, targetAngle, 0.15);
   }
   
   // Update camera to follow player smoothly
