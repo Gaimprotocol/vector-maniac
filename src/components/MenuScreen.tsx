@@ -165,15 +165,16 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
         {/* Vector Maniac button */}
         {onStartVectorManiac && (
           <button
-            className="font-pixel text-sm text-magenta border-2 border-magenta/50 rounded-full px-12 py-3 mb-4 
-                       transition-all duration-300 hover:border-magenta hover:bg-magenta/10 active:bg-magenta/20"
+            className="font-pixel text-sm border-2 rounded-full px-12 py-3 mb-4 
+                       transition-all duration-300 bg-gradient-to-r from-magenta/20 to-cyan/20
+                       text-white border-magenta hover:border-cyan hover:from-magenta/30 hover:to-cyan/30 active:from-magenta/40 active:to-cyan/40"
             style={{ 
-              boxShadow: '0 0 20px rgba(255, 0, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.05)',
+              boxShadow: '0 0 25px rgba(255, 0, 255, 0.4), 0 0 50px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1)',
             }}
             onTouchEnd={(e) => { e.preventDefault(); onStartVectorManiac(); }}
             onClick={onStartVectorManiac}
           >
-            VECTOR MANIAC
+            <span className="text-magenta">VECTOR</span> <span className="text-cyan">MANIAC</span>
           </button>
         )}
 

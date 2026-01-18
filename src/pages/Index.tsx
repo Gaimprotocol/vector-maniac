@@ -313,16 +313,17 @@ const Index = () => {
             <button
               className={`font-pixel text-[11px] border-2 rounded-full px-8 py-2 mb-3 
                          transition-all duration-300 
-                         text-magenta border-magenta/50 hover:border-magenta hover:bg-magenta/10 active:bg-magenta/20
+                         bg-gradient-to-r from-magenta/20 to-cyan/20
+                         text-white border-magenta hover:border-cyan hover:from-magenta/30 hover:to-cyan/30 active:from-magenta/40 active:to-cyan/40
                          ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
               style={{ 
-                boxShadow: '0 0 20px rgba(255, 0, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.05)',
+                boxShadow: '0 0 25px rgba(255, 0, 255, 0.4), 0 0 50px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1)',
                 animationDelay: '150ms',
                 animationFillMode: 'backwards',
               }}
               onClick={handleVectorManiacStart}
             >
-              🎯 VECTOR MANIAC
+              <span className="text-magenta">VECTOR</span> <span className="text-cyan">MANIAC</span>
             </button>
 
             {/* Secondary buttons - single row in landscape, stacked in portrait */}
