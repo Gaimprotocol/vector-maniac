@@ -326,7 +326,7 @@ const Index = () => {
               showMenuContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
           >
-            {/* Start button - Main game */}
+            {/* Start button - Start Vector Maniac */}
             <button
               className="font-vector font-semibold text-sm text-cyan-400 border-2 border-cyan-400/60 px-10 py-3 mb-3 
                          transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:bg-cyan-400/20 uppercase tracking-wider"
@@ -334,49 +334,10 @@ const Index = () => {
                 boxShadow: '0 0 25px rgba(0, 255, 255, 0.25)',
                 clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
               }}
-              onClick={handleStart}
-            >
-              Start Mission
-            </button>
-
-            {/* Survival Mode button */}
-            <button
-              className={`font-vector font-medium text-xs border-2 px-8 py-2.5 mb-3 
-                         transition-all duration-300 uppercase tracking-wider
-                         ${hasSurvivalMode() 
-                           ? 'text-orange-400 border-orange-400/60 hover:border-orange-400 hover:bg-orange-400/10'
-                           : 'text-orange-400/70 border-orange-400/40 hover:border-orange-300'
-                         }
-                         ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
-              style={{ 
-                boxShadow: '0 0 20px rgba(255, 150, 0, 0.2)',
-                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
-                animationDelay: '100ms',
-                animationFillMode: 'backwards',
-              }}
-              onClick={hasSurvivalMode() ? handleSurvivalStart : () => navigate('/shop')}
-            >
-              {hasSurvivalMode() ? '∞ Survival' : '🔒 Survival'}
-            </button>
-
-            {/* Vector Maniac button - featured */}
-            <button
-              className={`font-vector font-bold text-xs border-2 px-8 py-2.5 mb-3 
-                         transition-all duration-300 uppercase tracking-wider
-                         bg-gradient-to-r from-magenta/20 to-cyan/20
-                         text-white border-magenta hover:border-cyan hover:from-magenta/30 hover:to-cyan/30
-                         ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
-              style={{ 
-                boxShadow: '0 0 30px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.15)',
-                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
-                animationDelay: '150ms',
-                animationFillMode: 'backwards',
-              }}
               onClick={handleVectorManiacStart}
             >
-              <span className="text-magenta">Vector</span> <span className="text-cyan-400">Maniac</span>
+              Start Game
             </button>
-
             {/* Secondary buttons */}
             <div className={`flex gap-2 mb-3 ${isLandscape ? 'flex-row flex-wrap justify-center' : 'flex-col items-center'}`}>
               <div className="flex gap-2">
