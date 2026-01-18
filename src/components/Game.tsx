@@ -224,6 +224,19 @@ export const Game: React.FC<GameProps> = ({
         // Then fade in survival music
         await fadeIn(survivalMusic, 0.128, FADE_DURATION);
       })();
+    } else if (gameData.state === 'vectorManiac') {
+      // Vector Maniac - fade out start music but no game music for now
+      (async () => {
+        // Fade out start music if playing
+        if (startMusicRef?.current && !startMusicRef.current.paused) {
+          await fadeOut(startMusicRef.current, FADE_DURATION, true);
+        }
+        // Fade out any other music
+        const otherTracks = allMusic.filter(m => !m.paused);
+        if (otherTracks.length > 0) {
+          await Promise.all(otherTracks.map(track => fadeOut(track, FADE_DURATION, true)));
+        }
+      })();
     } else if (gameData.state === 'playing' && gameData.inHazardZone) {
       // Hazard Zone - quick crossfade (300ms)
       quickCrossfadeToHazard();

@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import { InputState, GameState } from '@/game/types';
 import { GAME_CONFIG, TOUCH_CONFIG } from '@/game/constants';
+import { VM_CONFIG } from '@/game/vectorManiac/constants';
 
 interface TouchControlsProps {
   onInputChange: (input: Partial<InputState>) => void;
@@ -22,14 +23,20 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     if (!canvasRef.current) return { x: 0, y: 0 };
     
     const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = GAME_CONFIG.canvasWidth / rect.width;
-    const scaleY = GAME_CONFIG.canvasHeight / rect.height;
+    
+    // Use Vector Maniac dimensions for that mode
+    const isVectorManiac = gameState === 'vectorManiac';
+    const canvasWidth = isVectorManiac ? VM_CONFIG.arenaWidth : GAME_CONFIG.canvasWidth;
+    const canvasHeight = isVectorManiac ? VM_CONFIG.arenaHeight : GAME_CONFIG.canvasHeight;
+    
+    const scaleX = canvasWidth / rect.width;
+    const scaleY = canvasHeight / rect.height;
     
     return {
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY,
     };
-  }, [canvasRef]);
+  }, [canvasRef, gameState]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return;
@@ -53,11 +60,15 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       if (movementTouchId.current === null) {
         movementTouchId.current = touch.identifier;
         
-        // Set target position with offset (ship ahead of finger)
+        // Set target position with offset (ship ahead of finger) - no offset for Vector Maniac
+        const isVectorManiac = gameState === 'vectorManiac';
+        const offsetX = isVectorManiac ? 0 : TOUCH_CONFIG.shipOffsetX;
+        const offsetY = isVectorManiac ? -60 : TOUCH_CONFIG.shipOffsetY; // Small upward offset for VM
+        
         onInputChange({
           isTouching: true,
-          touchX: coords.x + TOUCH_CONFIG.shipOffsetX,
-          touchY: coords.y + TOUCH_CONFIG.shipOffsetY,
+          touchX: coords.x + offsetX,
+          touchY: coords.y + offsetY,
           fire: true, // Auto-fire while touching
         });
       }
@@ -74,9 +85,14 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       if (touch.identifier === movementTouchId.current) {
         const coords = getCanvasCoords(touch.clientX, touch.clientY);
         
+        // Use appropriate offset for game mode
+        const isVectorManiac = gameState === 'vectorManiac';
+        const offsetX = isVectorManiac ? 0 : TOUCH_CONFIG.shipOffsetX;
+        const offsetY = isVectorManiac ? -60 : TOUCH_CONFIG.shipOffsetY;
+        
         onInputChange({
-          touchX: coords.x + TOUCH_CONFIG.shipOffsetX,
-          touchY: coords.y + TOUCH_CONFIG.shipOffsetY,
+          touchX: coords.x + offsetX,
+          touchY: coords.y + offsetY,
         });
       }
     }

@@ -13,7 +13,7 @@ import { SHIP_SKINS } from '@/hooks/useEquipment';
 import { renderPilotRunner, PilotRunnerState } from '@/game/pilotRunner';
 import { renderParatrooper, ParatrooperState } from '@/game/paratrooper';
 import { renderForwardFlight, ForwardFlightState } from '@/game/forwardFlight';
-import { renderVectorManiac, VectorState } from '@/game/vectorManiac';
+import { renderVectorManiac, VectorState, VM_CONFIG } from '@/game/vectorManiac';
 import { getStoredMegaShipId, hasStealthMode, hasBlueProjectiles } from '@/hooks/useMegaShips';
 
 interface GameCanvasProps {
@@ -320,18 +320,23 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
       ctx.restore();
     }, [gameData, activeShipSkin]);
 
+    // Use portrait dimensions for Vector Maniac, landscape for other modes
+    const isVectorManiac = gameData.state === 'vectorManiac';
+    const canvasWidth = isVectorManiac ? VM_CONFIG.arenaWidth : GAME_CONFIG.canvasWidth;
+    const canvasHeight = isVectorManiac ? VM_CONFIG.arenaHeight : GAME_CONFIG.canvasHeight;
+
     return (
       <canvas
         ref={canvasRef}
-        width={GAME_CONFIG.canvasWidth}
-        height={GAME_CONFIG.canvasHeight}
+        width={canvasWidth}
+        height={canvasHeight}
         className="pixel-perfect block"
         style={{ 
           imageRendering: 'pixelated',
           touchAction: 'none',
           width: '100vw',
           height: 'var(--app-height)',
-          objectFit: 'cover',
+          objectFit: 'contain',
           position: 'absolute',
           top: 0,
           left: 0,
