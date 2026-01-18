@@ -56,6 +56,7 @@ export interface VectorSalvage {
   vy: number;
   value: number;
   magnetized: boolean;
+  isRare: boolean; // 5% chance, gives full health
 }
 
 export type PowerUpType = 'shield' | 'nuke' | 'doublePoints' | 'doubleShot' | 'speedBoost';

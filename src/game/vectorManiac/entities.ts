@@ -161,9 +161,12 @@ export function createParticle(
   return particles;
 }
 
-export function createSalvage(x: number, y: number, value: number): VectorSalvage {
+export function createSalvage(x: number, y: number, value: number, forceRare?: boolean): VectorSalvage {
   const angle = Math.random() * Math.PI * 2;
   const speed = VM_CONFIG.salvageDriftSpeed;
+  
+  // 5% chance for rare pod (gives full health)
+  const isRare = forceRare ?? Math.random() < 0.05;
   
   return {
     id: generateId(),
@@ -173,6 +176,7 @@ export function createSalvage(x: number, y: number, value: number): VectorSalvag
     vy: Math.sin(angle) * speed,
     value,
     magnetized: false,
+    isRare,
   };
 }
 
