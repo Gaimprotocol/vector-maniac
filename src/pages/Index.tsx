@@ -254,9 +254,9 @@ const Index = () => {
 
           {/* Top decorative line */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
-            <div className="w-24 h-px bg-gradient-to-r from-transparent via-magenta to-transparent" />
+            <div className="w-24 h-px bg-gradient-to-l from-magenta to-transparent" />
             <div className="w-3 h-3 rotate-45 border-2 border-magenta" style={{ boxShadow: '0 0 10px #ff00ff' }} />
-            <div className="w-24 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+            <div className="w-24 h-px bg-gradient-to-r from-cyan-400 to-transparent" />
           </div>
 
           {/* Main title - VECTOR MANIAC */}
