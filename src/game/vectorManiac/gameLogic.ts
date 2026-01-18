@@ -107,8 +107,8 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   const dy = newState.targetY - newState.playerY;
   const dist = Math.sqrt(dx * dx + dy * dy);
   
-  // Track if player is moving (for shooting)
-  const isMoving = dist > 4 && input.isTouching;
+  // Track if player is touching (for shooting)
+  const isShooting = input.isTouching;
   
   if (dist > 2) {
     const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
@@ -133,8 +133,8 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     if (newState.comboTimer <= 0) newState.combo = 0;
   }
   
-  // Fire only while moving - shoot in movement direction from ship tip
-  if (isMoving && newState.fireTimer <= 0) {
+  // Fire while touching - shoot in facing direction from ship tip
+  if (isShooting && newState.fireTimer <= 0) {
     // Calculate projectile spawn position at the tip of the ship
     const tipOffset = VM_CONFIG.playerSize + 8; // Spawn from ship tip
     const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
