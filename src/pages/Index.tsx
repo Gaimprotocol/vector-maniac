@@ -285,6 +285,11 @@ const Index = () => {
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-0.5 bg-gradient-to-r from-magenta via-white to-cyan-400" />
           </div>
 
+          {/* Publisher */}
+          <p className="font-tech text-[10px] tracking-[0.5em] text-cyan-400/50 mb-3 uppercase">
+            A GAIM STUDIOS Production
+          </p>
+          
           {/* Subtitle */}
           <p className="font-tech text-sm tracking-[0.4em] text-gray-400 mb-1 uppercase">
             Tactical Arena Combat
