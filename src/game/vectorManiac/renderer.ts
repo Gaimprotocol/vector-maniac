@@ -340,7 +340,7 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
   
   ctx.save();
   ctx.translate(screen.x, screen.y);
-  ctx.rotate(-Math.PI / 2); // Ship always faces up
+  ctx.rotate(state.playerAngle + Math.PI / 2); // Rotate ship to face movement direction
   
   // Invulnerability flash
   if (state.invulnerableTimer > 0 && Math.floor(state.invulnerableTimer / 4) % 2 === 0) {
