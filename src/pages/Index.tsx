@@ -254,62 +254,64 @@ const Index = () => {
 
           {/* Top decorative line */}
           <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent to-magenta" />
-            <div className="w-2 h-2 rotate-45 border border-magenta" />
-            <div className="w-16 h-px bg-gradient-to-l from-transparent to-magenta" />
+            <div className="w-24 h-px bg-gradient-to-r from-transparent via-magenta to-transparent" />
+            <div className="w-3 h-3 rotate-45 border-2 border-magenta" style={{ boxShadow: '0 0 10px #ff00ff' }} />
+            <div className="w-24 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
           </div>
 
           {/* Main title - VECTOR MANIAC */}
-          <div className="relative mb-6">
-            {/* Glitch/shadow layers */}
-            <h1 className="font-pixel text-3xl flex flex-col items-center gap-0 relative">
+          <div className="relative mb-4">
+            <h1 className="font-vector font-black text-5xl flex flex-col items-center gap-0 relative tracking-wider">
               <span 
-                className="text-magenta tracking-[0.2em]"
+                className="text-magenta"
                 style={{ 
-                  textShadow: '0 0 30px #ff00ff, 0 0 60px #ff00ff, 0 0 90px #ff00ff40',
-                  filter: 'drop-shadow(0 0 2px #ff00ff)',
+                  textShadow: '0 0 40px #ff00ff, 0 0 80px #ff00ff60',
+                  letterSpacing: '0.15em',
                 }}
               >
                 VECTOR
               </span>
               <span 
-                className="text-cyan-400 tracking-[0.2em]"
+                className="text-cyan-400"
                 style={{ 
-                  textShadow: '0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 90px #00ffff40',
-                  filter: 'drop-shadow(0 0 2px #00ffff)',
+                  textShadow: '0 0 40px #00ffff, 0 0 80px #00ffff60',
+                  letterSpacing: '0.15em',
                 }}
               >
                 MANIAC
               </span>
             </h1>
+            {/* Underline accent */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-0.5 bg-gradient-to-r from-magenta via-white to-cyan-400" />
           </div>
 
           {/* Subtitle */}
-          <p className="font-pixel text-[8px] tracking-[0.3em] text-gray-500 mb-1">
-            ◇ TACTICAL ARENA COMBAT ◇
+          <p className="font-tech text-sm tracking-[0.4em] text-gray-400 mb-1 uppercase">
+            Tactical Arena Combat
           </p>
-          <p className="font-pixel text-[7px] tracking-[0.2em] text-magenta/60 mb-8">
-            [ SYSTEM v2.0 ]
+          <p className="font-tech text-xs tracking-widest text-magenta/70 mb-8">
+            // SYSTEM v2.0 //
           </p>
 
-          {/* ENTER THE GALAXY button - shown first */}
+          {/* ENTER button - shown first */}
           {!hasEnteredGalaxy && (
             <button
-              className="font-pixel text-xs border-2 rounded px-10 py-3 relative overflow-hidden
-                         transition-all duration-500 group"
+              className="font-vector font-bold text-sm border-2 px-12 py-4 relative overflow-hidden
+                         transition-all duration-300 group uppercase tracking-wider"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255,0,255,0.1) 0%, rgba(0,255,255,0.1) 100%)',
+                background: 'linear-gradient(180deg, rgba(255,0,255,0.15) 0%, rgba(0,255,255,0.1) 100%)',
                 borderColor: '#ff00ff',
-                boxShadow: '0 0 30px rgba(255, 0, 255, 0.3), inset 0 0 30px rgba(255, 0, 255, 0.1)',
+                boxShadow: '0 0 30px rgba(255, 0, 255, 0.4), inset 0 0 40px rgba(255, 0, 255, 0.1)',
+                clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
               }}
               onClick={enterGalaxy}
               onTouchEnd={(e) => { e.preventDefault(); enterGalaxy(); }}
             >
               <span className="relative z-10 text-white group-hover:text-cyan-400 transition-colors">
-                ▶ INITIALIZE COMBAT
+                ▶ Initialize
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-magenta/0 via-magenta/20 to-magenta/0 
-                              translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-magenta/0 via-cyan-400/30 to-magenta/0 
+                              translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
             </button>
           )}
 
@@ -319,95 +321,101 @@ const Index = () => {
               showMenuContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
           >
-            {/* Start button */}
+            {/* Start button - Main game */}
             <button
-              className="font-pixel text-sm text-cyan-400 border-2 border-cyan-400/50 rounded-full px-12 py-3 mb-3 
-                         transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:bg-cyan-400/20"
+              className="font-vector font-semibold text-sm text-cyan-400 border-2 border-cyan-400/60 px-10 py-3 mb-3 
+                         transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:bg-cyan-400/20 uppercase tracking-wider"
               style={{ 
-                boxShadow: '0 0 20px rgba(0, 229, 255, 0.2), inset 0 0 20px rgba(0, 229, 255, 0.05)',
+                boxShadow: '0 0 25px rgba(0, 255, 255, 0.25)',
+                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
               }}
               onClick={handleStart}
             >
-              START MISSION
+              Start Mission
             </button>
 
-            {/* Survival Mode button - always shown, locked style when not purchased */}
+            {/* Survival Mode button */}
             <button
-              className={`font-pixel text-[11px] border-2 rounded-full px-8 py-2 mb-3 
-                         transition-all duration-300 
+              className={`font-vector font-medium text-xs border-2 px-8 py-2.5 mb-3 
+                         transition-all duration-300 uppercase tracking-wider
                          ${hasSurvivalMode() 
-                           ? 'text-orange-400 border-orange-400/50 hover:border-orange-400 hover:bg-orange-400/10 active:bg-orange-400/20'
-                           : 'text-orange-400 border-orange-400/50 hover:border-orange-300 hover:bg-orange-400/10'
+                           ? 'text-orange-400 border-orange-400/60 hover:border-orange-400 hover:bg-orange-400/10'
+                           : 'text-orange-400/70 border-orange-400/40 hover:border-orange-300'
                          }
                          ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
               style={{ 
-                boxShadow: '0 0 20px rgba(255, 150, 0, 0.2), inset 0 0 20px rgba(255, 150, 0, 0.05)',
+                boxShadow: '0 0 20px rgba(255, 150, 0, 0.2)',
+                clipPath: 'polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px)',
                 animationDelay: '100ms',
                 animationFillMode: 'backwards',
               }}
               onClick={hasSurvivalMode() ? handleSurvivalStart : () => navigate('/shop')}
             >
-              {hasSurvivalMode() ? '♾️ SURVIVAL MODE' : '🔒 SURVIVAL MODE'}
+              {hasSurvivalMode() ? '∞ Survival' : '🔒 Survival'}
             </button>
 
-            {/* Vector Maniac button */}
+            {/* Vector Maniac button - featured */}
             <button
-              className={`font-pixel text-[11px] border-2 rounded-full px-8 py-2 mb-3 
-                         transition-all duration-300 
+              className={`font-vector font-bold text-xs border-2 px-8 py-2.5 mb-3 
+                         transition-all duration-300 uppercase tracking-wider
                          bg-gradient-to-r from-magenta/20 to-cyan/20
-                         text-white border-magenta hover:border-cyan hover:from-magenta/30 hover:to-cyan/30 active:from-magenta/40 active:to-cyan/40
+                         text-white border-magenta hover:border-cyan hover:from-magenta/30 hover:to-cyan/30
                          ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
               style={{ 
-                boxShadow: '0 0 25px rgba(255, 0, 255, 0.4), 0 0 50px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(255, 0, 255, 0.1)',
+                boxShadow: '0 0 30px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.15)',
+                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
                 animationDelay: '150ms',
                 animationFillMode: 'backwards',
               }}
               onClick={handleVectorManiacStart}
             >
-              <span className="text-magenta">VECTOR</span> <span className="text-cyan">MANIAC</span>
+              <span className="text-magenta">Vector</span> <span className="text-cyan-400">Maniac</span>
             </button>
 
-            {/* Secondary buttons - single row in landscape, stacked in portrait */}
+            {/* Secondary buttons */}
             <div className={`flex gap-2 mb-3 ${isLandscape ? 'flex-row flex-wrap justify-center' : 'flex-col items-center'}`}>
               <div className="flex gap-2">
                 <button
-                  className={`font-pixel text-[9px] text-yellow-400 border border-yellow-400/50 rounded-full px-4 py-1.5 
-                             transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400/10
+                  className={`font-tech font-semibold text-xs text-yellow-400 border border-yellow-400/50 px-4 py-2 
+                             transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
                     boxShadow: '0 0 15px rgba(255, 255, 0, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '200ms',
                     animationFillMode: 'backwards',
                   }}
                   onClick={() => navigate('/shop')}
                 >
-                  🛒 SHOP
+                  Shop
                 </button>
                 <button
-                  className={`font-pixel text-[9px] text-purple-400 border border-purple-400/50 rounded-full px-4 py-1.5 
-                             transition-all duration-300 hover:border-purple-400 hover:bg-purple-400/10
+                  className={`font-tech font-semibold text-xs text-purple-400 border border-purple-400/50 px-4 py-2 
+                             transition-all duration-300 hover:border-purple-400 hover:bg-purple-400/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
                     boxShadow: '0 0 15px rgba(170, 0, 255, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '300ms',
                     animationFillMode: 'backwards',
                   }}
                   onClick={() => navigate('/equipment')}
                 >
-                  ⚙️ GEAR
+                  Gear
                 </button>
                 <button
-                  className={`font-pixel text-[9px] text-magenta border border-magenta/50 rounded-full px-4 py-1.5 
-                             transition-all duration-300 hover:border-magenta hover:bg-magenta/10
+                  className={`font-tech font-semibold text-xs text-magenta border border-magenta/50 px-4 py-2 
+                             transition-all duration-300 hover:border-magenta hover:bg-magenta/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
                     boxShadow: '0 0 15px rgba(255, 0, 255, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '400ms',
                     animationFillMode: 'backwards',
                   }}
                   onClick={() => navigate('/info')}
                 >
-                  ℹ️ INFO
+                  Info
                 </button>
               </div>
               
@@ -416,23 +424,24 @@ const Index = () => {
                 {/* Maps locked indicator for non-Ultimate users */}
                 {!hasGoldenSkin() && (
                   <button
-                    className={`font-pixel text-[8px] text-yellow-500 border border-yellow-500/50 rounded-full px-4 py-1.5
-                                transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-500/10
+                    className={`font-tech font-medium text-xs text-yellow-500 border border-yellow-500/50 px-4 py-2
+                                transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-500/10 uppercase
                                 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                     style={{ 
                       boxShadow: '0 0 15px rgba(255, 200, 0, 0.15)',
+                      clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                       animationDelay: '450ms',
                       animationFillMode: 'backwards',
                     }}
                     onClick={() => navigate('/shop')}
                   >
-                    🔒 MAPS 21-50
+                    🔒 Maps 21-50
                   </button>
                 )}
                 
-                {/* Bonus Maps button - always shown, locked style when not purchased */}
+                {/* Bonus Maps button */}
                 <button
-                  className={`font-pixel text-[8px] border rounded-full px-4 py-1.5
+                  className={`font-tech font-medium text-xs border px-4 py-2 uppercase
                               transition-all duration-300 ${
                                 hasGoldenSkin()
                                   ? bonusMapsEnabled 
@@ -444,6 +453,7 @@ const Index = () => {
                     boxShadow: hasGoldenSkin() 
                       ? (bonusMapsEnabled ? '0 0 15px rgba(74, 222, 128, 0.15)' : 'none')
                       : '0 0 15px rgba(170, 0, 255, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '500ms',
                     animationFillMode: 'backwards',
                   }}
@@ -457,23 +467,24 @@ const Index = () => {
                     localStorage.setItem('bonusMapsEnabled', String(newValue));
                   }}
                 >
-                  {!hasGoldenSkin() ? '🔒 BONUS MAPS' : bonusMapsEnabled ? '✓ BONUS MAPS' : '✗ BONUS MAPS'}
+                  {!hasGoldenSkin() ? '🔒 Bonus Maps' : bonusMapsEnabled ? '✓ Bonus' : '✗ Bonus'}
                 </button>
                 
                 {canWatchAd() && (
                   <button
                     onClick={handleWatchAd}
                     disabled={isShowingAd}
-                    className={`font-pixel text-[9px] text-green-400 border border-green-400/50 rounded-full px-4 py-1.5
+                    className={`font-tech font-medium text-xs text-green-400 border border-green-400/50 px-4 py-2 uppercase
                                transition-all duration-300 hover:border-green-400 hover:bg-green-400/10 disabled:opacity-50
                                ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                     style={{ 
                       boxShadow: '0 0 15px rgba(0, 255, 100, 0.15)',
+                      clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                       animationDelay: '600ms',
                       animationFillMode: 'backwards',
                     }}
                   >
-                    🎬 REWARD ({remainingAdWatches()})
+                    Reward ({remainingAdWatches()})
                   </button>
                 )}
               </div>
@@ -482,7 +493,7 @@ const Index = () => {
 
             {highScore > 0 && (
               <p 
-                className={`font-pixel text-[7px] text-cyan-400/60 mb-2 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+                className={`font-tech text-sm text-cyan-400/60 mb-2 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                 style={{ animationDelay: '700ms', animationFillMode: 'backwards' }}
               >
                 HIGH SCORE: {highScore}
@@ -490,12 +501,12 @@ const Index = () => {
             )}
 
             <div 
-              className={`font-pixel text-[6px] text-gray-600 text-center space-y-0.5 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+              className={`font-tech text-xs text-gray-500 text-center space-y-0.5 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
               style={{ animationDelay: '800ms', animationFillMode: 'backwards' }}
             >
-              <p>TOUCH TO FLY • AUTO-FIRE</p>
-              <p>DOUBLE-TAP FOR BOMB</p>
-              <p className="text-[5px] text-gray-700">BUILD: {__BUILD_TIME__}</p>
+              <p>Touch to fly • Auto-fire</p>
+              <p>Double-tap for bomb</p>
+              <p className="text-[10px] text-gray-600 mt-2">v{__BUILD_TIME__}</p>
             </div>
           </div>
 
