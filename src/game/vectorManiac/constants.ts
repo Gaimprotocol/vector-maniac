@@ -36,16 +36,15 @@ export const VM_CONFIG = {
   bountySize: 48,
   bountySpeed: 0.6,
   
-  // Segment backgrounds (colors per segment 1-3)
-  segmentBackgrounds: [
-    { bg1: '#050510', bg2: '#0a0a20', grid: 'rgba(0, 255, 255, 0.05)' },   // Segment 1: Deep blue/cyan
-    { bg1: '#100505', bg2: '#200a0a', grid: 'rgba(255, 100, 50, 0.05)' },  // Segment 2: Red/orange
-    { bg1: '#051005', bg2: '#0a200a', grid: 'rgba(100, 255, 100, 0.05)' }, // Segment 3: Green
-  ],
+  // Boss config
+  bossHealth: 400,
+  bossSize: 60,
+  bossFireRate: 40,
   
-  // Waves per segment
-  wavesPerSegment: 3,
-  totalSegments: 3,
+  // Map system - 50 unique maps
+  totalMaps: 50,
+  wavesPerMapMin: 1,
+  wavesPerMapMax: 3,
   
   // Enemies per wave (base, scales gradually with wave number)
   baseEnemiesPerWave: 2,
@@ -54,6 +53,7 @@ export const VM_CONFIG = {
   // Spawn timing
   spawnInterval: 60,
   waveTransitionTime: 90,
+  mapTransitionTime: 120,
   
   // Salvage
   salvageDropChance: {
@@ -61,18 +61,19 @@ export const VM_CONFIG = {
     shooter: 0.25,
     elite: 0.50,
     bounty: 1.0,
+    boss: 1.0,
   },
   salvageValue: {
     drone: 10,
     shooter: 15,
     elite: 30,
     bounty: 100,
+    boss: 200,
   },
   salvageDriftSpeed: 0.3,
   
-  // Difficulty scaling
-  safeDifficultyIncrease: 1.05,
-  riskDifficultyIncrease: 1.15,
+  // Difficulty scaling per level
+  levelDifficultyMultiplier: 1.25,
   
   // Power-ups
   powerUpSize: 18,
@@ -97,5 +98,69 @@ export const VM_CONFIG = {
     shooter: '#ff0066',
     elite: '#aa00ff',
     bounty: '#ffff00',
+    boss: '#ff0000',
   },
 };
+
+// Generate 50 unique map themes with varied backgrounds
+export interface MapTheme {
+  id: number;
+  name: string;
+  bg1: string;
+  bg2: string;
+  gridColor: string;
+  pattern: 'grid' | 'hexagon' | 'circles' | 'triangles' | 'diamonds' | 'waves' | 'stars' | 'spiral';
+  accentColor: string;
+}
+
+// Helper to generate HSL color
+function hsl(h: number, s: number, l: number): string {
+  return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+function hsla(h: number, s: number, l: number, a: number): string {
+  return `hsla(${h}, ${s}%, ${l}%, ${a})`;
+}
+
+// Generate 50 unique map themes
+export const VM_MAP_THEMES: MapTheme[] = Array.from({ length: 50 }, (_, i) => {
+  const mapId = i + 1;
+  const hue = (i * 137.5) % 360; // Golden angle distribution for variety
+  const patterns: MapTheme['pattern'][] = ['grid', 'hexagon', 'circles', 'triangles', 'diamonds', 'waves', 'stars', 'spiral'];
+  const pattern = patterns[i % patterns.length];
+  
+  // Create distinct color schemes
+  const saturation = 60 + (i % 3) * 15;
+  const baseLightness = 3 + (i % 5);
+  
+  return {
+    id: mapId,
+    name: getMapName(mapId),
+    bg1: hsl(hue, saturation, baseLightness),
+    bg2: hsl((hue + 20) % 360, saturation - 10, baseLightness + 5),
+    gridColor: hsla(hue, 80, 50, 0.06),
+    pattern,
+    accentColor: hsl(hue, 80, 60),
+  };
+});
+
+function getMapName(mapId: number): string {
+  const names = [
+    'Neon Abyss', 'Cyber Core', 'Void Station', 'Plasma Grid', 'Dark Matter',
+    'Chrome Sector', 'Quantum Field', 'Binary Storm', 'Nova Zone', 'Pulse Array',
+    'Vector Prime', 'Data Stream', 'Circuit Break', 'Synth Valley', 'Tron Highway',
+    'Laser Maze', 'Digital Drift', 'Null Space', 'Wave Runner', 'Pixel Storm',
+    'Gamma Ray', 'Alpha Base', 'Beta Sector', 'Delta Zone', 'Omega Point',
+    'Hyper Drive', 'Warp Core', 'Ion Storm', 'Photon Grid', 'Electron Sea',
+    'Neutron Star', 'Quark Field', 'Muon Ring', 'Tau Zone', 'Sigma Base',
+    'Hex Matrix', 'Octal Array', 'Decimal Drift', 'Binary Blitz', 'Quad Core',
+    'Penta Zone', 'Hexa Storm', 'Septa Field', 'Octa Ring', 'Nona Base',
+    'Deca Prime', 'Mega Core', 'Giga Zone', 'Tera Field', 'Final Vector',
+  ];
+  return names[mapId - 1] || `Sector ${mapId}`;
+}
+
+export function getMapTheme(mapId: number): MapTheme {
+  const index = ((mapId - 1) % VM_MAP_THEMES.length);
+  return VM_MAP_THEMES[index];
+}

@@ -1,7 +1,7 @@
 // Vector Maniac Renderer
 
 import { VectorState } from './types';
-import { VM_CONFIG } from './constants';
+import { VM_CONFIG, getMapTheme, MapTheme } from './constants';
 import { drawMegaShip } from '../megaShipRenderer';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getStoredSkinColors } from '@/hooks/useEquipment';
@@ -12,8 +12,8 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
   // Clear and draw background
   renderBackground(ctx, state);
   
-  // Draw grid
-  renderGrid(ctx, state);
+  // Draw pattern overlay
+  renderPattern(ctx, state);
   
   // Draw salvage
   renderSalvage(ctx, state);
@@ -54,49 +54,162 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
 }
 
 function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight, segmentBackgrounds } = VM_CONFIG;
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
   
-  // Get colors for current segment (1-3 mapped to 0-2 index)
-  const segmentIndex = Math.min(state.currentSegment - 1, segmentBackgrounds.length - 1);
-  const colors = segmentBackgrounds[segmentIndex];
+  // Get theme for current map
+  const theme = getMapTheme(state.currentMap);
   
   const gradient = ctx.createRadialGradient(
     arenaWidth / 2, arenaHeight / 2, 0,
     arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
   );
-  gradient.addColorStop(0, colors.bg2);
-  gradient.addColorStop(1, colors.bg1);
+  gradient.addColorStop(0, theme.bg2);
+  gradient.addColorStop(1, theme.bg1);
   
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
 }
 
-function renderGrid(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight, segmentBackgrounds } = VM_CONFIG;
+function renderPattern(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const theme = getMapTheme(state.currentMap);
   const gridSize = 40;
   const offset = (state.gameTime * 0.5) % gridSize;
   
-  // Get grid color for current segment
-  const segmentIndex = Math.min(state.currentSegment - 1, segmentBackgrounds.length - 1);
-  const gridColor = segmentBackgrounds[segmentIndex].grid;
-  
-  ctx.strokeStyle = gridColor;
+  ctx.strokeStyle = theme.gridColor;
   ctx.lineWidth = 1;
   
-  // Vertical lines
-  for (let x = offset; x < arenaWidth; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, arenaHeight);
-    ctx.stroke();
-  }
-  
-  // Horizontal lines
-  for (let y = offset; y < arenaHeight; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(arenaWidth, y);
-    ctx.stroke();
+  switch (theme.pattern) {
+    case 'grid':
+      // Vertical lines
+      for (let x = offset; x < arenaWidth; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, arenaHeight);
+        ctx.stroke();
+      }
+      // Horizontal lines
+      for (let y = offset; y < arenaHeight; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(arenaWidth, y);
+        ctx.stroke();
+      }
+      break;
+      
+    case 'hexagon':
+      const hexSize = gridSize * 0.8;
+      for (let row = 0; row < arenaHeight / (hexSize * 1.5) + 2; row++) {
+        for (let col = 0; col < arenaWidth / (hexSize * 1.7) + 2; col++) {
+          const cx = col * hexSize * 1.7 + (row % 2) * hexSize * 0.85 + offset;
+          const cy = row * hexSize * 1.5 + offset;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+            const px = cx + Math.cos(angle) * hexSize * 0.5;
+            const py = cy + Math.sin(angle) * hexSize * 0.5;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+      break;
+      
+    case 'circles':
+      for (let i = 1; i <= 8; i++) {
+        const radius = i * 100 + Math.sin(state.gameTime * 0.02 + i) * 20;
+        ctx.beginPath();
+        ctx.arc(arenaWidth / 2, arenaHeight / 2, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      break;
+      
+    case 'triangles':
+      const triSize = gridSize * 1.5;
+      for (let row = 0; row < arenaHeight / triSize + 2; row++) {
+        for (let col = 0; col < arenaWidth / triSize + 2; col++) {
+          const cx = col * triSize + offset;
+          const cy = row * triSize + offset;
+          const inverted = (row + col) % 2 === 0;
+          ctx.beginPath();
+          if (inverted) {
+            ctx.moveTo(cx, cy + triSize * 0.4);
+            ctx.lineTo(cx + triSize * 0.5, cy - triSize * 0.3);
+            ctx.lineTo(cx - triSize * 0.5, cy - triSize * 0.3);
+          } else {
+            ctx.moveTo(cx, cy - triSize * 0.4);
+            ctx.lineTo(cx + triSize * 0.5, cy + triSize * 0.3);
+            ctx.lineTo(cx - triSize * 0.5, cy + triSize * 0.3);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+      break;
+      
+    case 'diamonds':
+      const diamSize = gridSize;
+      for (let row = 0; row < arenaHeight / diamSize + 2; row++) {
+        for (let col = 0; col < arenaWidth / diamSize + 2; col++) {
+          const cx = col * diamSize + offset;
+          const cy = row * diamSize + offset;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - diamSize * 0.4);
+          ctx.lineTo(cx + diamSize * 0.4, cy);
+          ctx.lineTo(cx, cy + diamSize * 0.4);
+          ctx.lineTo(cx - diamSize * 0.4, cy);
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+      break;
+      
+    case 'waves':
+      for (let y = 0; y < arenaHeight; y += gridSize) {
+        ctx.beginPath();
+        for (let x = 0; x <= arenaWidth; x += 10) {
+          const wave = Math.sin((x + state.gameTime * 2) * 0.03) * 15;
+          if (x === 0) ctx.moveTo(x, y + wave);
+          else ctx.lineTo(x, y + wave);
+        }
+        ctx.stroke();
+      }
+      break;
+      
+    case 'stars':
+      const starSpacing = gridSize * 2;
+      for (let row = 0; row < arenaHeight / starSpacing + 1; row++) {
+        for (let col = 0; col < arenaWidth / starSpacing + 1; col++) {
+          const cx = col * starSpacing + offset * 2;
+          const cy = row * starSpacing + offset * 2;
+          ctx.beginPath();
+          for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+            const innerAngle = angle + Math.PI / 5;
+            const outerR = 12;
+            const innerR = 5;
+            ctx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+            ctx.lineTo(cx + Math.cos(innerAngle) * innerR, cy + Math.sin(innerAngle) * innerR);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+      break;
+      
+    case 'spiral':
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 10; a += 0.1) {
+        const r = a * 30 + state.gameTime * 0.5;
+        const x = arenaWidth / 2 + Math.cos(a) * r;
+        const y = arenaHeight / 2 + Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      break;
   }
 }
 
@@ -350,22 +463,79 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         ctx.arc(0, 0, 5, 0, Math.PI * 2);
         ctx.fill();
         break;
+        
+      case 'boss':
+        // Boss - large rotating decagon with multiple layers
+        const bossRotation = state.gameTime * 0.02;
+        ctx.lineWidth = 4;
+        
+        // Outer ring
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const angle = (i / 10) * Math.PI * 2 + bossRotation;
+          const x = Math.cos(angle) * enemy.size;
+          const y = Math.sin(angle) * enemy.size;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Middle ring (counter-rotate)
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2 - bossRotation * 1.5;
+          const x = Math.cos(angle) * enemy.size * 0.65;
+          const y = Math.sin(angle) * enemy.size * 0.65;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Inner pulsing core
+        const pulseSize = 8 + Math.sin(state.gameTime * 0.1) * 3;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, 0, pulseSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Danger spikes
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2 + bossRotation * 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * enemy.size * 0.4, Math.sin(angle) * enemy.size * 0.4);
+          ctx.stroke();
+        }
+        break;
     }
     
     ctx.restore();
     
-    // Health bar (for elites and bounty)
-    if ((enemy.type === 'elite' || enemy.type === 'bounty') && healthPercent < 1) {
-      const barWidth = enemy.size * 2;
-      const barHeight = 3;
+    // Health bar (for elites, bounty, and boss)
+    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss') && healthPercent < 1) {
+      const barWidth = enemy.type === 'boss' ? enemy.size * 3 : enemy.size * 2;
+      const barHeight = enemy.type === 'boss' ? 6 : 3;
       const barX = enemy.x - barWidth / 2;
-      const barY = enemy.y - enemy.size - 8;
+      const barY = enemy.y - enemy.size - 12;
       
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(barX, barY, barWidth, barHeight);
       
       ctx.fillStyle = color;
       ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
+      
+      // Boss name label
+      if (enemy.type === 'boss') {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('BOSS', enemy.x, barY - 5);
+      }
     }
   }
 }

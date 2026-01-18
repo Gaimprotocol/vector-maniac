@@ -18,7 +18,7 @@ export interface VectorEnemy {
   size: number;
   health: number;
   maxHealth: number;
-  type: 'drone' | 'shooter' | 'elite' | 'bounty';
+  type: 'drone' | 'shooter' | 'elite' | 'bounty' | 'boss';
   fireTimer: number;
   behaviorTimer: number;
   targetAngle: number;
@@ -189,11 +189,18 @@ export interface VectorState {
   // Active power-up timers
   activePowerUps: ActivePowerUps;
   
-  // Wave/Segment management
-  currentWave: number;      // Wave within current segment
-  currentSegment: number;   // 1-3
-  wavesInSegment: number;   // Randomized 1-3 waves per segment
-  totalWavesCompleted: number; // Total waves completed across all segments
+  // Map-based progression (50 maps, each with 1-3 waves)
+  currentLevel: number;        // Increases after completing all 50 maps
+  currentMap: number;          // 1-50
+  currentWave: number;         // Wave within current map
+  wavesInMap: number;          // Randomized 1-3 waves per map
+  totalWavesCompleted: number;
+  totalMapsCompleted: number;
+  
+  // Boss tracking
+  bossActive: boolean;
+  bossDefeated: boolean;
+  
   enemiesSpawned: number;
   enemiesDefeated: number;
   enemiesInWave: number;
@@ -205,8 +212,7 @@ export interface VectorState {
   combo: number;
   comboTimer: number;
   
-  // Portal choice (for next segment)
-  portalChoice: 'safe' | 'risk' | null;
+  // Difficulty scaling
   difficultyMultiplier: number;
   upgradesPending: number;
   
