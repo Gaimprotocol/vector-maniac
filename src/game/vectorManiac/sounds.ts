@@ -17,35 +17,48 @@ export function playVectorSound(type: VectorSoundType): void {
     
     switch (type) {
       case 'shoot': {
-        // Arcade laser pew-pew sound
+        // Sci-fi laser zap - sharp and punchy
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
+        const osc3 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         const gain2 = ctx.createGain();
+        const gain3 = ctx.createGain();
         
         osc1.connect(gain1);
         osc2.connect(gain2);
+        osc3.connect(gain3);
         gain1.connect(ctx.destination);
         gain2.connect(ctx.destination);
+        gain3.connect(ctx.destination);
         
-        // High-pitched laser sweep
+        // Main laser - sharp descending zap
         osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(1800, ctx.currentTime);
-        osc1.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
-        gain1.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc1.frequency.setValueAtTime(2400, ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.06);
+        gain1.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
         
-        // Sub harmonics for punch
+        // High freq sizzle
         osc2.type = 'square';
-        osc2.frequency.setValueAtTime(600, ctx.currentTime);
-        osc2.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.05);
-        gain2.gain.setValueAtTime(0.06, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc2.frequency.setValueAtTime(3200, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.04);
+        gain2.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+        
+        // Sub bass punch
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(400, ctx.currentTime);
+        osc3.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.03);
+        gain3.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
         
         osc1.start(ctx.currentTime);
-        osc1.stop(ctx.currentTime + 0.08);
+        osc1.stop(ctx.currentTime + 0.06);
         osc2.start(ctx.currentTime);
-        osc2.stop(ctx.currentTime + 0.05);
+        osc2.stop(ctx.currentTime + 0.04);
+        osc3.start(ctx.currentTime);
+        osc3.stop(ctx.currentTime + 0.03);
         break;
       }
       
@@ -62,81 +75,108 @@ export function playVectorSound(type: VectorSoundType): void {
         noiseGain.connect(ctx.destination);
         
         osc.type = 'square';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(500, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
         
         // Noise burst for impact
         noise.type = 'sawtooth';
-        noise.frequency.setValueAtTime(200, ctx.currentTime);
-        noise.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.06);
-        noiseGain.gain.setValueAtTime(0.08, ctx.currentTime);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        noise.frequency.setValueAtTime(300, ctx.currentTime);
+        noise.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.05);
+        noiseGain.gain.setValueAtTime(0.12, ctx.currentTime);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
         
         osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.1);
+        osc.stop(ctx.currentTime + 0.08);
         noise.start(ctx.currentTime);
-        noise.stop(ctx.currentTime + 0.06);
+        noise.stop(ctx.currentTime + 0.05);
         break;
       }
       
       case 'explosion': {
-        // Big arcade explosion with multiple layers
-        const bass = ctx.createOscillator();
+        // Massive multi-layered explosion
+        // Layer 1: Deep sub bass thump
+        const sub = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        sub.connect(subGain);
+        subGain.connect(ctx.destination);
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(60, ctx.currentTime);
+        sub.frequency.exponentialRampToValueAtTime(15, ctx.currentTime + 0.5);
+        subGain.gain.setValueAtTime(0.4, ctx.currentTime);
+        subGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        sub.start(ctx.currentTime);
+        sub.stop(ctx.currentTime + 0.5);
+        
+        // Layer 2: Low rumble
+        const rumble = ctx.createOscillator();
+        const rumbleGain = ctx.createGain();
+        rumble.connect(rumbleGain);
+        rumbleGain.connect(ctx.destination);
+        rumble.type = 'sawtooth';
+        rumble.frequency.setValueAtTime(120, ctx.currentTime);
+        rumble.frequency.exponentialRampToValueAtTime(25, ctx.currentTime + 0.35);
+        rumbleGain.gain.setValueAtTime(0.25, ctx.currentTime);
+        rumbleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        rumble.start(ctx.currentTime);
+        rumble.stop(ctx.currentTime + 0.35);
+        
+        // Layer 3: Mid punch
         const mid = ctx.createOscillator();
-        const high = ctx.createOscillator();
-        const crackle = ctx.createOscillator();
-        const bassGain = ctx.createGain();
         const midGain = ctx.createGain();
-        const highGain = ctx.createGain();
-        const crackleGain = ctx.createGain();
-        
-        bass.connect(bassGain);
         mid.connect(midGain);
-        high.connect(highGain);
-        crackle.connect(crackleGain);
-        bassGain.connect(ctx.destination);
         midGain.connect(ctx.destination);
-        highGain.connect(ctx.destination);
-        crackleGain.connect(ctx.destination);
-        
-        // Deep bass rumble
-        bass.type = 'sine';
-        bass.frequency.setValueAtTime(80, ctx.currentTime);
-        bass.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.4);
-        bassGain.gain.setValueAtTime(0.25, ctx.currentTime);
-        bassGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        
-        // Mid punch
-        mid.type = 'sawtooth';
-        mid.frequency.setValueAtTime(200, ctx.currentTime);
-        mid.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.25);
-        midGain.gain.setValueAtTime(0.18, ctx.currentTime);
-        midGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-        
-        // High crackle
-        high.type = 'square';
-        high.frequency.setValueAtTime(800, ctx.currentTime);
-        high.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
-        highGain.gain.setValueAtTime(0.1, ctx.currentTime);
-        highGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        
-        // Extra crackle layer
-        crackle.type = 'sawtooth';
-        crackle.frequency.setValueAtTime(1500, ctx.currentTime);
-        crackle.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
-        crackleGain.gain.setValueAtTime(0.06, ctx.currentTime);
-        crackleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        
-        bass.start(ctx.currentTime);
-        bass.stop(ctx.currentTime + 0.4);
+        mid.type = 'square';
+        mid.frequency.setValueAtTime(250, ctx.currentTime);
+        mid.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
+        midGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        midGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
         mid.start(ctx.currentTime);
-        mid.stop(ctx.currentTime + 0.25);
-        high.start(ctx.currentTime);
-        high.stop(ctx.currentTime + 0.15);
-        crackle.start(ctx.currentTime);
-        crackle.stop(ctx.currentTime + 0.1);
+        mid.stop(ctx.currentTime + 0.2);
+        
+        // Layer 4: High crackle burst
+        const crack = ctx.createOscillator();
+        const crackGain = ctx.createGain();
+        crack.connect(crackGain);
+        crackGain.connect(ctx.destination);
+        crack.type = 'sawtooth';
+        crack.frequency.setValueAtTime(1200, ctx.currentTime);
+        crack.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.12);
+        crackGain.gain.setValueAtTime(0.15, ctx.currentTime);
+        crackGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        crack.start(ctx.currentTime);
+        crack.stop(ctx.currentTime + 0.12);
+        
+        // Layer 5: White noise burst (simulated with multiple oscillators)
+        for (let i = 0; i < 4; i++) {
+          const noise = ctx.createOscillator();
+          const noiseGain = ctx.createGain();
+          noise.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          noise.type = 'sawtooth';
+          noise.frequency.setValueAtTime(800 + Math.random() * 1500, ctx.currentTime);
+          noise.frequency.exponentialRampToValueAtTime(50 + Math.random() * 100, ctx.currentTime + 0.15);
+          noiseGain.gain.setValueAtTime(0.06, ctx.currentTime);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15 + Math.random() * 0.1);
+          noise.start(ctx.currentTime);
+          noise.stop(ctx.currentTime + 0.25);
+        }
+        
+        // Layer 6: Delayed secondary explosion
+        const delay = 0.08;
+        const boom2 = ctx.createOscillator();
+        const boom2Gain = ctx.createGain();
+        boom2.connect(boom2Gain);
+        boom2Gain.connect(ctx.destination);
+        boom2.type = 'sine';
+        boom2.frequency.setValueAtTime(80, ctx.currentTime + delay);
+        boom2.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + delay + 0.3);
+        boom2Gain.gain.setValueAtTime(0, ctx.currentTime);
+        boom2Gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+        boom2Gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
+        boom2.start(ctx.currentTime + delay);
+        boom2.stop(ctx.currentTime + delay + 0.3);
         break;
       }
       
