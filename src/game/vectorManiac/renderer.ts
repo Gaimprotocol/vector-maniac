@@ -324,6 +324,9 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
 }
 
 function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  // Draw power-up auras BEFORE the player (so they appear behind)
+  renderPowerUpAuras(ctx, state);
+  
   ctx.save();
   ctx.translate(state.playerX, state.playerY);
   ctx.rotate(state.playerAngle);
@@ -333,7 +336,7 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.globalAlpha = 0.5;
   }
   
-  // Shield indicator
+  // Shield indicator (built-in shields)
   if (state.shields > 0) {
     ctx.strokeStyle = '#00aaff';
     ctx.lineWidth = 2;
@@ -363,6 +366,101 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.stroke();
     ctx.restore();
   }
+}
+
+function renderPowerUpAuras(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { activePowerUps } = state;
+  const baseSize = VM_CONFIG.playerSize;
+  const time = state.gameTime;
+  
+  // Count active power-ups for layered effect
+  const activeLayers: { color: string; offset: number }[] = [];
+  
+  if (activePowerUps.doublePoints > 0) {
+    activeLayers.push({ color: VM_CONFIG.powerUpColors.doublePoints, offset: 0 });
+  }
+  if (activePowerUps.doubleShot > 0) {
+    activeLayers.push({ color: VM_CONFIG.powerUpColors.doubleShot, offset: 1 });
+  }
+  if (activePowerUps.speedBoost > 0) {
+    activeLayers.push({ color: VM_CONFIG.powerUpColors.speedBoost, offset: 2 });
+  }
+  
+  if (activeLayers.length === 0) return;
+  
+  ctx.save();
+  ctx.translate(state.playerX, state.playerY);
+  
+  // Draw each power-up aura layer
+  activeLayers.forEach((layer, index) => {
+    const pulseSpeed = 0.08 + index * 0.02;
+    const pulse = Math.sin(time * pulseSpeed + layer.offset) * 0.3 + 0.7;
+    const auraSize = baseSize + 12 + index * 8;
+    
+    // Outer glow ring
+    ctx.save();
+    ctx.globalAlpha = 0.15 * pulse;
+    ctx.shadowColor = layer.color;
+    ctx.shadowBlur = 25;
+    ctx.strokeStyle = layer.color;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, auraSize + 8, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    
+    // Main rotating aura ring
+    ctx.save();
+    ctx.globalAlpha = 0.3 * pulse;
+    ctx.rotate(time * 0.02 * (index % 2 === 0 ? 1 : -1));
+    ctx.strokeStyle = layer.color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.arc(0, 0, auraSize, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    
+    // Inner particle ring effect
+    ctx.save();
+    ctx.globalAlpha = 0.5 * pulse;
+    const particleCount = 6;
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2 + time * 0.03 * (index % 2 === 0 ? 1 : -1);
+      const px = Math.cos(angle) * (auraSize - 4);
+      const py = Math.sin(angle) * (auraSize - 4);
+      const particleSize = 2 + Math.sin(time * 0.1 + i) * 1;
+      
+      ctx.fillStyle = layer.color;
+      ctx.shadowColor = layer.color;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  });
+  
+  // Combined glow effect when multiple power-ups active
+  if (activeLayers.length >= 2) {
+    ctx.save();
+    const combinedPulse = Math.sin(time * 0.05) * 0.2 + 0.4;
+    ctx.globalAlpha = 0.1 * combinedPulse;
+    
+    const gradient = ctx.createRadialGradient(0, 0, baseSize, 0, 0, baseSize + 40);
+    activeLayers.forEach((layer, index) => {
+      gradient.addColorStop(index / activeLayers.length, layer.color);
+    });
+    gradient.addColorStop(1, 'transparent');
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseSize + 40, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  
+  ctx.restore();
 }
 
 function renderParticles(ctx: CanvasRenderingContext2D, state: VectorState): void {
