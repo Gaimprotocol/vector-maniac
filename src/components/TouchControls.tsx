@@ -32,7 +32,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   }, [canvasRef]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight') return;
+    if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return;
     e.preventDefault();
 
     const now = Date.now();
@@ -65,7 +65,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   }, [gameState, getCanvasCoords, onInputChange]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight') return;
+    if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return;
     e.preventDefault();
 
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -134,7 +134,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     window.setTimeout(() => onInputChange({ rescue: false }), 100);
   }, [onInputChange]);
 
-  if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight') return null;
+  if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return null;
 
   const showJumpButton = gameState === 'pilotRunner';
 
