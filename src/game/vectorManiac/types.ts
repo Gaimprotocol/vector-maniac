@@ -158,6 +158,12 @@ export interface PlayerStats {
   speed: number;
 }
 
+export interface TrailPoint {
+  x: number;
+  y: number;
+  age: number;
+}
+
 export interface VectorState {
   phase: VectorPhase;
   phaseTimer: number;
@@ -169,6 +175,9 @@ export interface VectorState {
   playerAngle: number;
   targetX: number;
   targetY: number;
+  playerVelX: number;  // For smooth movement
+  playerVelY: number;
+  trail: TrailPoint[]; // Glowing tail effect
   fireTimer: number;
   health: number;
   maxHealth: number;
