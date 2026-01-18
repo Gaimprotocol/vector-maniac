@@ -17,20 +17,22 @@ export function createDefaultStats(): PlayerStats {
 }
 
 export function createVectorManiacState(): VectorState {
-  const centerX = VM_CONFIG.arenaWidth / 2;
-  const centerY = VM_CONFIG.arenaHeight / 2;
-  
+  // Player starts at origin (0, 0) in world space
   return {
     phase: 'entering',
     phaseTimer: 60,
     gameTime: 0,
     
-    // Player starts at center
-    playerX: centerX,
-    playerY: centerY,
+    // Camera starts centered on player
+    cameraX: 0,
+    cameraY: 0,
+    
+    // Player starts at world origin
+    playerX: 0,
+    playerY: 0,
     playerAngle: -Math.PI / 2, // Facing up
-    targetX: centerX,
-    targetY: centerY,
+    targetX: 0,
+    targetY: 0,
     fireTimer: 0,
     health: VM_CONFIG.playerMaxHealth,
     maxHealth: VM_CONFIG.playerMaxHealth,
