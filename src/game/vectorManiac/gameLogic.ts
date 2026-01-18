@@ -456,14 +456,21 @@ function updateSalvage(state: VectorState): VectorState {
       newState.salvageCount += value;
       newState.score += value * 5;
       
-      // Heal player when collecting salvage (small amount)
-      const healAmount = 5;
-      newState.health = Math.min(newState.health + healAmount, VM_CONFIG.playerMaxHealth);
+      // Heal player when collecting salvage
+      if (salvage.isRare) {
+        // Rare pod gives full health
+        newState.health = VM_CONFIG.playerMaxHealth;
+      } else {
+        // Normal pod gives small heal
+        const healAmount = 5;
+        newState.health = Math.min(newState.health + healAmount, VM_CONFIG.playerMaxHealth);
+      }
       
       newState.soundQueue = [...newState.soundQueue, 'salvage'];
       
-      // Create pickup particles
-      const particles = createParticle(salvage.x, salvage.y, '#00ff88', 3);
+      // Create pickup particles (gold for rare, green for normal)
+      const particleColor = salvage.isRare ? '#ffdd44' : '#00ff88';
+      const particles = createParticle(salvage.x, salvage.y, particleColor, salvage.isRare ? 8 : 3);
       newState.particles = [...newState.particles, ...particles];
     } else {
       updatedSalvage.push(salvage);

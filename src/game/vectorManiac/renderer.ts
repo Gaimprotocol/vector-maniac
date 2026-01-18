@@ -104,22 +104,69 @@ function renderSalvage(ctx: CanvasRenderingContext2D, state: VectorState): void 
   for (const salvage of state.salvage) {
     const pulse = Math.sin(state.gameTime * 0.1 + salvage.x) * 0.2 + 0.8;
     
-    // Glow
-    ctx.save();
-    ctx.globalAlpha = 0.5 * pulse;
-    ctx.shadowColor = '#00ff88';
-    ctx.shadowBlur = 10;
-    ctx.fillStyle = '#00ff88';
-    ctx.beginPath();
-    ctx.arc(salvage.x, salvage.y, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    
-    // Core
-    ctx.fillStyle = '#88ffaa';
-    ctx.beginPath();
-    ctx.arc(salvage.x, salvage.y, 4, 0, Math.PI * 2);
-    ctx.fill();
+    if (salvage.isRare) {
+      // Rare pod - bright white/gold glow with pulsing effect
+      const rarePulse = Math.sin(state.gameTime * 0.2) * 0.3 + 0.7;
+      
+      // Outer glow ring
+      ctx.save();
+      ctx.globalAlpha = 0.6 * rarePulse;
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 25;
+      ctx.strokeStyle = '#ffdd44';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(salvage.x, salvage.y, 12, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      
+      // Middle glow
+      ctx.save();
+      ctx.globalAlpha = 0.7 * rarePulse;
+      ctx.shadowColor = '#ffff88';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#ffdd44';
+      ctx.beginPath();
+      ctx.arc(salvage.x, salvage.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      
+      // Bright core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(salvage.x, salvage.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Cross sparkle
+      ctx.save();
+      ctx.globalAlpha = 0.8 * rarePulse;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(salvage.x - 10, salvage.y);
+      ctx.lineTo(salvage.x + 10, salvage.y);
+      ctx.moveTo(salvage.x, salvage.y - 10);
+      ctx.lineTo(salvage.x, salvage.y + 10);
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      // Normal salvage - green glow
+      ctx.save();
+      ctx.globalAlpha = 0.5 * pulse;
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00ff88';
+      ctx.beginPath();
+      ctx.arc(salvage.x, salvage.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      
+      // Core
+      ctx.fillStyle = '#88ffaa';
+      ctx.beginPath();
+      ctx.arc(salvage.x, salvage.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
