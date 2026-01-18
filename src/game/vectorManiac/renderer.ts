@@ -372,15 +372,94 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
 
 function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const centerX = arenaWidth / 2;
+  const centerY = arenaHeight / 2;
   
-  ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-  ctx.font = 'bold 24px monospace';
+  // Animated background pulse
+  const pulse = Math.sin(state.gameTime * 0.05) * 0.3 + 0.7;
+  
+  // Dark overlay
+  ctx.fillStyle = `rgba(0, 0, 0, ${0.6 * pulse})`;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  // Animated scan lines
+  ctx.strokeStyle = `rgba(255, 0, 255, ${0.1 * pulse})`;
+  ctx.lineWidth = 1;
+  for (let y = (state.gameTime * 2) % 8; y < arenaHeight; y += 8) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(arenaWidth, y);
+    ctx.stroke();
+  }
+  
+  // Title: "VECTOR MANIAC" with glowing effect
+  ctx.save();
+  ctx.shadowColor = '#ff00ff';
+  ctx.shadowBlur = 30 * pulse;
+  ctx.fillStyle = '#ff00ff';
+  ctx.font = 'bold 36px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('GET READY', arenaWidth / 2, arenaHeight / 2 - 30);
+  ctx.fillText('VECTOR', centerX, centerY - 70);
   
-  ctx.font = '16px monospace';
-  ctx.fillText('Drag to move • Auto-fire enabled', arenaWidth / 2, arenaHeight / 2 + 10);
+  ctx.shadowColor = '#00ffff';
+  ctx.fillStyle = '#00ffff';
+  ctx.fillText('MANIAC', centerX, centerY - 30);
+  ctx.restore();
+  
+  // Subtitle with vector graphics style
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '12px monospace';
+  ctx.fillText('// ARENA SHOOTER //', centerX, centerY + 20);
+  
+  // Animated "GET READY" text
+  const readyPulse = Math.sin(state.gameTime * 0.1) * 0.5 + 0.5;
+  ctx.save();
+  ctx.globalAlpha = readyPulse;
+  ctx.fillStyle = '#ffff00';
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText('< GET READY >', centerX, centerY + 70);
+  ctx.restore();
+  
+  // Instructions
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = '10px monospace';
+  ctx.fillText('Move to shoot • Collect salvage', centerX, centerY + 110);
+  
+  // Decorative corner brackets
+  const bracketSize = 30;
+  const margin = 40;
+  ctx.strokeStyle = '#ff00ff';
+  ctx.lineWidth = 2;
+  
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(margin, margin + bracketSize);
+  ctx.lineTo(margin, margin);
+  ctx.lineTo(margin + bracketSize, margin);
+  ctx.stroke();
+  
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(arenaWidth - margin - bracketSize, margin);
+  ctx.lineTo(arenaWidth - margin, margin);
+  ctx.lineTo(arenaWidth - margin, margin + bracketSize);
+  ctx.stroke();
+  
+  // Bottom-left
+  ctx.strokeStyle = '#00ffff';
+  ctx.beginPath();
+  ctx.moveTo(margin, arenaHeight - margin - bracketSize);
+  ctx.lineTo(margin, arenaHeight - margin);
+  ctx.lineTo(margin + bracketSize, arenaHeight - margin);
+  ctx.stroke();
+  
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(arenaWidth - margin - bracketSize, arenaHeight - margin);
+  ctx.lineTo(arenaWidth - margin, arenaHeight - margin);
+  ctx.lineTo(arenaWidth - margin, arenaHeight - margin - bracketSize);
+  ctx.stroke();
 }
 
 function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
