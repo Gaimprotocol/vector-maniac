@@ -67,51 +67,82 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
 
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm scanlines" />
+      <div 
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0, 5, 16, 0.95) 0%, rgba(5, 0, 21, 0.95) 50%, rgba(16, 5, 32, 0.95) 100%)',
+        }}
+      />
+      
+      {/* Glowing orbs background */}
+      <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full opacity-10 blur-3xl pointer-events-none"
+           style={{ background: 'radial-gradient(circle, #ff00ff 0%, transparent 70%)' }} />
+      <div className="absolute bottom-1/4 right-1/4 w-32 h-32 rounded-full opacity-10 blur-3xl pointer-events-none"
+           style={{ background: 'radial-gradient(circle, #00ffff 0%, transparent 70%)' }} />
+
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
         {/* Victory/Game Over Title */}
         <h2
-          className={`text-2xl font-pixel mb-2 ${isVictory ? 'text-accent neon-text-accent' : 'text-destructive neon-text-destructive'}`}
+          className={`font-vector font-bold text-3xl mb-2 ${isVictory ? 'text-yellow-400' : 'text-red-400'}`}
+          style={{ 
+            textShadow: isVictory ? '0 0 40px #facc15, 0 0 80px #facc1560' : '0 0 40px #f87171, 0 0 80px #f8717160',
+            letterSpacing: '0.1em',
+          }}
         >
           {isVictory ? '🏆 VICTORY!' : '💀 GAME OVER'}
         </h2>
 
         {isVictory && (
-          <p className="font-pixel text-[10px] text-primary neon-text-primary mb-4 animate-pulse">
+          <p 
+            className="font-vector text-sm text-magenta mb-4 animate-pulse"
+            style={{ textShadow: '0 0 20px #ff00ff' }}
+          >
             ALL 9 WAVES COMPLETED!
           </p>
         )}
 
         {isNewHighScore && !isVictory && (
-          <div className="text-accent font-pixel text-xs mb-4 neon-text-accent animate-pulse">
+          <div 
+            className="font-vector text-sm text-yellow-400 mb-4 animate-pulse"
+            style={{ textShadow: '0 0 20px #facc15' }}
+          >
             ⭐ NEW HIGH SCORE! ⭐
           </div>
         )}
 
         {/* Stats */}
-        <div className="font-pixel text-center space-y-3 mb-6 bg-background/30 rounded-lg p-4 border border-border/40 crt-glow">
+        <div 
+          className="text-center space-y-3 mb-6 rounded-lg p-4 border border-white/10"
+          style={{
+            background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%)',
+            boxShadow: '0 0 30px rgba(0, 255, 255, 0.1)',
+          }}
+        >
           <div>
-            <div className="text-muted-foreground text-[8px] tracking-wider">FINAL SCORE</div>
-            <div className="text-primary text-xl neon-text-primary">
+            <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Final Score</div>
+            <div 
+              className="font-vector font-bold text-cyan-400 text-2xl"
+              style={{ textShadow: '0 0 20px #00ffff' }}
+            >
               {Math.floor(score).toString().padStart(8, '0')}
             </div>
           </div>
 
           <div className="flex gap-6 justify-center">
             <div>
-              <div className="text-muted-foreground text-[8px] tracking-wider">SALVAGE</div>
-              <div className="text-foreground text-base">💎 {salvageCount}</div>
+              <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Salvage</div>
+              <div className="font-tech text-white text-base">💎 {salvageCount}</div>
             </div>
 
             <div>
-              <div className="text-muted-foreground text-[8px] tracking-wider">WAVE</div>
-              <div className="text-foreground text-base">{wave}/9</div>
+              <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Wave</div>
+              <div className="font-tech text-white text-base">{wave}/9</div>
             </div>
           </div>
 
           <div>
-            <div className="text-muted-foreground text-[8px] tracking-wider">HI-SCORE</div>
-            <div className="text-foreground text-xs">
+            <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Hi-Score</div>
+            <div className="font-tech text-white/80 text-sm">
               {Math.floor(Math.max(highScore, score)).toString().padStart(8, '0')}
             </div>
           </div>
@@ -128,12 +159,18 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
                   handleWatchAdToContinue();
                 }}
                 disabled={continueButtonDisabled}
-                className="retro-button font-pixel text-xs w-full px-6 py-3 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed text-accent"
+                className="font-vector font-semibold text-sm text-yellow-400 border-2 border-yellow-400/60 w-full px-6 py-3
+                           transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400/10 active:scale-95 uppercase tracking-wider
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ 
+                  boxShadow: '0 0 25px rgba(250, 204, 21, 0.25)',
+                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+                }}
               >
-                {isAdLoading ? '⏳ LOADING...' : '🎬 WATCH AD → REVIVE'}
+                {isAdLoading ? '⏳ Loading...' : '🎬 Watch Ad → Revive'}
               </button>
               {displayError && (
-                <p className="font-pixel text-[8px] text-muted-foreground mt-1 text-center animate-pulse">
+                <p className="font-tech text-xs text-gray-400 mt-1 text-center animate-pulse">
                   {displayError}
                 </p>
               )}
@@ -146,9 +183,14 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
               e.preventDefault();
               onRestart();
             }}
-            className="retro-button font-pixel text-xs w-full text-primary px-6 py-3 active:scale-95 transition-transform"
+            className="font-vector font-semibold text-sm text-cyan-400 border-2 border-cyan-400/60 w-full px-6 py-3
+                       transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:scale-95 uppercase tracking-wider"
+            style={{ 
+              boxShadow: '0 0 25px rgba(0, 255, 255, 0.25)',
+              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+            }}
           >
-            {isVictory ? '🔄 PLAY AGAIN' : '🔄 TRY AGAIN'}
+            {isVictory ? '🔄 Play Again' : '🔄 Try Again'}
           </button>
 
           <button
@@ -157,9 +199,14 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
               e.preventDefault();
               onQuit();
             }}
-            className="retro-button font-pixel text-[10px] w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground px-6 py-2 active:scale-95 transition-transform"
+            className="font-vector font-semibold text-sm text-red-400 border-2 border-red-400/60 w-full px-6 py-3
+                       transition-all duration-300 hover:border-red-400 hover:bg-red-400/10 active:scale-95 uppercase tracking-wider"
+            style={{ 
+              boxShadow: '0 0 25px rgba(248, 113, 113, 0.25)',
+              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+            }}
           >
-            🚪 MAIN MENU
+            🚪 Main Menu
           </button>
         </div>
 
