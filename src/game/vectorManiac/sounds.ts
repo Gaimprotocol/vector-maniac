@@ -1,6 +1,8 @@
 // Vector Maniac Sound Effects - Arcade Style
 
 let audioCtx: AudioContext | null = null;
+let laserBuffer: AudioBuffer | null = null;
+let isLaserLoading = false;
 
 function getAudioContext(): AudioContext {
   if (!audioCtx) {
@@ -8,6 +10,25 @@ function getAudioContext(): AudioContext {
   }
   return audioCtx;
 }
+
+// Preload laser sound
+async function loadLaserSound(): Promise<void> {
+  if (laserBuffer || isLaserLoading) return;
+  isLaserLoading = true;
+  
+  try {
+    const ctx = getAudioContext();
+    const response = await fetch('/audio/Laser.mp3');
+    const arrayBuffer = await response.arrayBuffer();
+    laserBuffer = await ctx.decodeAudioData(arrayBuffer);
+  } catch (e) {
+    console.error('Failed to load laser sound:', e);
+  }
+  isLaserLoading = false;
+}
+
+// Start loading immediately
+loadLaserSound();
 
 export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage';
 
@@ -17,48 +38,30 @@ export function playVectorSound(type: VectorSoundType): void {
     
     switch (type) {
       case 'shoot': {
-        // Sci-fi laser zap - sharp and punchy
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const osc3 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        const gain2 = ctx.createGain();
-        const gain3 = ctx.createGain();
-        
-        osc1.connect(gain1);
-        osc2.connect(gain2);
-        osc3.connect(gain3);
-        gain1.connect(ctx.destination);
-        gain2.connect(ctx.destination);
-        gain3.connect(ctx.destination);
-        
-        // Main laser - sharp descending zap
-        osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(2400, ctx.currentTime);
-        osc1.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.06);
-        gain1.gain.setValueAtTime(0.18, ctx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-        
-        // High freq sizzle
-        osc2.type = 'square';
-        osc2.frequency.setValueAtTime(3200, ctx.currentTime);
-        osc2.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.04);
-        gain2.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-        
-        // Sub bass punch
-        osc3.type = 'sine';
-        osc3.frequency.setValueAtTime(400, ctx.currentTime);
-        osc3.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.03);
-        gain3.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
-        
-        osc1.start(ctx.currentTime);
-        osc1.stop(ctx.currentTime + 0.06);
-        osc2.start(ctx.currentTime);
-        osc2.stop(ctx.currentTime + 0.04);
-        osc3.start(ctx.currentTime);
-        osc3.stop(ctx.currentTime + 0.03);
+        // Play laser MP3 (clipped to first 0.15 seconds)
+        if (laserBuffer) {
+          const source = ctx.createBufferSource();
+          const gain = ctx.createGain();
+          source.buffer = laserBuffer;
+          source.connect(gain);
+          gain.connect(ctx.destination);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+          source.start(ctx.currentTime, 0, 0.15); // Start at 0, play for 0.15 seconds
+        } else {
+          // Fallback synthesized sound if not loaded yet
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(2400, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.06);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.06);
+        }
         break;
       }
       
