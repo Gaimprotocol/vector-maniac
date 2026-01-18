@@ -6,37 +6,44 @@ import { drawMegaShip } from '../megaShipRenderer';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getStoredSkinColors } from '@/hooks/useEquipment';
 
+// Convert world coordinates to screen coordinates
+function worldToScreen(worldX: number, worldY: number, state: VectorState): { x: number; y: number } {
+  const { viewportWidth, viewportHeight } = VM_CONFIG;
+  return {
+    x: worldX - state.cameraX + viewportWidth / 2,
+    y: worldY - state.cameraY + viewportHeight / 2,
+  };
+}
+
 export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight } = VM_CONFIG;
-  
-  // Clear and draw background
+  // Clear and draw background (follows camera for endless feel)
   renderBackground(ctx, state);
   
-  // Draw grid
+  // Draw infinite grid that scrolls with camera
   renderGrid(ctx, state);
   
-  // Draw salvage
+  // Draw salvage (in world space)
   renderSalvage(ctx, state);
   
-  // Draw power-ups
+  // Draw power-ups (in world space)
   renderPowerUps(ctx, state);
   
-  // Draw projectiles
+  // Draw projectiles (in world space)
   renderProjectiles(ctx, state);
   
-  // Draw enemies
+  // Draw enemies (in world space)
   renderEnemies(ctx, state);
   
-  // Draw player
+  // Draw player (always centered on screen)
   renderPlayer(ctx, state);
   
-  // Draw particles
+  // Draw particles (in world space)
   renderParticles(ctx, state);
   
-  // Draw HUD
+  // Draw HUD (screen space - fixed position)
   renderHUD(ctx, state);
   
-  // Draw phase overlays
+  // Draw phase overlays (screen space)
   switch (state.phase) {
     case 'entering':
       renderEnteringOverlay(ctx, state);
@@ -54,27 +61,27 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
 }
 
 function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight, segmentBackgrounds } = VM_CONFIG;
+  const { viewportWidth, viewportHeight, segmentBackgrounds } = VM_CONFIG;
   
   // Get colors for current segment (1-3 mapped to 0-2 index)
   const segmentIndex = Math.min(state.currentSegment - 1, segmentBackgrounds.length - 1);
   const colors = segmentBackgrounds[segmentIndex];
   
+  // Fixed radial gradient centered on screen
   const gradient = ctx.createRadialGradient(
-    arenaWidth / 2, arenaHeight / 2, 0,
-    arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
+    viewportWidth / 2, viewportHeight / 2, 0,
+    viewportWidth / 2, viewportHeight / 2, viewportWidth
   );
   gradient.addColorStop(0, colors.bg2);
   gradient.addColorStop(1, colors.bg1);
   
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  ctx.fillRect(0, 0, viewportWidth, viewportHeight);
 }
 
 function renderGrid(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight, segmentBackgrounds } = VM_CONFIG;
-  const gridSize = 40;
-  const offset = (state.gameTime * 0.5) % gridSize;
+  const { viewportWidth, viewportHeight, segmentBackgrounds } = VM_CONFIG;
+  const gridSize = 60;
   
   // Get grid color for current segment
   const segmentIndex = Math.min(state.currentSegment - 1, segmentBackgrounds.length - 1);
@@ -83,25 +90,30 @@ function renderGrid(ctx: CanvasRenderingContext2D, state: VectorState): void {
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
   
-  // Vertical lines
-  for (let x = offset; x < arenaWidth; x += gridSize) {
+  // Calculate grid offset based on camera position for endless scrolling effect
+  const offsetX = ((state.cameraX % gridSize) + gridSize) % gridSize;
+  const offsetY = ((state.cameraY % gridSize) + gridSize) % gridSize;
+  
+  // Vertical lines (scroll with camera)
+  for (let x = -offsetX; x < viewportWidth + gridSize; x += gridSize) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, arenaHeight);
+    ctx.lineTo(x, viewportHeight);
     ctx.stroke();
   }
   
-  // Horizontal lines
-  for (let y = offset; y < arenaHeight; y += gridSize) {
+  // Horizontal lines (scroll with camera)
+  for (let y = -offsetY; y < viewportHeight + gridSize; y += gridSize) {
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(arenaWidth, y);
+    ctx.lineTo(viewportWidth, y);
     ctx.stroke();
   }
 }
 
 function renderSalvage(ctx: CanvasRenderingContext2D, state: VectorState): void {
   for (const salvage of state.salvage) {
+    const screen = worldToScreen(salvage.x, salvage.y, state);
     const pulse = Math.sin(state.gameTime * 0.1 + salvage.x) * 0.2 + 0.8;
     
     // Glow
@@ -111,26 +123,27 @@ function renderSalvage(ctx: CanvasRenderingContext2D, state: VectorState): void 
     ctx.shadowBlur = 10;
     ctx.fillStyle = '#00ff88';
     ctx.beginPath();
-    ctx.arc(salvage.x, salvage.y, 6, 0, Math.PI * 2);
+    ctx.arc(screen.x, screen.y, 6, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     
     // Core
     ctx.fillStyle = '#88ffaa';
     ctx.beginPath();
-    ctx.arc(salvage.x, salvage.y, 4, 0, Math.PI * 2);
+    ctx.arc(screen.x, screen.y, 4, 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
 function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void {
   for (const powerUp of state.powerups) {
+    const screen = worldToScreen(powerUp.x, powerUp.y, state);
     const pulse = Math.sin(state.gameTime * 0.15 + powerUp.x) * 0.3 + 0.7;
     const color = VM_CONFIG.powerUpColors[powerUp.type];
     const size = VM_CONFIG.powerUpSize;
     
     ctx.save();
-    ctx.translate(powerUp.x, powerUp.y);
+    ctx.translate(screen.x, screen.y);
     
     // Outer glow ring
     ctx.globalAlpha = 0.4 * pulse;
@@ -183,7 +196,7 @@ function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void
       ctx.globalAlpha = 0.3;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(powerUp.x, powerUp.y, size + 8, 0, Math.PI * 2);
+      ctx.arc(screen.x, screen.y, size + 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -192,24 +205,22 @@ function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void
 
 function renderProjectiles(ctx: CanvasRenderingContext2D, state: VectorState): void {
   for (const proj of state.projectiles) {
+    const screen = worldToScreen(proj.x, proj.y, state);
     ctx.save();
     
     if (proj.isPlayer) {
-      // Player bullets - cyan
       ctx.shadowColor = '#00ffff';
       ctx.shadowBlur = 8;
       ctx.fillStyle = '#00ffff';
     } else {
-      // Enemy bullets - red
       ctx.shadowColor = '#ff4444';
       ctx.shadowBlur = 8;
       ctx.fillStyle = '#ff4444';
     }
     
     ctx.beginPath();
-    ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+    ctx.arc(screen.x, screen.y, proj.size, 0, Math.PI * 2);
     ctx.fill();
-    
     ctx.restore();
   }
 }
@@ -380,11 +391,11 @@ function renderParticles(ctx: CanvasRenderingContext2D, state: VectorState): voi
 }
 
 function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth } = VM_CONFIG;
+  const { viewportWidth, viewportHeight } = VM_CONFIG;
   
   // Top bar
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-  ctx.fillRect(0, 0, arenaWidth, 30);
+  ctx.fillRect(0, 0, viewportWidth, 30);
   
   ctx.font = 'bold 14px monospace';
   ctx.textBaseline = 'middle';
@@ -396,18 +407,18 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   
   // Score
   ctx.textAlign = 'center';
-  ctx.fillText(`SCORE: ${Math.floor(state.score)}`, arenaWidth / 2, 15);
+  ctx.fillText(`SCORE: ${Math.floor(state.score)}`, viewportWidth / 2, 15);
   
   // Salvage
   ctx.textAlign = 'right';
   ctx.fillStyle = '#00ff88';
-  ctx.fillText(`SALVAGE: ${state.salvageCount}`, arenaWidth - 10, 15);
+  ctx.fillText(`SALVAGE: ${state.salvageCount}`, viewportWidth - 10, 15);
   
   // Health bar (bottom left)
   const healthBarWidth = 100;
   const healthBarHeight = 8;
   const healthBarX = 10;
-  const healthBarY = VM_CONFIG.arenaHeight - 20;
+  const healthBarY = viewportHeight - 20;
   
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
   ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
@@ -436,7 +447,7 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.fillStyle = '#ffff00';
     ctx.font = 'bold 16px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, healthBarY + 4);
+    ctx.fillText(`${state.combo}x COMBO`, viewportWidth - 10, healthBarY + 4);
   }
   
   // Active power-ups indicator (top right area)
@@ -472,28 +483,25 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
       const y = 50 + index * 20;
       const barWidth = 60;
       const barHeight = 12;
-      const barX = arenaWidth - 15 - barWidth;
+      const barX = viewportWidth - 15 - barWidth;
       
-      // Background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(barX, y - 6, barWidth, barHeight);
       
-      // Progress bar
       const progress = powerUp.remaining / VM_CONFIG.powerUpDuration;
       ctx.fillStyle = powerUp.color;
       ctx.globalAlpha = 0.7;
       ctx.fillRect(barX, y - 6, barWidth * progress, barHeight);
       ctx.globalAlpha = 1;
       
-      // Text
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(powerUp.name, arenaWidth - 20 - barWidth, y);
+      ctx.fillText(powerUp.name, viewportWidth - 20 - barWidth, y);
     });
   }
 }
 
 function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const { viewportWidth: arenaWidth, viewportHeight: arenaHeight } = VM_CONFIG;
   const centerX = arenaWidth / 2;
   const centerY = arenaHeight / 2;
   const t = state.gameTime;
@@ -707,7 +715,7 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
 }
 
 function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const { viewportWidth: arenaWidth, viewportHeight: arenaHeight } = VM_CONFIG;
   
   ctx.fillStyle = 'rgba(0, 255, 0, 0.9)';
   ctx.font = 'bold 28px monospace';
@@ -721,7 +729,7 @@ function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorS
 }
 
 function renderGameOverOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const { viewportWidth: arenaWidth, viewportHeight: arenaHeight } = VM_CONFIG;
   
   // Darken background
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -741,7 +749,7 @@ function renderGameOverOverlay(ctx: CanvasRenderingContext2D, state: VectorState
 }
 
 function renderVictoryOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const { viewportWidth: arenaWidth, viewportHeight: arenaHeight } = VM_CONFIG;
   
   // Celebration background
   ctx.fillStyle = 'rgba(0, 50, 0, 0.7)';

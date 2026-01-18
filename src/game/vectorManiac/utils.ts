@@ -70,3 +70,19 @@ export function randomFromEdge(
   
   return { x, y, angle };
 }
+
+// Spawn enemy at a random position around the player (for endless mode)
+export function randomAroundPlayer(
+  playerX: number,
+  playerY: number,
+  spawnDistance: number = 500
+): { x: number; y: number; angle: number } {
+  const angle = Math.random() * Math.PI * 2;
+  const distance = spawnDistance + Math.random() * 200;
+  
+  return {
+    x: playerX + Math.cos(angle) * distance,
+    y: playerY + Math.sin(angle) * distance,
+    angle: angle + Math.PI, // Face towards player
+  };
+}
