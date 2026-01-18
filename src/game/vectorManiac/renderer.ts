@@ -229,9 +229,10 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
   for (const enemy of state.enemies) {
     const color = VM_CONFIG.enemyColors[enemy.type];
     const healthPercent = enemy.health / enemy.maxHealth;
+    const screen = worldToScreen(enemy.x, enemy.y, state);
     
     ctx.save();
-    ctx.translate(enemy.x, enemy.y);
+    ctx.translate(screen.x, screen.y);
     
     // Glow
     ctx.shadowColor = color;
@@ -322,8 +323,8 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
     if ((enemy.type === 'elite' || enemy.type === 'bounty') && healthPercent < 1) {
       const barWidth = enemy.size * 2;
       const barHeight = 3;
-      const barX = enemy.x - barWidth / 2;
-      const barY = enemy.y - enemy.size - 8;
+      const barX = screen.x - barWidth / 2;
+      const barY = screen.y - enemy.size - 8;
       
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(barX, barY, barWidth, barHeight);
@@ -335,9 +336,11 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
 }
 
 function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const screen = worldToScreen(state.playerX, state.playerY, state);
+  
   ctx.save();
-  ctx.translate(state.playerX, state.playerY);
-  ctx.rotate(state.playerAngle);
+  ctx.translate(screen.x, screen.y);
+  ctx.rotate(-Math.PI / 2); // Ship always faces up
   
   // Invulnerability flash
   if (state.invulnerableTimer > 0 && Math.floor(state.invulnerableTimer / 4) % 2 === 0) {
@@ -370,7 +373,7 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.arc(state.playerX, state.playerY, state.stats.magnetRange, 0, Math.PI * 2);
+    ctx.arc(screen.x, screen.y, state.stats.magnetRange, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
@@ -378,13 +381,14 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
 
 function renderParticles(ctx: CanvasRenderingContext2D, state: VectorState): void {
   for (const particle of state.particles) {
+    const screen = worldToScreen(particle.x, particle.y, state);
     const alpha = particle.life / particle.maxLife;
     
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = particle.color;
     ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+    ctx.arc(screen.x, screen.y, particle.size * alpha, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
