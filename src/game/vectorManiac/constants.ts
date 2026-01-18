@@ -3,13 +3,10 @@
 // Portrait mode dimensions with higher internal resolution.
 // We render at 2x resolution so everything appears ~50% smaller but sharper.
 export const VM_CONFIG = {
-  // Viewport dimensions (what we render to)
-  viewportWidth: 780,
-  viewportHeight: 1688,
-  
-  // World is infinite - no arena bounds
-  enemySpawnDistance: 600, // Distance from player to spawn enemies
-  enemyDespawnDistance: 1200, // Distance from player to remove enemies
+  // Arena bounds - PORTRAIT MODE (2x)
+  arenaWidth: 780,
+  arenaHeight: 1688,
+  arenaPadding: 60,
   
   // Player (scaled up 50%)
   playerSize: 24,

@@ -26,8 +26,8 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     
     // Use Vector Maniac dimensions for that mode
     const isVectorManiac = gameState === 'vectorManiac';
-    const canvasWidth = isVectorManiac ? VM_CONFIG.viewportWidth : GAME_CONFIG.canvasWidth;
-    const canvasHeight = isVectorManiac ? VM_CONFIG.viewportHeight : GAME_CONFIG.canvasHeight;
+    const canvasWidth = isVectorManiac ? VM_CONFIG.arenaWidth : GAME_CONFIG.canvasWidth;
+    const canvasHeight = isVectorManiac ? VM_CONFIG.arenaHeight : GAME_CONFIG.canvasHeight;
     
     const scaleX = canvasWidth / rect.width;
     const scaleY = canvasHeight / rect.height;

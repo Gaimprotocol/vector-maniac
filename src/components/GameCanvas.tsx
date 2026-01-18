@@ -322,8 +322,8 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
 
     // Use portrait dimensions for Vector Maniac, landscape for other modes
     const isVectorManiac = gameData.state === 'vectorManiac';
-    const canvasWidth = isVectorManiac ? VM_CONFIG.viewportWidth : GAME_CONFIG.canvasWidth;
-    const canvasHeight = isVectorManiac ? VM_CONFIG.viewportHeight : GAME_CONFIG.canvasHeight;
+    const canvasWidth = isVectorManiac ? VM_CONFIG.arenaWidth : GAME_CONFIG.canvasWidth;
+    const canvasHeight = isVectorManiac ? VM_CONFIG.arenaHeight : GAME_CONFIG.canvasHeight;
 
     return (
       <canvas

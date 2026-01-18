@@ -2,13 +2,12 @@
 
 import { VectorEnemy, VectorProjectile, VectorParticle, VectorSalvage, VectorPowerUp, PowerUpType } from './types';
 import { VM_CONFIG } from './constants';
-import { generateId, randomAroundPlayer, normalize } from './utils';
+import { generateId, randomFromEdge, normalize } from './utils';
 
 export function createDrone(targetX: number, targetY: number): VectorEnemy {
-  // Spawn around the player position
-  const spawn = randomAroundPlayer(targetX, targetY, VM_CONFIG.enemySpawnDistance);
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
   
-  // Calculate direction towards player
+  // Calculate direction towards center/player
   const dir = normalize(targetX - spawn.x, targetY - spawn.y);
   
   return {
@@ -28,7 +27,7 @@ export function createDrone(targetX: number, targetY: number): VectorEnemy {
 }
 
 export function createShooter(targetX: number, targetY: number): VectorEnemy {
-  const spawn = randomAroundPlayer(targetX, targetY, VM_CONFIG.enemySpawnDistance);
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
   
   const dir = normalize(targetX - spawn.x, targetY - spawn.y);
   
@@ -49,7 +48,7 @@ export function createShooter(targetX: number, targetY: number): VectorEnemy {
 }
 
 export function createElite(targetX: number, targetY: number): VectorEnemy {
-  const spawn = randomAroundPlayer(targetX, targetY, VM_CONFIG.enemySpawnDistance);
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
   
   const dir = normalize(targetX - spawn.x, targetY - spawn.y);
   
@@ -69,10 +68,12 @@ export function createElite(targetX: number, targetY: number): VectorEnemy {
   };
 }
 
-export function createBounty(playerX: number, playerY: number): VectorEnemy {
-  const spawn = randomAroundPlayer(playerX, playerY, VM_CONFIG.enemySpawnDistance + 100);
+export function createBounty(): VectorEnemy {
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  const centerX = VM_CONFIG.arenaWidth / 2;
+  const centerY = VM_CONFIG.arenaHeight / 2;
   
-  const dir = normalize(playerX - spawn.x, playerY - spawn.y);
+  const dir = normalize(centerX - spawn.x, centerY - spawn.y);
   
   return {
     id: generateId(),

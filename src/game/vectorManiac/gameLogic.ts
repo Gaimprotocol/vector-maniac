@@ -123,11 +123,10 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     newState.playerAngle = lerpAngle(newState.playerAngle, Math.atan2(dy, dx), 0.15);
   }
   
-  // Update camera to follow player smoothly
-  newState.cameraX = lerp(newState.cameraX, newState.playerX, 0.1);
-  newState.cameraY = lerp(newState.cameraY, newState.playerY, 0.1);
-  
-  // No arena bounds - player can move freely in endless world
+  // Clamp to arena bounds
+  const padding = VM_CONFIG.arenaPadding;
+  newState.playerX = clamp(newState.playerX, padding, VM_CONFIG.arenaWidth - padding);
+  newState.playerY = clamp(newState.playerY, padding, VM_CONFIG.arenaHeight - padding);
   
   // Update timers
   if (newState.fireTimer > 0) newState.fireTimer--;
@@ -247,8 +246,8 @@ function spawnEnemy(state: VectorState): VectorState {
   const isBountyWave = isFinalWave(state.currentWave);
   
   if (isBountyWave && state.enemiesSpawned === 0) {
-    // Spawn bounty boss around player
-    const bounty = createBounty(state.playerX, state.playerY);
+    // Spawn bounty boss
+    const bounty = createBounty();
     bounty.health *= state.difficultyMultiplier;
     bounty.maxHealth = bounty.health;
     newState.enemies = [...newState.enemies, bounty];
@@ -353,15 +352,15 @@ function updateEnemies(state: VectorState): VectorState {
         break;
         
       case 'bounty':
-        // Bounty boss circles around the player and fires patterns
+        // Bounty boss circles and fires patterns
         e.behaviorTimer++;
         const orbitAngle = e.behaviorTimer * 0.02;
-        const orbitRadius = 150;
-        const bossTargetX = newState.playerX + Math.cos(orbitAngle) * orbitRadius;
-        const bossTargetY = newState.playerY + Math.sin(orbitAngle) * orbitRadius;
+        const orbitRadius = 100;
+        const targetX = VM_CONFIG.arenaWidth / 2 + Math.cos(orbitAngle) * orbitRadius;
+        const targetY = VM_CONFIG.arenaHeight / 2 + Math.sin(orbitAngle) * orbitRadius;
         
-        e.vx = lerp(e.vx, (bossTargetX - e.x) * 0.02, 0.1);
-        e.vy = lerp(e.vy, (bossTargetY - e.y) * 0.02, 0.1);
+        e.vx = lerp(e.vx, (targetX - e.x) * 0.02, 0.1);
+        e.vy = lerp(e.vy, (targetY - e.y) * 0.02, 0.1);
         
         e.fireTimer--;
         if (e.fireTimer <= 0) {
@@ -385,9 +384,10 @@ function updateEnemies(state: VectorState): VectorState {
     e.x += e.vx;
     e.y += e.vy;
     
-    // Remove enemies that are too far from player (endless mode cleanup)
-    const distToPlayer = distance(e.x, e.y, newState.playerX, newState.playerY);
-    if (distToPlayer < VM_CONFIG.enemyDespawnDistance) {
+    // Keep in bounds (with some leeway for spawning)
+    const margin = 50;
+    if (e.x > -margin && e.x < VM_CONFIG.arenaWidth + margin &&
+        e.y > -margin && e.y < VM_CONFIG.arenaHeight + margin) {
       updatedEnemies.push(e);
     }
   }
@@ -407,9 +407,9 @@ function updateProjectiles(state: VectorState): VectorState {
       y: proj.y + proj.vy,
     };
     
-    // Remove projectiles that are too far from player
-    const distToPlayer = distance(p.x, p.y, newState.playerX, newState.playerY);
-    if (distToPlayer < VM_CONFIG.enemyDespawnDistance) {
+    // Keep if in bounds
+    if (p.x > -20 && p.x < VM_CONFIG.arenaWidth + 20 &&
+        p.y > -20 && p.y < VM_CONFIG.arenaHeight + 20) {
       updatedProjectiles.push(p);
     }
   }
@@ -493,13 +493,18 @@ function updatePowerUps(state: VectorState): VectorState {
     p.y += p.vy;
     p.life--;
     
-    // Slow down drift
-    p.vx *= 0.99;
-    p.vy *= 0.99;
+    // Bounce off walls
+    if (p.x < VM_CONFIG.arenaPadding || p.x > VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding) {
+      p.vx *= -1;
+      p.x = clamp(p.x, VM_CONFIG.arenaPadding, VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding);
+    }
+    if (p.y < VM_CONFIG.arenaPadding || p.y > VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding) {
+      p.vy *= -1;
+      p.y = clamp(p.y, VM_CONFIG.arenaPadding, VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding);
+    }
     
-    // Keep if still alive and near player
-    const distToPlayer = distance(p.x, p.y, newState.playerX, newState.playerY);
-    if (p.life > 0 && distToPlayer < VM_CONFIG.enemyDespawnDistance) {
+    // Keep if still alive
+    if (p.life > 0) {
       updatedPowerUps.push(p);
     }
   }

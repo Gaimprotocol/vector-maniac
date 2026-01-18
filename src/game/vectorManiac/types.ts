@@ -163,11 +163,7 @@ export interface VectorState {
   phaseTimer: number;
   gameTime: number;
   
-  // Camera (follows player with smoothing)
-  cameraX: number;
-  cameraY: number;
-  
-  // Player (world position - can go anywhere)
+  // Player
   playerX: number;
   playerY: number;
   playerAngle: number;
