@@ -627,12 +627,13 @@ export function selectPortal(state: VectorState, choice: 'safe' | 'risk'): Vecto
   
   newState.portalChoice = choice;
   
+  // Difficulty scaling: more enemies and faster shooting (NOT speed increase)
   if (choice === 'safe') {
     newState.upgradesPending = 1;
-    newState.difficultyMultiplier *= 1.05;
+    newState.difficultyMultiplier *= 1.1; // 10% more health/enemies
   } else {
     newState.upgradesPending = 2;
-    newState.difficultyMultiplier *= 1.15;
+    newState.difficultyMultiplier *= 1.25; // 25% more health/enemies
   }
   
   newState.phase = 'upgradePick';
