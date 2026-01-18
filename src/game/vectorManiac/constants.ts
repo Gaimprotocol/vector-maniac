@@ -25,8 +25,8 @@ export const VM_CONFIG = {
   shooterSpeed: 0.9,
   shooterHealth: 30,
   shooterSize: 21,
-  shooterFireRate: 90,
-  shooterBulletSpeed: 6,
+  shooterFireRate: 150, // Reduced fire frequency (higher = slower)
+  shooterBulletSpeed: 5,
   
   eliteSpeed: 1.35,
   eliteHealth: 60,
@@ -47,9 +47,9 @@ export const VM_CONFIG = {
   wavesPerSegment: 3,
   totalSegments: 3,
   
-  // Enemies per wave (base, scales with wave number)
-  baseEnemiesPerWave: 4,
-  enemiesPerWaveIncrease: 2,
+  // Enemies per wave (base, scales gradually with wave number)
+  baseEnemiesPerWave: 2,
+  enemiesPerWaveIncrease: 1,
   
   // Spawn timing
   spawnInterval: 60,
