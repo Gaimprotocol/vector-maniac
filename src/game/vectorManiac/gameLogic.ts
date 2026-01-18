@@ -957,15 +957,10 @@ function completeWave(state: VectorState): VectorState {
     newState.showMapName = true;
     newState.mapNameTimer = 180; // 3 seconds
     
-    // Upgrade pick every 5 maps
-    if (newState.totalMapsCompleted % 5 === 0) {
-      newState.upgradesPending = 1;
-      newState.availableUpgrades = getRandomUpgrades(3);
-      newState.phase = 'upgradePick';
-    } else {
-      newState.phase = 'waveComplete';
-      newState.phaseTimer = VM_CONFIG.mapTransitionTime;
-    }
+    // Upgrade pick after every boss (map completion)
+    newState.upgradesPending = 1;
+    newState.availableUpgrades = getRandomUpgrades(3);
+    newState.phase = 'upgradePick';
   } else {
     // Wave complete - continue to next wave in map
     newState.phase = 'waveComplete';
