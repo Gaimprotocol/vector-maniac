@@ -82,9 +82,9 @@ const Index = () => {
     }
   }, [showMenuContent]);
 
-  // Auto-start game when rotating to landscape after pressing START
+  // Auto-start game when rotating to landscape after pressing START (main + survival only)
   useEffect(() => {
-    if (waitingForLandscape && isLandscape) {
+    if (waitingForLandscape && isLandscape && !vectorManiacStarted) {
       setGameStarted(true);
       setWaitingForLandscape(false);
       
@@ -101,7 +101,7 @@ const Index = () => {
       };
       lockOrientation();
     }
-  }, [waitingForLandscape, isLandscape]);
+  }, [waitingForLandscape, isLandscape, vectorManiacStarted]);
 
   // Reset when game over (returning to menu)
   const handleGameEnd = useCallback(() => {
@@ -142,14 +142,11 @@ const Index = () => {
 
   const handleVectorManiacStart = useCallback(() => {
     primeAudio();
-    if (isLandscape) {
-      setVectorManiacStarted(true);
-      setGameStarted(true);
-    } else {
-      setVectorManiacStarted(true);
-      setWaitingForLandscape(true);
-    }
-  }, [isLandscape, primeAudio]);
+    // Vector Maniac is designed for portrait mode - start immediately
+    setVectorManiacStarted(true);
+    setWaitingForLandscape(false);
+    setGameStarted(true);
+  }, [primeAudio]);
 
 
   const handleWatchAd = useCallback(() => {
@@ -166,11 +163,10 @@ const Index = () => {
         <title>Galactic Overdrive | Retro Arcade Shooter</title>
         <meta name="description" content="A retro 8-bit cyberpunk side-scrolling shooter by GAIM Studios. Rescue civilians, destroy enemies, and survive the hostile terrain." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-        <meta name="screen-orientation" content="landscape" />
       </Helmet>
       
-      {/* Portrait mode - waiting for landscape after START pressed */}
-      {waitingForLandscape && !isLandscape && (
+      {/* Portrait mode - waiting for landscape after START pressed (not for Vector Maniac) */}
+      {waitingForLandscape && !isLandscape && !vectorManiacStarted && (
         <div 
           className="fixed inset-0 flex flex-col items-center justify-center gap-4 z-50"
           style={{ background: 'linear-gradient(135deg, #050810 0%, #0a1020 50%, #100818 100%)' }}
