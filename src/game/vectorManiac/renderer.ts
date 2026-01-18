@@ -464,54 +464,76 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         ctx.fill();
         break;
         
-      case 'boss':
-        // Boss - large rotating decagon with multiple layers
-        const bossRotation = state.gameTime * 0.02;
+      case 'boss': {
+        // Boss - map-specific geometry so each map feels like a new boss
+        const mapSeed = enemy.behaviorTimer ?? 0;
+        const rotationSpeed = 0.014 + (mapSeed % 6) * 0.003;
+        const bossRotation = state.gameTime * rotationSpeed;
+
+        const outerSides = 6 + (mapSeed % 7); // 6-12
+        const midSides = 5 + ((mapSeed * 3) % 6); // 5-10
+        const spikes = 4 + (mapSeed % 6); // 4-9
+        const style = mapSeed % 4; // 0-3
+
         ctx.lineWidth = 4;
-        
+
         // Outer ring
         ctx.beginPath();
-        for (let i = 0; i < 10; i++) {
-          const angle = (i / 10) * Math.PI * 2 + bossRotation;
-          const x = Math.cos(angle) * enemy.size;
-          const y = Math.sin(angle) * enemy.size;
+        for (let i = 0; i < outerSides; i++) {
+          const angle = (i / outerSides) * Math.PI * 2 + bossRotation;
+          const r = enemy.size * (style === 2 ? (0.9 + 0.12 * Math.sin(state.gameTime * 0.06 + i)) : 1);
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.closePath();
         ctx.stroke();
-        
+
         // Middle ring (counter-rotate)
         ctx.lineWidth = 2;
         ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2 - bossRotation * 1.5;
-          const x = Math.cos(angle) * enemy.size * 0.65;
-          const y = Math.sin(angle) * enemy.size * 0.65;
+        for (let i = 0; i < midSides; i++) {
+          const angle = (i / midSides) * Math.PI * 2 - bossRotation * (1.2 + (mapSeed % 3) * 0.35);
+          const r = enemy.size * 0.65;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
         ctx.closePath();
         ctx.stroke();
-        
-        // Inner pulsing core
-        const pulseSize = 8 + Math.sin(state.gameTime * 0.1) * 3;
+
+        // Inner core (varies per boss)
+        const corePulse = 8 + Math.sin(state.gameTime * (0.08 + (mapSeed % 5) * 0.02)) * 3;
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(0, 0, pulseSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Danger spikes
+        if (style === 1) {
+          // diamond core
+          ctx.moveTo(0, -corePulse);
+          ctx.lineTo(corePulse, 0);
+          ctx.lineTo(0, corePulse);
+          ctx.lineTo(-corePulse, 0);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.arc(0, 0, corePulse, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Spikes / rays (changes per boss)
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 1;
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2 + bossRotation * 2;
+        for (let i = 0; i < spikes; i++) {
+          const angle = (i / spikes) * Math.PI * 2 + bossRotation * (1.8 + (mapSeed % 4) * 0.4);
+          const len = enemy.size * (style === 3 ? 0.55 : 0.4);
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.lineTo(Math.cos(angle) * enemy.size * 0.4, Math.sin(angle) * enemy.size * 0.4);
+          ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
           ctx.stroke();
         }
         break;
+      }
     }
     
     ctx.restore();
