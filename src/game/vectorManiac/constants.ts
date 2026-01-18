@@ -12,7 +12,7 @@ export const VM_CONFIG = {
   playerSize: 24,
   playerSpeed: 6,
   playerMaxHealth: 100,
-  baseFireRate: 12,
+  baseFireRate: 6,
   baseBulletSpeed: 12,
   baseDamage: 10,
   baseMagnetRange: 90,
