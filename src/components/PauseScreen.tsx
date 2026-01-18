@@ -18,18 +18,37 @@ export const PauseScreen: React.FC<PauseScreenProps> = ({
   onToggleSfx
 }) => {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
-      <h2 className="text-xl font-pixel text-primary neon-text-primary mb-6">
-        PAUSED
+    <div 
+      className="absolute inset-0 flex flex-col items-center justify-center p-4"
+      style={{
+        background: 'radial-gradient(ellipse at center, rgba(0, 30, 60, 0.95) 0%, rgba(0, 10, 30, 0.98) 100%)',
+      }}
+    >
+      {/* Pause Title */}
+      <h2 
+        className="text-2xl font-pixel text-cyan-400 mb-6"
+        style={{ 
+          textShadow: '0 0 20px #00ffff, 0 0 40px #00ffff50',
+        }}
+      >
+        ⏸️ PAUSED
       </h2>
 
-      <div className="space-y-3">
+      {/* Buttons Container */}
+      <div className="space-y-3 w-full max-w-xs">
+        {/* Resume Button */}
         <button
           onClick={onResume}
           onTouchEnd={(e) => { e.preventDefault(); onResume(); }}
-          className="retro-button font-pixel text-xs block w-full text-primary px-8 py-3 active:scale-95 transition-transform"
+          className="font-pixel text-xs w-full px-6 py-3 rounded-full border-2
+                     transition-all duration-300 active:scale-95
+                     border-cyan-400/50 text-cyan-400 
+                     hover:bg-cyan-400/10 hover:border-cyan-400"
+          style={{ 
+            boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)',
+          }}
         >
-          RESUME
+          ▶️ RESUME
         </button>
         
         {/* Audio controls */}
@@ -37,45 +56,48 @@ export const PauseScreen: React.FC<PauseScreenProps> = ({
           <button
             onClick={onToggleMusic}
             onTouchEnd={(e) => { e.preventDefault(); onToggleMusic(); }}
-            className={`retro-button font-pixel text-[9px] flex-1 py-2 active:scale-95 transition-transform ${
-              musicMuted 
-                ? 'text-muted-foreground border-muted-foreground' 
-                : 'text-accent border-accent'
-            }`}
+            className={`font-pixel text-[9px] flex-1 py-2 rounded-full border-2
+                       transition-all duration-300 active:scale-95
+                       ${musicMuted 
+                         ? 'border-gray-500/50 text-gray-500' 
+                         : 'border-green-400/50 text-green-400 hover:bg-green-400/10 hover:border-green-400'
+                       }`}
             style={{
-              textShadow: musicMuted ? 'none' : '0 0 10px hsl(var(--accent))',
-              boxShadow: musicMuted ? 'none' : '0 0 10px hsl(var(--accent) / 0.3)',
+              boxShadow: musicMuted ? 'none' : '0 0 10px rgba(0, 255, 100, 0.3)',
             }}
           >
-            {musicMuted ? '🔇 MUSIC OFF' : '🎵 MUSIC ON'}
+            {musicMuted ? '🔇 MUSIC' : '🎵 MUSIC'}
           </button>
           <button
             onClick={onToggleSfx}
             onTouchEnd={(e) => { e.preventDefault(); onToggleSfx(); }}
-            className={`retro-button font-pixel text-[9px] flex-1 py-2 active:scale-95 transition-transform ${
-              sfxMuted 
-                ? 'text-muted-foreground border-muted-foreground' 
-                : 'text-accent border-accent'
-            }`}
+            className={`font-pixel text-[9px] flex-1 py-2 rounded-full border-2
+                       transition-all duration-300 active:scale-95
+                       ${sfxMuted 
+                         ? 'border-gray-500/50 text-gray-500' 
+                         : 'border-green-400/50 text-green-400 hover:bg-green-400/10 hover:border-green-400'
+                       }`}
             style={{
-              textShadow: sfxMuted ? 'none' : '0 0 10px hsl(var(--accent))',
-              boxShadow: sfxMuted ? 'none' : '0 0 10px hsl(var(--accent) / 0.3)',
+              boxShadow: sfxMuted ? 'none' : '0 0 10px rgba(0, 255, 100, 0.3)',
             }}
           >
-            {sfxMuted ? '🔇 SFX OFF' : '🔊 SFX ON'}
+            {sfxMuted ? '🔇 SFX' : '🔊 SFX'}
           </button>
         </div>
         
+        {/* Quit Button */}
         <button
           onClick={onQuit}
           onTouchEnd={(e) => { e.preventDefault(); onQuit(); }}
-          className="retro-button font-pixel text-xs block w-full text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground px-8 py-3 active:scale-95 transition-transform"
-          style={{
-            textShadow: '0 0 10px hsl(0 100% 50%)',
-            boxShadow: '0 0 10px hsl(0 100% 50% / 0.3)',
+          className="font-pixel text-xs w-full px-6 py-3 rounded-full border-2
+                     transition-all duration-300 active:scale-95
+                     border-red-400/50 text-red-400 
+                     hover:bg-red-400/10 hover:border-red-400"
+          style={{ 
+            boxShadow: '0 0 15px rgba(255, 50, 50, 0.3)',
           }}
         >
-          QUIT MISSION
+          🚪 QUIT MISSION
         </button>
       </div>
     </div>
