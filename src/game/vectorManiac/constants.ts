@@ -8,33 +8,33 @@ export const VM_CONFIG = {
   arenaHeight: 1688,
   arenaPadding: 60,
   
-  // Player
-  playerSize: 16,
-  playerSpeed: 4,
+  // Player (scaled up 50%)
+  playerSize: 24,
+  playerSpeed: 6,
   playerMaxHealth: 100,
   baseFireRate: 12,
-  baseBulletSpeed: 8,
+  baseBulletSpeed: 12,
   baseDamage: 10,
-  baseMagnetRange: 60,
+  baseMagnetRange: 90,
   
-  // Enemies - speeds halved
-  droneSpeed: 1.25,
+  // Enemies - scaled up 50%
+  droneSpeed: 1.875,
   droneHealth: 20,
-  droneSize: 12,
+  droneSize: 18,
   
-  shooterSpeed: 0.6,
+  shooterSpeed: 0.9,
   shooterHealth: 30,
-  shooterSize: 14,
+  shooterSize: 21,
   shooterFireRate: 90,
-  shooterBulletSpeed: 4,
+  shooterBulletSpeed: 6,
   
-  eliteSpeed: 0.9,
+  eliteSpeed: 1.35,
   eliteHealth: 60,
-  eliteSize: 18,
+  eliteSize: 27,
   
   bountyHealth: 200,
-  bountySize: 32,
-  bountySpeed: 0.4,
+  bountySize: 48,
+  bountySpeed: 0.6,
   
   // Segment backgrounds (colors per segment 1-3)
   segmentBackgrounds: [
