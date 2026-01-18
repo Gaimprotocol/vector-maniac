@@ -16,9 +16,14 @@ export function createDefaultStats(): PlayerStats {
   };
 }
 
+export function getRandomWavesForSegment(): number {
+  return Math.floor(Math.random() * 3) + 1; // 1-3 waves
+}
+
 export function createVectorManiacState(): VectorState {
   const centerX = VM_CONFIG.arenaWidth / 2;
   const centerY = VM_CONFIG.arenaHeight / 2;
+  const initialWavesInSegment = getRandomWavesForSegment();
   
   return {
     phase: 'entering',
@@ -53,6 +58,8 @@ export function createVectorManiacState(): VectorState {
     
     currentWave: 1,
     currentSegment: 1,
+    wavesInSegment: initialWavesInSegment,
+    totalWavesCompleted: 0,
     enemiesSpawned: 0,
     enemiesDefeated: 0,
     enemiesInWave: getEnemiesForWave(1),
@@ -73,18 +80,15 @@ export function createVectorManiacState(): VectorState {
   };
 }
 
-export function getEnemiesForWave(wave: number): number {
-  return VM_CONFIG.baseEnemiesPerWave + (wave - 1) * VM_CONFIG.enemiesPerWaveIncrease;
+export function getEnemiesForWave(totalWaves: number): number {
+  // Scale enemies based on total waves completed
+  return VM_CONFIG.baseEnemiesPerWave + totalWaves * VM_CONFIG.enemiesPerWaveIncrease;
 }
 
-export function getWaveInSegment(wave: number): number {
-  return ((wave - 1) % VM_CONFIG.wavesPerSegment) + 1;
+export function isLastWaveInSegment(state: VectorState): boolean {
+  return state.currentWave >= state.wavesInSegment;
 }
 
-export function isLastWaveInSegment(wave: number): boolean {
-  return wave % VM_CONFIG.wavesPerSegment === 0;
-}
-
-export function isFinalWave(wave: number): boolean {
-  return wave === VM_CONFIG.wavesPerSegment * VM_CONFIG.totalSegments;
+export function isFinalSegment(segment: number): boolean {
+  return segment >= VM_CONFIG.totalSegments;
 }

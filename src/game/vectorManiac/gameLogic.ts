@@ -13,7 +13,7 @@ import {
   createSalvage,
   createPowerUp
 } from './entities';
-import { getEnemiesForWave, isLastWaveInSegment, isFinalWave } from './state';
+import { getEnemiesForWave, isLastWaveInSegment, isFinalSegment, getRandomWavesForSegment } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound } from './sounds';
 
@@ -228,11 +228,11 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
   newState.particles = updateParticles(newState.particles);
   
   if (newState.phaseTimer <= 0) {
-    // Advance to next wave
+    // Advance to next wave within this segment
     newState.currentWave++;
     newState.enemiesSpawned = 0;
     newState.enemiesDefeated = 0;
-    newState.enemiesInWave = getEnemiesForWave(newState.currentWave);
+    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted);
     newState.spawnTimer = 30;
     newState.phase = 'playing';
   }
@@ -243,7 +243,7 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
 function spawnEnemy(state: VectorState): VectorState {
   let newState = { ...state };
   
-  const isBountyWave = isFinalWave(state.currentWave);
+  const isBountyWave = isFinalSegment(state.currentSegment) && isLastWaveInSegment(state);
   
   if (isBountyWave && state.enemiesSpawned === 0) {
     // Spawn bounty boss
@@ -751,21 +751,25 @@ function completeWave(state: VectorState): VectorState {
   let newState = { ...state };
   
   newState.soundQueue = [...newState.soundQueue, 'waveComplete'];
+  newState.totalWavesCompleted++;
   
-  if (isFinalWave(state.currentWave)) {
-    // Victory!
-    newState.phase = 'victory';
-    newState.score += 5000; // Victory bonus
-  } else if (isLastWaveInSegment(state.currentWave)) {
-    // Segment complete - show portal choice
-    newState.phase = 'portalChoice';
-    newState.currentSegment++;
-    newState.score += 1000 * state.currentSegment;
+  // Check if this is the last wave in current segment
+  if (isLastWaveInSegment(state)) {
+    // Check if this was the final segment
+    if (isFinalSegment(state.currentSegment)) {
+      // Victory!
+      newState.phase = 'victory';
+      newState.score += 5000; // Victory bonus
+    } else {
+      // Segment complete - show portal choice
+      newState.phase = 'portalChoice';
+      newState.score += 1000 * state.currentSegment;
+    }
   } else {
-    // Wave complete - continue to next wave
+    // Wave complete - continue to next wave in segment
     newState.phase = 'waveComplete';
     newState.phaseTimer = VM_CONFIG.waveTransitionTime;
-    newState.score += 500 * state.currentWave;
+    newState.score += 500 * newState.totalWavesCompleted;
   }
   
   return newState;
@@ -810,11 +814,13 @@ export function selectUpgrade(state: VectorState, upgradeId: string): VectorStat
   newState.upgradesPending--;
   
   if (newState.upgradesPending <= 0) {
-    // All upgrades picked - continue to next wave
-    newState.currentWave++;
+    // All upgrades picked - move to next segment
+    newState.currentSegment++;
+    newState.currentWave = 1;
+    newState.wavesInSegment = getRandomWavesForSegment(); // New random waves for this segment
     newState.enemiesSpawned = 0;
     newState.enemiesDefeated = 0;
-    newState.enemiesInWave = getEnemiesForWave(newState.currentWave);
+    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted);
     newState.spawnTimer = 60;
     newState.phase = 'playing';
     newState.portalChoice = null;

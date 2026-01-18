@@ -189,8 +189,10 @@ export interface VectorState {
   activePowerUps: ActivePowerUps;
   
   // Wave/Segment management
-  currentWave: number;      // 1-9
+  currentWave: number;      // Wave within current segment
   currentSegment: number;   // 1-3
+  wavesInSegment: number;   // Randomized 1-3 waves per segment
+  totalWavesCompleted: number; // Total waves completed across all segments
   enemiesSpawned: number;
   enemiesDefeated: number;
   enemiesInWave: number;
