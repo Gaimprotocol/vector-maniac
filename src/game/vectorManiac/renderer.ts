@@ -51,23 +51,31 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
 }
 
 function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight, bgColor1, bgColor2 } = VM_CONFIG;
+  const { arenaWidth, arenaHeight, segmentBackgrounds } = VM_CONFIG;
+  
+  // Get colors for current segment (1-3 mapped to 0-2 index)
+  const segmentIndex = Math.min(state.currentSegment - 1, segmentBackgrounds.length - 1);
+  const colors = segmentBackgrounds[segmentIndex];
   
   const gradient = ctx.createRadialGradient(
     arenaWidth / 2, arenaHeight / 2, 0,
     arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
   );
-  gradient.addColorStop(0, bgColor2);
-  gradient.addColorStop(1, bgColor1);
+  gradient.addColorStop(0, colors.bg2);
+  gradient.addColorStop(1, colors.bg1);
   
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
 }
 
 function renderGrid(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth, arenaHeight, gridColor } = VM_CONFIG;
+  const { arenaWidth, arenaHeight, segmentBackgrounds } = VM_CONFIG;
   const gridSize = 40;
   const offset = (state.gameTime * 0.5) % gridSize;
+  
+  // Get grid color for current segment
+  const segmentIndex = Math.min(state.currentSegment - 1, segmentBackgrounds.length - 1);
+  const gridColor = segmentBackgrounds[segmentIndex].grid;
   
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;

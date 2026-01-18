@@ -17,24 +17,31 @@ export const VM_CONFIG = {
   baseDamage: 10,
   baseMagnetRange: 60,
   
-  // Enemies
-  droneSpeed: 2.5,
+  // Enemies - speeds halved
+  droneSpeed: 1.25,
   droneHealth: 20,
   droneSize: 12,
   
-  shooterSpeed: 1.2,
+  shooterSpeed: 0.6,
   shooterHealth: 30,
   shooterSize: 14,
   shooterFireRate: 90,
   shooterBulletSpeed: 4,
   
-  eliteSpeed: 1.8,
+  eliteSpeed: 0.9,
   eliteHealth: 60,
   eliteSize: 18,
   
   bountyHealth: 200,
   bountySize: 32,
-  bountySpeed: 0.8,
+  bountySpeed: 0.4,
+  
+  // Segment backgrounds (colors per segment 1-3)
+  segmentBackgrounds: [
+    { bg1: '#050510', bg2: '#0a0a20', grid: 'rgba(0, 255, 255, 0.05)' },   // Segment 1: Deep blue/cyan
+    { bg1: '#100505', bg2: '#200a0a', grid: 'rgba(255, 100, 50, 0.05)' },  // Segment 2: Red/orange
+    { bg1: '#051005', bg2: '#0a200a', grid: 'rgba(100, 255, 100, 0.05)' }, // Segment 3: Green
+  ],
   
   // Waves per segment
   wavesPerSegment: 3,
