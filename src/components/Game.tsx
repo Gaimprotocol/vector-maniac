@@ -60,6 +60,7 @@ export const Game: React.FC<GameProps> = ({
   const paratrooperMusicRef = useRef<HTMLAudioElement | null>(null);
   const forwardFlightMusicRef = useRef<HTMLAudioElement | null>(null);
   const survivalMusicRef = useRef<HTMLAudioElement | null>(null);
+  const vectorManiacMusicRef = useRef<HTMLAudioElement | null>(null);
   const hasAutoStarted = useRef(false);
   
   // Purchase system for Ultimate Edition check
@@ -125,9 +126,10 @@ export const Game: React.FC<GameProps> = ({
     paratrooperMusicRef.current = initAudio('/audio/Paratrooper.mp3', 0.128);
     forwardFlightMusicRef.current = initAudio('/audio/Underground_Drilling_Assault.mp3', 0.128);
     survivalMusicRef.current = initAudio('/audio/Survival_map.mp3', 0.128);
+    vectorManiacMusicRef.current = initAudio('/audio/Main_music.mp3', 0.128);
     
     return () => {
-      [mainMusicRef, bunkerMusicRef, roverMusicRef, underwaterMusicRef, arenaMusicRef, hazardMusicRef, pilotRunnerMusicRef, paratrooperMusicRef, forwardFlightMusicRef, survivalMusicRef].forEach(ref => {
+      [mainMusicRef, bunkerMusicRef, roverMusicRef, underwaterMusicRef, arenaMusicRef, hazardMusicRef, pilotRunnerMusicRef, paratrooperMusicRef, forwardFlightMusicRef, survivalMusicRef, vectorManiacMusicRef].forEach(ref => {
         if (ref.current) {
           ref.current.pause();
           ref.current = null;
@@ -166,9 +168,10 @@ export const Game: React.FC<GameProps> = ({
     const paratrooperMusic = paratrooperMusicRef.current;
     const forwardFlightMusic = forwardFlightMusicRef.current;
     const survivalMusic = survivalMusicRef.current;
-    if (!mainMusic || !bunkerMusic || !roverMusic || !underwaterMusic || !arenaMusic || !hazardMusic || !pilotRunnerMusic || !paratrooperMusic || !forwardFlightMusic || !survivalMusic) return;
+    const vectorManiacMusic = vectorManiacMusicRef.current;
+    if (!mainMusic || !bunkerMusic || !roverMusic || !underwaterMusic || !arenaMusic || !hazardMusic || !pilotRunnerMusic || !paratrooperMusic || !forwardFlightMusic || !survivalMusic || !vectorManiacMusic) return;
     
-    const allMusic = [mainMusic, bunkerMusic, roverMusic, underwaterMusic, arenaMusic, hazardMusic, pilotRunnerMusic, paratrooperMusic, forwardFlightMusic, survivalMusic];
+    const allMusic = [mainMusic, bunkerMusic, roverMusic, underwaterMusic, arenaMusic, hazardMusic, pilotRunnerMusic, paratrooperMusic, forwardFlightMusic, survivalMusic, vectorManiacMusic];
     allMusic.forEach(m => m.muted = musicMuted);
     
     const FADE_DURATION = 500; // Duration for sequential fade (out then in)
@@ -225,17 +228,21 @@ export const Game: React.FC<GameProps> = ({
         await fadeIn(survivalMusic, 0.128, FADE_DURATION);
       })();
     } else if (gameData.state === 'vectorManiac') {
-      // Vector Maniac - fade out start music but no game music for now
+      // Vector Maniac - crossfade to Vector Maniac music
+      const vectorManiacMusic = vectorManiacMusicRef.current;
+      if (!vectorManiacMusic) return;
       (async () => {
         // Fade out start music if playing
         if (startMusicRef?.current && !startMusicRef.current.paused) {
           await fadeOut(startMusicRef.current, FADE_DURATION, true);
         }
-        // Fade out any other music
-        const otherTracks = allMusic.filter(m => !m.paused);
+        // Fade out any other music except Vector Maniac
+        const otherTracks = allMusic.filter(m => m !== vectorManiacMusic && !m.paused);
         if (otherTracks.length > 0) {
           await Promise.all(otherTracks.map(track => fadeOut(track, FADE_DURATION, true)));
         }
+        // Then fade in Vector Maniac music
+        await fadeIn(vectorManiacMusic, 0.128, FADE_DURATION);
       })();
     } else if (gameData.state === 'playing' && gameData.inHazardZone) {
       // Hazard Zone - quick crossfade (300ms)
