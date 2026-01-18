@@ -160,8 +160,8 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Galactic Overdrive | Retro Arcade Shooter</title>
-        <meta name="description" content="A retro 8-bit cyberpunk side-scrolling shooter by GAIM Studios. Rescue civilians, destroy enemies, and survive the hostile terrain." />
+        <title>Vector Maniac | Neon Arena Shooter</title>
+        <meta name="description" content="Vector Maniac is a neon vector arena shooter by GAIM Studios. Survive 9 waves, collect salvage, and upgrade your ship." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
       </Helmet>
       
@@ -243,11 +243,11 @@ const Index = () => {
 
           {/* Main title - two tone */}
           <h1 className="font-pixel text-2xl mb-2 flex flex-col items-center gap-1">
-            <span className="text-cyan-400" style={{ textShadow: '0 0 20px #00e5ff, 0 0 40px #00e5ff50' }}>
-              GALACTIC
+            <span className="text-magenta" style={{ textShadow: '0 0 22px #ff00ff, 0 0 44px #ff00ff50' }}>
+              VECTOR
             </span>
-            <span className="text-magenta" style={{ textShadow: '0 0 20px #ff00ff, 0 0 40px #ff00ff50' }}>
-              OVERDRIVE
+            <span className="text-cyan-400" style={{ textShadow: '0 0 22px #00e5ff, 0 0 44px #00e5ff50' }}>
+              MANIAC
             </span>
           </h1>
 

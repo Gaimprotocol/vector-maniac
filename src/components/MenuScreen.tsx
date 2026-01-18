@@ -113,11 +113,11 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
 
       {/* Main title - two tone */}
       <h1 className="font-pixel text-3xl md:text-4xl mb-2 flex items-center gap-2">
-        <span className="text-cyan-400" style={{ textShadow: '0 0 20px #00e5ff, 0 0 40px #00e5ff50' }}>
-          GALACTIC
+        <span className="text-magenta" style={{ textShadow: '0 0 22px #ff00ff, 0 0 44px #ff00ff50' }}>
+          VECTOR
         </span>
-        <span className="text-magenta" style={{ textShadow: '0 0 20px #ff00ff, 0 0 40px #ff00ff50' }}>
-          OVERDRIVE
+        <span className="text-cyan-400" style={{ textShadow: '0 0 22px #00e5ff, 0 0 44px #00e5ff50' }}>
+          MANIAC
         </span>
       </h1>
 
