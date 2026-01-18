@@ -155,8 +155,8 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     
     // Check if double shot is active
     if (newState.activePowerUps.doubleShot > 0) {
-      // Shoot two projectiles with slight angle offset
-      const spreadAngle = 0.15;
+      // Shoot two projectiles with slight angle offset (tighter spread)
+      const spreadAngle = 0.08;
       const projectile1 = createPlayerProjectile(
         spawnX,
         spawnY,
