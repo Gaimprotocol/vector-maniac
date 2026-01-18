@@ -193,9 +193,27 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   // Spawn enemies
   if (newState.spawnTimer > 0) {
     newState.spawnTimer--;
-  } else if (newState.enemiesSpawned < newState.enemiesInWave) {
-    newState = spawnEnemy(newState);
-    newState.spawnTimer = VM_CONFIG.spawnInterval;
+  } else {
+    const lastWave = isLastWaveInMap(newState);
+
+    // On the last wave of a map: spawn normal enemies first, then spawn the boss as the финал.
+    const shouldSpawnBossNow =
+      lastWave &&
+      newState.enemiesSpawned >= newState.enemiesInWave &&
+      !newState.bossActive &&
+      !newState.bossDefeated;
+
+    if (shouldSpawnBossNow) {
+      const boss = createBoss(newState.currentMap, newState.currentLevel);
+      boss.health *= newState.difficultyMultiplier;
+      boss.maxHealth = boss.health;
+      newState.enemies = [...newState.enemies, boss];
+      newState.bossActive = true;
+      newState.spawnTimer = 30; // small breather before boss starts firing/moving fully
+    } else if (!newState.bossActive && newState.enemiesSpawned < newState.enemiesInWave) {
+      newState = spawnEnemy(newState);
+      newState.spawnTimer = VM_CONFIG.spawnInterval;
+    }
   }
   
   // Update entities
@@ -210,13 +228,13 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   newState = checkPowerUpCollisions(newState);
   
   // Check wave completion
-  // For boss waves (last wave of map), complete when boss is defeated
-  // For regular waves, complete when all enemies are defeated
+  // Last wave of a map: must clear the wave enemies AND defeat the boss.
+  // Regular waves: clear the wave enemies.
   const isLastWave = isLastWaveInMap(newState);
   const waveComplete = isLastWave
-    ? newState.bossDefeated && newState.enemies.length === 0
+    ? newState.bossDefeated && newState.enemiesDefeated >= newState.enemiesInWave + 1 && newState.enemies.length === 0
     : newState.enemiesDefeated >= newState.enemiesInWave && newState.enemies.length === 0;
-  
+
   if (waveComplete) {
     newState = completeWave(newState);
   }
@@ -261,43 +279,32 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
 
 function spawnEnemy(state: VectorState): VectorState {
   let newState = { ...state };
-  
-  // Check if we need to spawn the map boss (last wave of each map)
-  const isLastWave = isLastWaveInMap(state);
-  const shouldSpawnBoss = isLastWave && !state.bossActive && !state.bossDefeated && state.enemiesSpawned === 0;
-  
-  if (shouldSpawnBoss) {
-    // Spawn map boss
-    const boss = createBoss(state.currentMap, state.currentLevel);
-    boss.health *= state.difficultyMultiplier;
-    boss.maxHealth = boss.health;
-    newState.enemies = [...newState.enemies, boss];
-    newState.bossActive = true;
-  } else if (!state.bossActive) {
-    // Determine enemy type based on map and wave
-    const roll = Math.random();
-    let enemy: VectorEnemy;
-    
-    // More variety as maps progress
-    const eliteChance = Math.min(0.25, 0.05 + state.currentMap * 0.004);
-    const shooterChance = Math.min(0.5, 0.3 + state.currentMap * 0.004);
-    
-    if (roll < eliteChance) {
-      enemy = createElite(state.playerX, state.playerY);
-    } else if (roll < shooterChance) {
-      enemy = createShooter(state.playerX, state.playerY);
-    } else {
-      enemy = createDrone(state.playerX, state.playerY);
-    }
-    
-    // Apply difficulty scaling (increases with level)
-    const levelScaling = 1 + (state.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
-    enemy.health *= state.difficultyMultiplier * levelScaling;
-    enemy.maxHealth = enemy.health;
-    
-    newState.enemies = [...newState.enemies, enemy];
+
+  // Never spawn regular enemies while a boss is active
+  if (state.bossActive) return newState;
+
+  // Determine enemy type based on map progression
+  const roll = Math.random();
+  let enemy: VectorEnemy;
+
+  // More variety as maps progress
+  const eliteChance = Math.min(0.25, 0.05 + state.currentMap * 0.004);
+  const shooterChance = Math.min(0.5, 0.3 + state.currentMap * 0.004);
+
+  if (roll < eliteChance) {
+    enemy = createElite(state.playerX, state.playerY);
+  } else if (roll < shooterChance) {
+    enemy = createShooter(state.playerX, state.playerY);
+  } else {
+    enemy = createDrone(state.playerX, state.playerY);
   }
-  
+
+  // Apply difficulty scaling (increases with level)
+  const levelScaling = 1 + (state.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
+  enemy.health *= state.difficultyMultiplier * levelScaling;
+  enemy.maxHealth = enemy.health;
+
+  newState.enemies = [...newState.enemies, enemy];
   newState.enemiesSpawned++;
   return newState;
 }
