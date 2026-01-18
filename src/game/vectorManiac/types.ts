@@ -201,6 +201,10 @@ export interface VectorState {
   bossActive: boolean;
   bossDefeated: boolean;
   
+  // Map transition display
+  showMapName: boolean;
+  mapNameTimer: number;
+  
   enemiesSpawned: number;
   enemiesDefeated: number;
   enemiesInWave: number;

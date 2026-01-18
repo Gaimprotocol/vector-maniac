@@ -226,6 +226,14 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
   let newState = { ...state };
   newState.phaseTimer--;
   
+  // Update map name timer
+  if (newState.mapNameTimer > 0) {
+    newState.mapNameTimer--;
+    if (newState.mapNameTimer <= 0) {
+      newState.showMapName = false;
+    }
+  }
+  
   newState.particles = updateParticles(newState.particles);
   
   if (newState.phaseTimer <= 0) {
@@ -237,6 +245,7 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
     newState.spawnTimer = 30;
     newState.bossActive = false;
     newState.bossDefeated = false;
+    newState.showMapName = false;
     newState.phase = 'playing';
   }
   
@@ -922,6 +931,10 @@ function completeWave(state: VectorState): VectorState {
     newState.spawnTimer = 60;
     newState.bossActive = false;
     newState.bossDefeated = false;
+    
+    // Show new map name
+    newState.showMapName = true;
+    newState.mapNameTimer = 180; // 3 seconds
     
     // Upgrade pick every 5 maps
     if (newState.totalMapsCompleted % 5 === 0) {
