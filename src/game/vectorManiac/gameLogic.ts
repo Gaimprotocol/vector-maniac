@@ -455,6 +455,11 @@ function updateSalvage(state: VectorState): VectorState {
       const value = Math.floor(salvage.value * newState.stats.salvageBonus);
       newState.salvageCount += value;
       newState.score += value * 5;
+      
+      // Heal player when collecting salvage (small amount)
+      const healAmount = 5;
+      newState.health = Math.min(newState.health + healAmount, VM_CONFIG.playerMaxHealth);
+      
       newState.soundQueue = [...newState.soundQueue, 'salvage'];
       
       // Create pickup particles
