@@ -99,46 +99,29 @@ function updateEnteringPhase(state: VectorState): VectorState {
 function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState {
   let newState = { ...state };
   
-  // Update player position + facing based on touch direction
-  // Finger acts like a “steering point”: ship stays 50px in front of the finger in the direction you steer.
-  const isSteering = input.isTouching;
-  const shipOffset = 50;
-
-  if (isSteering) {
+  // Update player position (drag-to-move)
+  if (input.isTouching) {
     newState.targetX = input.touchX;
     newState.targetY = input.touchY;
-
-    // Direction from ship -> finger (where you steer)
-    const dx = newState.targetX - newState.playerX;
-    const dy = newState.targetY - newState.playerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist > 0.001) {
-      const dir = normalize(dx, dy);
-
-      // Ship should be 50px "ahead" of the finger (finger behind the ship)
-      const desiredX = newState.targetX + dir.x * shipOffset;
-      const desiredY = newState.targetY + dir.y * shipOffset;
-
-      const toDesiredX = desiredX - newState.playerX;
-      const toDesiredY = desiredY - newState.playerY;
-      const distToDesired = Math.sqrt(toDesiredX * toDesiredX + toDesiredY * toDesiredY);
-
-      if (distToDesired > 1) {
-        const speedNow = newState.activePowerUps.speedBoost > 0 ? newState.stats.speed * 1.5 : newState.stats.speed;
-        const moveSpeed = Math.min(speedNow, distToDesired * 0.25);
-        const moveDir = normalize(toDesiredX, toDesiredY);
-        newState.playerX += moveDir.x * moveSpeed;
-        newState.playerY += moveDir.y * moveSpeed;
-      }
-
-      // Face exactly where you steer (no "spin" beyond this)
-      newState.playerAngle = Math.atan2(dir.y, dir.x);
-    }
   }
-
+  
+  // Smooth movement towards target
+  const dx = newState.targetX - newState.playerX;
+  const dy = newState.targetY - newState.playerY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  
   // Track if player is touching (for shooting)
   const isShooting = input.isTouching;
+  
+  if (dist > 2) {
+    const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
+    const dir = normalize(dx, dy);
+    newState.playerX += dir.x * moveSpeed;
+    newState.playerY += dir.y * moveSpeed;
+    
+    // Update player angle to face movement direction
+    newState.playerAngle = lerpAngle(newState.playerAngle, Math.atan2(dy, dx), 0.15);
+  }
   
   // Update camera to follow player smoothly
   newState.cameraX = lerp(newState.cameraX, newState.playerX, 0.1);
@@ -164,34 +147,29 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     ? newState.stats.speed * 1.5 
     : newState.stats.speed;
   
-  // Fire while touching - shoot from ship tip in direction ship is facing
+  // Fire while touching - shoot in facing direction from ship tip
   if (isShooting && newState.fireTimer <= 0) {
-    // Calculate projectile spawn position at the tip of the ship (where it's pointing)
+    // Calculate projectile spawn position at the tip of the ship
     const tipOffset = VM_CONFIG.playerSize + 8; // Spawn from ship tip
-    const shootAngle = newState.playerAngle; // Shoot in direction ship is facing
-    const spawnX = newState.playerX + Math.cos(shootAngle) * tipOffset;
-    const spawnY = newState.playerY + Math.sin(shootAngle) * tipOffset;
+    const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
+    const spawnY = newState.playerY + Math.sin(newState.playerAngle) * tipOffset;
     
     // Check if double shot is active
     if (newState.activePowerUps.doubleShot > 0) {
       // Shoot two projectiles with slight angle offset
       const spreadAngle = 0.15;
-      // Calculate perpendicular offset for side-by-side shots
-      const perpAngle = shootAngle + Math.PI / 2;
-      const offsetDist = 8;
-      
       const projectile1 = createPlayerProjectile(
-        spawnX + Math.cos(perpAngle) * offsetDist,
-        spawnY + Math.sin(perpAngle) * offsetDist,
-        shootAngle - spreadAngle,
+        spawnX,
+        spawnY,
+        newState.playerAngle - spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
       );
       const projectile2 = createPlayerProjectile(
-        spawnX - Math.cos(perpAngle) * offsetDist,
-        spawnY - Math.sin(perpAngle) * offsetDist,
-        shootAngle + spreadAngle,
+        spawnX,
+        spawnY,
+        newState.playerAngle + spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
@@ -201,7 +179,7 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
       const projectile = createPlayerProjectile(
         spawnX,
         spawnY,
-        shootAngle,
+        newState.playerAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
