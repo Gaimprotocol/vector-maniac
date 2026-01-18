@@ -1,11 +1,12 @@
 // Vector Maniac Constants
 
-// Portrait mode dimensions (swap width/height for vertical gameplay)
+// Portrait mode dimensions with higher internal resolution.
+// We render at 2x resolution so everything appears ~50% smaller but sharper.
 export const VM_CONFIG = {
-  // Arena bounds - PORTRAIT MODE
-  arenaWidth: 390,
-  arenaHeight: 844,
-  arenaPadding: 30,
+  // Arena bounds - PORTRAIT MODE (2x)
+  arenaWidth: 780,
+  arenaHeight: 1688,
+  arenaPadding: 60,
   
   // Player
   playerSize: 16,
