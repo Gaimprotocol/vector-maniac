@@ -16,14 +16,14 @@ export function createDefaultStats(): PlayerStats {
   };
 }
 
-export function getRandomWavesForSegment(): number {
-  return Math.floor(Math.random() * 3) + 1; // 1-3 waves
+export function getRandomWavesForMap(): number {
+  return Math.floor(Math.random() * (VM_CONFIG.wavesPerMapMax - VM_CONFIG.wavesPerMapMin + 1)) + VM_CONFIG.wavesPerMapMin;
 }
 
 export function createVectorManiacState(): VectorState {
   const centerX = VM_CONFIG.arenaWidth / 2;
   const centerY = VM_CONFIG.arenaHeight / 2;
-  const initialWavesInSegment = getRandomWavesForSegment();
+  const initialWavesInMap = getRandomWavesForMap();
   
   return {
     phase: 'entering',
@@ -56,13 +56,21 @@ export function createVectorManiacState(): VectorState {
       speedBoost: 0,
     },
     
+    // New map-based progression
+    currentLevel: 1,
+    currentMap: 1,
     currentWave: 1,
-    currentSegment: 1,
-    wavesInSegment: initialWavesInSegment,
+    wavesInMap: initialWavesInMap,
     totalWavesCompleted: 0,
+    totalMapsCompleted: 0,
+    
+    // Boss tracking
+    bossActive: false,
+    bossDefeated: false,
+    
     enemiesSpawned: 0,
     enemiesDefeated: 0,
-    enemiesInWave: getEnemiesForWave(1),
+    enemiesInWave: getEnemiesForWave(1, 1),
     spawnTimer: 60,
     
     score: 0,
@@ -70,7 +78,6 @@ export function createVectorManiacState(): VectorState {
     combo: 0,
     comboTimer: 0,
     
-    portalChoice: null,
     difficultyMultiplier: 1.0,
     upgradesPending: 0,
     availableUpgrades: [],
@@ -80,15 +87,16 @@ export function createVectorManiacState(): VectorState {
   };
 }
 
-export function getEnemiesForWave(totalWaves: number): number {
-  // Scale enemies based on total waves completed
-  return VM_CONFIG.baseEnemiesPerWave + totalWaves * VM_CONFIG.enemiesPerWaveIncrease;
+export function getEnemiesForWave(totalWaves: number, level: number): number {
+  // Scale enemies based on total waves completed and level
+  const base = VM_CONFIG.baseEnemiesPerWave + totalWaves * VM_CONFIG.enemiesPerWaveIncrease;
+  return Math.floor(base * (1 + (level - 1) * 0.1));
 }
 
-export function isLastWaveInSegment(state: VectorState): boolean {
-  return state.currentWave >= state.wavesInSegment;
+export function isLastWaveInMap(state: VectorState): boolean {
+  return state.currentWave >= state.wavesInMap;
 }
 
-export function isFinalSegment(segment: number): boolean {
-  return segment >= VM_CONFIG.totalSegments;
+export function isFinalMap(mapId: number): boolean {
+  return mapId >= VM_CONFIG.totalMaps;
 }

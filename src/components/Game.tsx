@@ -16,7 +16,7 @@ import { useRewardedAds } from '@/hooks/useRewardedAds';
 import { usePurchases } from '@/hooks/usePurchases';
 import { getStoredSoundtrackFile } from '@/hooks/useSoundtrack';
 import { createInitialGameData, startGame, startSurvivalGame, startVectorManiac, pauseGame } from '@/game/gameLogic';
-import { selectPortal, selectUpgrade } from '@/game/vectorManiac/gameLogic';
+import { selectUpgrade } from '@/game/vectorManiac/gameLogic';
 import { GameData } from '@/game/types';
 import { primeAudioContext, setSfxMuted as setGlobalSfxMuted } from '@/game/utils';
 import { fadeOut, fadeIn, fadeOutAllExcept } from '@/utils/audioTransitions';
@@ -481,30 +481,11 @@ export const Game: React.FC<GameProps> = ({
           />
         )}
 
-        {/* Vector Maniac portal choice */}
-        {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'portalChoice' && (
-          <PortalChoiceModal
-            segment={gameData.vectorManiacState.currentSegment - 1}
-            onChooseSafe={() => {
-              setGameData(prev => ({
-                ...prev,
-                vectorManiacState: selectPortal(prev.vectorManiacState, 'safe'),
-              }));
-            }}
-            onChooseRisk={() => {
-              setGameData(prev => ({
-                ...prev,
-                vectorManiacState: selectPortal(prev.vectorManiacState, 'risk'),
-              }));
-            }}
-          />
-        )}
-
         {/* Vector Maniac upgrade pick */}
         {gameData.state === 'vectorManiac' && gameData.vectorManiacState?.phase === 'upgradePick' && (
           <UpgradePickModal
             picksRemaining={gameData.vectorManiacState.upgradesPending}
-            totalPicks={gameData.vectorManiacState.portalChoice === 'risk' ? 2 : 1}
+            totalPicks={1}
             currentUpgrades={{}}
             onSelectUpgrade={(upgradeId) => {
               setGameData(prev => ({

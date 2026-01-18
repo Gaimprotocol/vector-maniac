@@ -7,16 +7,16 @@ import {
   createShooter, 
   createElite, 
   createBounty,
+  createBoss,
   createPlayerProjectile, 
   createEnemyProjectile,
   createParticle,
   createSalvage,
   createPowerUp
 } from './entities';
-import { getEnemiesForWave, isLastWaveInSegment, isFinalSegment, getRandomWavesForSegment } from './state';
+import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound } from './sounds';
-
 interface VectorInput {
   touchX: number;
   touchY: number;
@@ -229,12 +229,14 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
   newState.particles = updateParticles(newState.particles);
   
   if (newState.phaseTimer <= 0) {
-    // Advance to next wave within this segment
+    // Advance to next wave within this map
     newState.currentWave++;
     newState.enemiesSpawned = 0;
     newState.enemiesDefeated = 0;
-    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted);
+    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted, newState.currentLevel);
     newState.spawnTimer = 30;
+    newState.bossActive = false;
+    newState.bossDefeated = false;
     newState.phase = 'playing';
   }
   
@@ -244,32 +246,37 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
 function spawnEnemy(state: VectorState): VectorState {
   let newState = { ...state };
   
-  const isBountyWave = isFinalSegment(state.currentSegment) && isLastWaveInSegment(state);
+  // Check if we need to spawn the map boss (last wave of each map)
+  const isLastWave = isLastWaveInMap(state);
+  const shouldSpawnBoss = isLastWave && !state.bossActive && !state.bossDefeated && state.enemiesSpawned === 0;
   
-  if (isBountyWave && state.enemiesSpawned === 0) {
-    // Spawn bounty boss
-    const bounty = createBounty();
-    bounty.health *= state.difficultyMultiplier;
-    bounty.maxHealth = bounty.health;
-    newState.enemies = [...newState.enemies, bounty];
-  } else {
-    // Determine enemy type based on wave
+  if (shouldSpawnBoss) {
+    // Spawn map boss
+    const boss = createBoss(state.currentMap, state.currentLevel);
+    boss.health *= state.difficultyMultiplier;
+    boss.maxHealth = boss.health;
+    newState.enemies = [...newState.enemies, boss];
+    newState.bossActive = true;
+  } else if (!state.bossActive) {
+    // Determine enemy type based on map and wave
     const roll = Math.random();
     let enemy: VectorEnemy;
     
-    if (state.currentWave >= 4 && roll < 0.15) {
-      // Elite enemies after wave 4
+    // More variety as maps progress
+    const eliteChance = Math.min(0.25, 0.05 + state.currentMap * 0.004);
+    const shooterChance = Math.min(0.5, 0.3 + state.currentMap * 0.004);
+    
+    if (roll < eliteChance) {
       enemy = createElite(state.playerX, state.playerY);
-    } else if (roll < 0.4) {
-      // Shooters
+    } else if (roll < shooterChance) {
       enemy = createShooter(state.playerX, state.playerY);
     } else {
-      // Drones (most common)
       enemy = createDrone(state.playerX, state.playerY);
     }
     
-    // Apply difficulty scaling
-    enemy.health *= state.difficultyMultiplier;
+    // Apply difficulty scaling (increases with level)
+    const levelScaling = 1 + (state.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
+    enemy.health *= state.difficultyMultiplier * levelScaling;
     enemy.maxHealth = enemy.health;
     
     newState.enemies = [...newState.enemies, enemy];
@@ -379,6 +386,126 @@ function updateEnemies(state: VectorState): VectorState {
           e.fireTimer = 60;
         }
         break;
+        
+      case 'boss': {
+        // Map boss - varied behavior based on behaviorTimer (stores mapId)
+        const mapId = Math.floor(e.behaviorTimer / 1000) || 1;
+        e.behaviorTimer = (e.behaviorTimer % 1000) + 1000 * mapId;
+        const bossTime = e.behaviorTimer % 1000;
+        
+        // Different movement patterns based on map
+        const patternType = mapId % 5;
+        
+        switch (patternType) {
+          case 0: // Orbiting pattern
+            const bossOrbitAngle = bossTime * 0.015;
+            const bossOrbitRadius = 120 + Math.sin(bossTime * 0.02) * 40;
+            const bossTargetX = VM_CONFIG.arenaWidth / 2 + Math.cos(bossOrbitAngle) * bossOrbitRadius;
+            const bossTargetY = VM_CONFIG.arenaHeight / 2 + Math.sin(bossOrbitAngle) * bossOrbitRadius;
+            e.vx = lerp(e.vx, (bossTargetX - e.x) * 0.02, 0.1);
+            e.vy = lerp(e.vy, (bossTargetY - e.y) * 0.02, 0.1);
+            break;
+            
+          case 1: // Chasing pattern
+            const chaseDir = normalize(dx, dy);
+            e.vx = lerp(e.vx, chaseDir.x * 1.5, 0.03);
+            e.vy = lerp(e.vy, chaseDir.y * 1.5, 0.03);
+            break;
+            
+          case 2: // Figure-8 pattern
+            const fig8Time = bossTime * 0.01;
+            const fig8X = VM_CONFIG.arenaWidth / 2 + Math.sin(fig8Time * 2) * 150;
+            const fig8Y = VM_CONFIG.arenaHeight / 2 + Math.sin(fig8Time) * 200;
+            e.vx = lerp(e.vx, (fig8X - e.x) * 0.03, 0.1);
+            e.vy = lerp(e.vy, (fig8Y - e.y) * 0.03, 0.1);
+            break;
+            
+          case 3: // Teleport dash pattern
+            if (bossTime % 120 < 5) {
+              // Quick dash towards player
+              const dashDir = normalize(dx, dy);
+              e.vx = dashDir.x * 8;
+              e.vy = dashDir.y * 8;
+            } else {
+              e.vx *= 0.95;
+              e.vy *= 0.95;
+            }
+            break;
+            
+          case 4: // Zigzag pattern
+            const zigzagPhase = Math.floor(bossTime / 60) % 2;
+            const zigDir = normalize(dx, dy);
+            const perpX = -zigDir.y;
+            const perpY = zigDir.x;
+            const zigOffset = zigzagPhase === 0 ? 1 : -1;
+            e.vx = lerp(e.vx, (zigDir.x + perpX * zigOffset * 0.5) * 2, 0.05);
+            e.vy = lerp(e.vy, (zigDir.y + perpY * zigOffset * 0.5) * 2, 0.05);
+            break;
+        }
+        
+        // Fire patterns based on map
+        e.fireTimer--;
+        if (e.fireTimer <= 0) {
+          const firePattern = mapId % 4;
+          
+          switch (firePattern) {
+            case 0: // Ring of bullets
+              for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * Math.PI * 2;
+                const proj = createEnemyProjectile(
+                  e.x + Math.cos(angle) * 25,
+                  e.y + Math.sin(angle) * 25,
+                  e.x + Math.cos(angle) * 200,
+                  e.y + Math.sin(angle) * 200
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 1: // Aimed triple shot
+              for (let i = -1; i <= 1; i++) {
+                const angle = Math.atan2(dy, dx) + i * 0.2;
+                const proj = createEnemyProjectile(
+                  e.x, e.y,
+                  e.x + Math.cos(angle) * 100,
+                  e.y + Math.sin(angle) * 100
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 2: // Spiral burst
+              const spiralAngle = bossTime * 0.1;
+              for (let i = 0; i < 3; i++) {
+                const angle = spiralAngle + (i / 3) * Math.PI * 2;
+                const proj = createEnemyProjectile(
+                  e.x + Math.cos(angle) * 20,
+                  e.y + Math.sin(angle) * 20,
+                  e.x + Math.cos(angle) * 200,
+                  e.y + Math.sin(angle) * 200
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 3: // Cross pattern
+              for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2;
+                const proj = createEnemyProjectile(
+                  e.x + Math.cos(angle) * 20,
+                  e.y + Math.sin(angle) * 20,
+                  e.x + Math.cos(angle) * 200,
+                  e.y + Math.sin(angle) * 200
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+          }
+          
+          e.fireTimer = VM_CONFIG.bossFireRate;
+        }
+        break;
+      }
     }
     
     // Apply velocity
@@ -765,46 +892,52 @@ function completeWave(state: VectorState): VectorState {
   
   newState.soundQueue = [...newState.soundQueue, 'waveComplete'];
   newState.totalWavesCompleted++;
+  newState.bossDefeated = true;
+  newState.bossActive = false;
   
-  // Check if this is the last wave in current segment
-  if (isLastWaveInSegment(state)) {
-    // Check if this was the final segment
-    if (isFinalSegment(state.currentSegment)) {
-      // Victory!
-      newState.phase = 'victory';
-      newState.score += 5000; // Victory bonus
+  // Check if this is the last wave in current map
+  if (isLastWaveInMap(state)) {
+    // Map complete! Move to next map
+    newState.totalMapsCompleted++;
+    newState.score += 1000 * state.currentMap;
+    
+    // Check if this was the final map (50)
+    if (isFinalMap(state.currentMap)) {
+      // All 50 maps complete - increase level and restart
+      newState.currentLevel++;
+      newState.currentMap = 1;
+      newState.difficultyMultiplier *= VM_CONFIG.levelDifficultyMultiplier;
+      newState.score += 10000 * newState.currentLevel; // Big level bonus
     } else {
-      // Segment complete - show portal choice
-      newState.phase = 'portalChoice';
-      newState.score += 1000 * state.currentSegment;
+      // Move to next map
+      newState.currentMap++;
+    }
+    
+    // Setup for new map
+    newState.currentWave = 1;
+    newState.wavesInMap = getRandomWavesForMap();
+    newState.enemiesSpawned = 0;
+    newState.enemiesDefeated = 0;
+    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted, newState.currentLevel);
+    newState.spawnTimer = 60;
+    newState.bossActive = false;
+    newState.bossDefeated = false;
+    
+    // Upgrade pick every 5 maps
+    if (newState.totalMapsCompleted % 5 === 0) {
+      newState.upgradesPending = 1;
+      newState.availableUpgrades = getRandomUpgrades(3);
+      newState.phase = 'upgradePick';
+    } else {
+      newState.phase = 'waveComplete';
+      newState.phaseTimer = VM_CONFIG.mapTransitionTime;
     }
   } else {
-    // Wave complete - continue to next wave in segment
+    // Wave complete - continue to next wave in map
     newState.phase = 'waveComplete';
     newState.phaseTimer = VM_CONFIG.waveTransitionTime;
     newState.score += 500 * newState.totalWavesCompleted;
   }
-  
-  return newState;
-}
-
-// Handle portal choice selection
-export function selectPortal(state: VectorState, choice: 'safe' | 'risk'): VectorState {
-  let newState = { ...state };
-  
-  newState.portalChoice = choice;
-  
-  // Difficulty scaling: more enemies and faster shooting (NOT speed increase)
-  if (choice === 'safe') {
-    newState.upgradesPending = 1;
-    newState.difficultyMultiplier *= 1.1; // 10% more health/enemies
-  } else {
-    newState.upgradesPending = 2;
-    newState.difficultyMultiplier *= 1.25; // 25% more health/enemies
-  }
-  
-  newState.phase = 'upgradePick';
-  newState.availableUpgrades = getRandomUpgrades(3);
   
   return newState;
 }
@@ -827,16 +960,9 @@ export function selectUpgrade(state: VectorState, upgradeId: string): VectorStat
   newState.upgradesPending--;
   
   if (newState.upgradesPending <= 0) {
-    // All upgrades picked - move to next segment
-    newState.currentSegment++;
-    newState.currentWave = 1;
-    newState.wavesInSegment = getRandomWavesForSegment(); // New random waves for this segment
-    newState.enemiesSpawned = 0;
-    newState.enemiesDefeated = 0;
-    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted);
-    newState.spawnTimer = 60;
-    newState.phase = 'playing';
-    newState.portalChoice = null;
+    // All upgrades picked - continue to next map
+    newState.phase = 'waveComplete';
+    newState.phaseTimer = VM_CONFIG.mapTransitionTime;
   } else {
     // More upgrades to pick - refresh available upgrades
     newState.availableUpgrades = getRandomUpgrades(3);

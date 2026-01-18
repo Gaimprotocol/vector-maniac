@@ -91,6 +91,38 @@ export function createBounty(): VectorEnemy {
   };
 }
 
+// Create a boss for each map - unique behavior based on map number
+export function createBoss(mapId: number, level: number): VectorEnemy {
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  const centerX = VM_CONFIG.arenaWidth / 2;
+  const centerY = VM_CONFIG.arenaHeight / 2;
+  
+  const dir = normalize(centerX - spawn.x, centerY - spawn.y);
+  
+  // Boss health scales with map and level
+  const baseHealth = VM_CONFIG.bossHealth * (1 + mapId * 0.05);
+  const levelScaling = 1 + (level - 1) * 0.25;
+  const finalHealth = baseHealth * levelScaling;
+  
+  // Boss size varies slightly per map
+  const sizeVariation = VM_CONFIG.bossSize + (mapId % 10) * 2;
+  
+  return {
+    id: generateId(),
+    x: spawn.x,
+    y: spawn.y,
+    vx: dir.x * VM_CONFIG.bountySpeed * 0.8,
+    vy: dir.y * VM_CONFIG.bountySpeed * 0.8,
+    size: sizeVariation,
+    health: finalHealth,
+    maxHealth: finalHealth,
+    type: 'boss',
+    fireTimer: VM_CONFIG.bossFireRate,
+    behaviorTimer: mapId, // Use mapId to vary behavior
+    targetAngle: spawn.angle,
+  };
+}
+
 export function createPlayerProjectile(
   x: number, 
   y: number, 
