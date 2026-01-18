@@ -1,4 +1,4 @@
-// Vector Maniac Sound Effects
+// Vector Maniac Sound Effects - Arcade Style
 
 let audioCtx: AudioContext | null = null;
 
@@ -9,7 +9,7 @@ function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
-export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup';
+export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -17,40 +17,7 @@ export function playVectorSound(type: VectorSoundType): void {
     
     switch (type) {
       case 'shoot': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.06);
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
-        
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.06);
-        break;
-      }
-      
-      case 'hit': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-        
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.08);
-        break;
-      }
-      
-      case 'explosion': {
+        // Arcade laser pew-pew sound
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gain1 = ctx.createGain();
@@ -61,111 +28,313 @@ export function playVectorSound(type: VectorSoundType): void {
         gain1.connect(ctx.destination);
         gain2.connect(ctx.destination);
         
+        // High-pitched laser sweep
         osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(120, ctx.currentTime);
-        osc1.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.3);
-        gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc1.frequency.setValueAtTime(1800, ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
+        gain1.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
         
+        // Sub harmonics for punch
         osc2.type = 'square';
-        osc2.frequency.setValueAtTime(80, ctx.currentTime);
-        osc2.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.2);
-        gain2.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc2.frequency.setValueAtTime(600, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.05);
+        gain2.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
         
         osc1.start(ctx.currentTime);
-        osc1.stop(ctx.currentTime + 0.3);
+        osc1.stop(ctx.currentTime + 0.08);
         osc2.start(ctx.currentTime);
-        osc2.stop(ctx.currentTime + 0.2);
+        osc2.stop(ctx.currentTime + 0.05);
+        break;
+      }
+      
+      case 'hit': {
+        // Punchy arcade hit sound
+        const osc = ctx.createOscillator();
+        const noise = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const noiseGain = ctx.createGain();
+        
+        osc.connect(gain);
+        noise.connect(noiseGain);
+        gain.connect(ctx.destination);
+        noiseGain.connect(ctx.destination);
+        
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        
+        // Noise burst for impact
+        noise.type = 'sawtooth';
+        noise.frequency.setValueAtTime(200, ctx.currentTime);
+        noise.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.06);
+        noiseGain.gain.setValueAtTime(0.08, ctx.currentTime);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.1);
+        noise.start(ctx.currentTime);
+        noise.stop(ctx.currentTime + 0.06);
+        break;
+      }
+      
+      case 'explosion': {
+        // Big arcade explosion with multiple layers
+        const bass = ctx.createOscillator();
+        const mid = ctx.createOscillator();
+        const high = ctx.createOscillator();
+        const crackle = ctx.createOscillator();
+        const bassGain = ctx.createGain();
+        const midGain = ctx.createGain();
+        const highGain = ctx.createGain();
+        const crackleGain = ctx.createGain();
+        
+        bass.connect(bassGain);
+        mid.connect(midGain);
+        high.connect(highGain);
+        crackle.connect(crackleGain);
+        bassGain.connect(ctx.destination);
+        midGain.connect(ctx.destination);
+        highGain.connect(ctx.destination);
+        crackleGain.connect(ctx.destination);
+        
+        // Deep bass rumble
+        bass.type = 'sine';
+        bass.frequency.setValueAtTime(80, ctx.currentTime);
+        bass.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.4);
+        bassGain.gain.setValueAtTime(0.25, ctx.currentTime);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        
+        // Mid punch
+        mid.type = 'sawtooth';
+        mid.frequency.setValueAtTime(200, ctx.currentTime);
+        mid.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.25);
+        midGain.gain.setValueAtTime(0.18, ctx.currentTime);
+        midGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        
+        // High crackle
+        high.type = 'square';
+        high.frequency.setValueAtTime(800, ctx.currentTime);
+        high.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
+        highGain.gain.setValueAtTime(0.1, ctx.currentTime);
+        highGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        
+        // Extra crackle layer
+        crackle.type = 'sawtooth';
+        crackle.frequency.setValueAtTime(1500, ctx.currentTime);
+        crackle.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
+        crackleGain.gain.setValueAtTime(0.06, ctx.currentTime);
+        crackleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        
+        bass.start(ctx.currentTime);
+        bass.stop(ctx.currentTime + 0.4);
+        mid.start(ctx.currentTime);
+        mid.stop(ctx.currentTime + 0.25);
+        high.start(ctx.currentTime);
+        high.stop(ctx.currentTime + 0.15);
+        crackle.start(ctx.currentTime);
+        crackle.stop(ctx.currentTime + 0.1);
         break;
       }
       
       case 'salvage': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        // Arcade coin/pickup sound
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        const gain2 = ctx.createGain();
         
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.setValueAtTime(900, ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        gain1.connect(ctx.destination);
+        gain2.connect(ctx.destination);
         
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.1);
+        // Bright bling
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, ctx.currentTime);
+        osc1.frequency.setValueAtTime(1320, ctx.currentTime + 0.04);
+        gain1.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        
+        // Harmonic
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1760, ctx.currentTime);
+        osc2.frequency.setValueAtTime(2640, ctx.currentTime + 0.04);
+        gain2.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        
+        osc1.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 0.12);
+        osc2.start(ctx.currentTime);
+        osc2.stop(ctx.currentTime + 0.1);
+        break;
+      }
+      
+      case 'rareSalvage': {
+        // Epic jackpot/rare pickup sound
+        const notes = [523, 659, 784, 1047, 1319]; // C5, E5, G5, C6, E6
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const gain2 = ctx.createGain();
+          osc.connect(gain);
+          osc2.connect(gain2);
+          gain.connect(ctx.destination);
+          gain2.connect(ctx.destination);
+          
+          const startTime = ctx.currentTime + i * 0.05;
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.15, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+          
+          // Sparkle harmonics
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(freq * 2, startTime);
+          gain2.gain.setValueAtTime(0.05, startTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+          
+          osc.start(startTime);
+          osc.stop(startTime + 0.2);
+          osc2.start(startTime);
+          osc2.stop(startTime + 0.15);
+        });
         break;
       }
       
       case 'damage': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        // Arcade damage/buzz sound
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        const gain2 = ctx.createGain();
         
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(200, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        gain1.connect(ctx.destination);
+        gain2.connect(ctx.destination);
         
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.15);
+        // Harsh buzz
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(150, ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.2);
+        gain1.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        
+        // Dissonant overlay
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(180, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.15);
+        gain2.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        
+        osc1.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 0.2);
+        osc2.start(ctx.currentTime);
+        osc2.stop(ctx.currentTime + 0.15);
         break;
       }
       
       case 'shield': {
+        // Energy shield activation
         const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
         const gain = ctx.createGain();
+        const gain2 = ctx.createGain();
+        
         osc.connect(gain);
+        osc2.connect(gain2);
         gain.connect(ctx.destination);
+        gain2.connect(ctx.destination);
         
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.setValueAtTime(200, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(600, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+        gain2.gain.setValueAtTime(0.06, ctx.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
         
         osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.15);
+        osc.stop(ctx.currentTime + 0.2);
+        osc2.start(ctx.currentTime);
+        osc2.stop(ctx.currentTime + 0.15);
         break;
       }
       
       case 'waveComplete': {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
-        osc.frequency.setValueAtTime(800, ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.3);
+        // Victory fanfare
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const gain2 = ctx.createGain();
+          osc.connect(gain);
+          osc2.connect(gain2);
+          gain.connect(ctx.destination);
+          gain2.connect(ctx.destination);
+          
+          const startTime = ctx.currentTime + i * 0.08;
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.15, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+          
+          osc2.type = 'square';
+          osc2.frequency.setValueAtTime(freq / 2, startTime);
+          gain2.gain.setValueAtTime(0.05, startTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+          
+          osc.start(startTime);
+          osc.stop(startTime + 0.25);
+          osc2.start(startTime);
+          osc2.stop(startTime + 0.2);
+        });
         break;
       }
       
       case 'powerup': {
-        // Ascending arpeggio for power-up pickup
-        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        // Power-up pickup with rising arpeggio
+        const notes = [392, 494, 587, 784, 988]; // G4, B4, D5, G5, B5
         notes.forEach((freq, i) => {
           const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
           const gain = ctx.createGain();
+          const gain2 = ctx.createGain();
           osc.connect(gain);
+          osc2.connect(gain2);
           gain.connect(ctx.destination);
+          gain2.connect(ctx.destination);
+          
+          const startTime = ctx.currentTime + i * 0.04;
           
           osc.type = 'sine';
-          const startTime = ctx.currentTime + i * 0.06;
           osc.frequency.setValueAtTime(freq, startTime);
-          gain.gain.setValueAtTime(0.1, startTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.12);
+          gain.gain.setValueAtTime(0.12, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+          
+          // Shimmer overlay
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(freq * 2, startTime);
+          gain2.gain.setValueAtTime(0.04, startTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
           
           osc.start(startTime);
-          osc.stop(startTime + 0.12);
+          osc.stop(startTime + 0.15);
+          osc2.start(startTime);
+          osc2.stop(startTime + 0.12);
         });
         break;
       }
