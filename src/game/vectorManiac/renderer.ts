@@ -774,42 +774,46 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, healthBarY + 4);
   }
   
-  // Map name display (when transitioning to new map)
-  if (state.showMapName && state.mapNameTimer > 0) {
+  // Map name display (when transitioning to new map) - only during waveComplete phase
+  if (state.showMapName && state.mapNameTimer > 0 && state.phase === 'waveComplete') {
     const theme = getMapTheme(state.currentMap);
-    const alpha = Math.min(1, state.mapNameTimer / 30); // Fade out in last 0.5 seconds
-    const slideIn = Math.min(1, (180 - state.mapNameTimer) / 20); // Slide in during first 0.33 seconds
+    // Quick fade: show for 1.5 seconds, fade out in last 0.5 seconds
+    const displayTime = 90; // 1.5 seconds total display
+    const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
+    const fadeOutStart = 30; // Start fading at 0.5 seconds remaining
+    const alpha = effectiveTimer < fadeOutStart ? effectiveTimer / fadeOutStart : 1;
+    const slideIn = Math.min(1, (displayTime - effectiveTimer) / 15); // Quick slide in
     
     ctx.save();
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha = alpha * 0.95;
     
-    // Dark overlay behind text
-    const centerY = VM_CONFIG.arenaHeight / 2 - 80;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, centerY - 50, arenaWidth, 120);
+    const centerY = VM_CONFIG.arenaHeight / 2 - 60;
     
-    // Map name with slide-in effect
-    const slideOffset = (1 - slideIn) * 100;
+    // Map name with slide-in effect (no black background)
+    const slideOffset = (1 - slideIn) * 80;
     ctx.translate(slideOffset, 0);
+    
+    // Glow effect behind text
+    ctx.shadowColor = theme.accentColor;
+    ctx.shadowBlur = 30;
     
     // "MAP X" label
     ctx.fillStyle = theme.accentColor;
-    ctx.font = 'bold 16px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`— MAP ${state.currentMap} —`, arenaWidth / 2, centerY - 15);
+    ctx.fillText(`— MAP ${state.currentMap} —`, arenaWidth / 2, centerY - 10);
     
     // Map name (large)
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px monospace';
-    ctx.shadowColor = theme.accentColor;
-    ctx.shadowBlur = 20;
-    ctx.fillText(theme.name.toUpperCase(), arenaWidth / 2, centerY + 25);
+    ctx.font = 'bold 32px monospace';
+    ctx.shadowBlur = 25;
+    ctx.fillText(theme.name.toUpperCase(), arenaWidth / 2, centerY + 30);
     
     // Level indicator
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#888888';
-    ctx.font = 'bold 12px monospace';
-    ctx.fillText(`LEVEL ${state.currentLevel} • ${state.wavesInMap} WAVE${state.wavesInMap > 1 ? 'S' : ''}`, arenaWidth / 2, centerY + 55);
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(`LEVEL ${state.currentLevel} • ${state.wavesInMap} WAVE${state.wavesInMap > 1 ? 'S' : ''}`, arenaWidth / 2, centerY + 60);
     
     ctx.restore();
   }
