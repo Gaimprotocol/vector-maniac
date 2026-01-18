@@ -114,13 +114,14 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   const isShooting = input.isTouching;
   
   if (dist > 2) {
-    const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
+    // Fast response: move 50% of distance each frame for snappy controls
+    const moveSpeed = Math.min(newState.stats.speed * 3, dist * 0.5);
     const dir = normalize(dx, dy);
     newState.playerX += dir.x * moveSpeed;
     newState.playerY += dir.y * moveSpeed;
     
-    // Update player angle to face movement direction
-    newState.playerAngle = lerpAngle(newState.playerAngle, Math.atan2(dy, dx), 0.15);
+    // Update player angle to face movement direction (faster rotation too)
+    newState.playerAngle = lerpAngle(newState.playerAngle, Math.atan2(dy, dx), 0.3);
   }
   
   // Clamp to arena bounds
