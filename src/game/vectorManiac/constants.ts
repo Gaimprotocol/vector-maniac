@@ -7,9 +7,9 @@ export const VM_CONFIG = {
   viewportWidth: 780,
   viewportHeight: 1688,
   
-  // World is infinite - no arena bounds (expanded 200%)
-  enemySpawnDistance: 1200, // Distance from player to spawn enemies
-  enemyDespawnDistance: 2400, // Distance from player to remove enemies
+  // World is infinite - no arena bounds
+  enemySpawnDistance: 600, // Distance from player to spawn enemies
+  enemyDespawnDistance: 1200, // Distance from player to remove enemies
   
   // Player (scaled up 50%)
   playerSize: 24,
