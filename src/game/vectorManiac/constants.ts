@@ -76,9 +76,9 @@ export const VM_CONFIG = {
   
   // Power-ups
   powerUpSize: 18,
-  powerUpSpawnChance: 0.08, // 8% chance per enemy kill
+  powerUpSpawnChance: 0.25, // 25% chance per enemy kill
   powerUpDuration: 600, // 10 seconds at 60fps
-  powerUpLifetime: 480, // 8 seconds before despawn
+  powerUpLifetime: 720, // 12 seconds before despawn
   powerUpColors: {
     shield: '#00aaff',
     nuke: '#ff4400',
