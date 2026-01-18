@@ -107,6 +107,9 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   const dy = newState.targetY - newState.playerY;
   const dist = Math.sqrt(dx * dx + dy * dy);
   
+  // Track if player is moving (for shooting)
+  const isMoving = dist > 4 && input.isTouching;
+  
   if (dist > 2) {
     const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
     const dir = normalize(dx, dy);
@@ -130,34 +133,17 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     if (newState.comboTimer <= 0) newState.combo = 0;
   }
   
-  // Auto-fire
-  if (newState.fireTimer <= 0) {
-    // Find nearest enemy to aim at
-    let targetAngle = newState.playerAngle;
-    if (newState.enemies.length > 0) {
-      let nearestDist = Infinity;
-      let nearestEnemy: VectorEnemy | null = null;
-      
-      for (const enemy of newState.enemies) {
-        const d = distance(newState.playerX, newState.playerY, enemy.x, enemy.y);
-        if (d < nearestDist) {
-          nearestDist = d;
-          nearestEnemy = enemy;
-        }
-      }
-      
-      if (nearestEnemy) {
-        targetAngle = Math.atan2(
-          nearestEnemy.y - newState.playerY,
-          nearestEnemy.x - newState.playerX
-        );
-      }
-    }
+  // Fire only while moving - shoot in movement direction from ship tip
+  if (isMoving && newState.fireTimer <= 0) {
+    // Calculate projectile spawn position at the tip of the ship
+    const tipOffset = VM_CONFIG.playerSize + 8; // Spawn from ship tip
+    const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
+    const spawnY = newState.playerY + Math.sin(newState.playerAngle) * tipOffset;
     
     const projectile = createPlayerProjectile(
-      newState.playerX,
-      newState.playerY,
-      targetAngle,
+      spawnX,
+      spawnY,
+      newState.playerAngle, // Shoot in movement direction
       newState.stats.bulletSpeed,
       newState.stats.damage,
       newState.stats.pierce
