@@ -460,13 +460,13 @@ function updateSalvage(state: VectorState): VectorState {
       if (salvage.isRare) {
         // Rare pod gives full health
         newState.health = VM_CONFIG.playerMaxHealth;
+        newState.soundQueue = [...newState.soundQueue, 'rareSalvage'];
       } else {
         // Normal pod gives small heal
         const healAmount = 5;
         newState.health = Math.min(newState.health + healAmount, VM_CONFIG.playerMaxHealth);
+        newState.soundQueue = [...newState.soundQueue, 'salvage'];
       }
-      
-      newState.soundQueue = [...newState.soundQueue, 'salvage'];
       
       // Create pickup particles (gold for rare, green for normal)
       const particleColor = salvage.isRare ? '#ffdd44' : '#00ff88';
