@@ -99,40 +99,46 @@ function updateEnteringPhase(state: VectorState): VectorState {
 function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState {
   let newState = { ...state };
   
-  // Update player position (drag-to-move)
-  if (input.isTouching) {
+  // Update player position + facing based on touch direction
+  // Finger acts like a “steering point”: ship stays 50px in front of the finger in the direction you steer.
+  const isSteering = input.isTouching;
+  const shipOffset = 50;
+
+  if (isSteering) {
     newState.targetX = input.touchX;
     newState.targetY = input.touchY;
+
+    // Direction from ship -> finger (where you steer)
+    const dx = newState.targetX - newState.playerX;
+    const dy = newState.targetY - newState.playerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > 0.001) {
+      const dir = normalize(dx, dy);
+
+      // Ship should be 50px "ahead" of the finger (finger behind the ship)
+      const desiredX = newState.targetX + dir.x * shipOffset;
+      const desiredY = newState.targetY + dir.y * shipOffset;
+
+      const toDesiredX = desiredX - newState.playerX;
+      const toDesiredY = desiredY - newState.playerY;
+      const distToDesired = Math.sqrt(toDesiredX * toDesiredX + toDesiredY * toDesiredY);
+
+      if (distToDesired > 1) {
+        const speedNow = newState.activePowerUps.speedBoost > 0 ? newState.stats.speed * 1.5 : newState.stats.speed;
+        const moveSpeed = Math.min(speedNow, distToDesired * 0.25);
+        const moveDir = normalize(toDesiredX, toDesiredY);
+        newState.playerX += moveDir.x * moveSpeed;
+        newState.playerY += moveDir.y * moveSpeed;
+      }
+
+      // Face exactly where you steer (no "spin" beyond this)
+      newState.playerAngle = Math.atan2(dir.y, dir.x);
+    }
   }
-  
-  // Smooth movement towards target
-  const dx = newState.targetX - newState.playerX;
-  const dy = newState.targetY - newState.playerY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  
+
   // Track if player is touching (for shooting)
   const isShooting = input.isTouching;
-  
-  // Ship follows finger directly, positioned 50px ahead of finger
-  const shipOffset = 50;
-  const targetX = newState.targetX;
-  const targetY = newState.targetY - shipOffset; // Ship is 50px above finger
-  
-  const toTargetX = targetX - newState.playerX;
-  const toTargetY = targetY - newState.playerY;
-  const distToTarget = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
-  
-  if (distToTarget > 2) {
-    // Move directly towards target position
-    const moveSpeed = Math.min(newState.stats.speed, distToTarget * 0.2);
-    const dir = normalize(toTargetX, toTargetY);
-    newState.playerX += dir.x * moveSpeed;
-    newState.playerY += dir.y * moveSpeed;
-    
-    // Update angle to face movement direction (for visual rotation)
-    const targetAngle = Math.atan2(toTargetY, toTargetX);
-    newState.playerAngle = lerpAngle(newState.playerAngle, targetAngle, 0.15);
-  }
   
   // Update camera to follow player smoothly
   newState.cameraX = lerp(newState.cameraX, newState.playerX, 0.1);

@@ -340,7 +340,7 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
   
   ctx.save();
   ctx.translate(screen.x, screen.y);
-  ctx.rotate(state.playerAngle + Math.PI / 2); // Rotate ship to face movement direction
+  ctx.rotate(state.playerAngle + Math.PI / 2); // Face steering direction
   
   // Invulnerability flash
   if (state.invulnerableTimer > 0 && Math.floor(state.invulnerableTimer / 4) % 2 === 0) {
@@ -358,10 +358,10 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.globalAlpha = 1;
   }
   
-  // Draw the mega ship
+  // Draw the mega ship (no self-spinning)
   const megaShipId = getStoredMegaShipId();
   const skinColors = getStoredSkinColors();
-  drawMegaShip(ctx, 0, 0, megaShipId, state.gameTime * 0.003, skinColors);
+  drawMegaShip(ctx, 0, 0, megaShipId, 0, skinColors);
   
   ctx.restore();
   
