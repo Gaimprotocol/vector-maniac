@@ -105,7 +105,7 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     newState.targetY = input.touchY;
   }
   
-  // Smooth movement towards target
+  // Smooth movement with velocity-based interpolation
   const dx = newState.targetX - newState.playerX;
   const dy = newState.targetY - newState.playerY;
   const dist = Math.sqrt(dx * dx + dy * dy);
@@ -113,16 +113,46 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   // Track if player is touching (for shooting)
   const isShooting = input.isTouching;
   
+  // Smooth velocity-based movement
+  const acceleration = 0.25; // How quickly velocity changes
+  const friction = 0.85; // Velocity decay for smoothness
+  
   if (dist > 2) {
-    // Fast response: move 50% of distance each frame for snappy controls
-    const moveSpeed = Math.min(newState.stats.speed * 3, dist * 0.5);
     const dir = normalize(dx, dy);
-    newState.playerX += dir.x * moveSpeed;
-    newState.playerY += dir.y * moveSpeed;
-    
-    // Update player angle to face movement direction (faster rotation too)
-    newState.playerAngle = lerpAngle(newState.playerAngle, Math.atan2(dy, dx), 0.3);
+    // Accelerate towards target, scaled by distance for responsive feel
+    const targetSpeed = Math.min(newState.stats.speed * 2, dist * 0.4);
+    newState.playerVelX += dir.x * targetSpeed * acceleration;
+    newState.playerVelY += dir.y * targetSpeed * acceleration;
   }
+  
+  // Apply friction for smooth deceleration
+  newState.playerVelX *= friction;
+  newState.playerVelY *= friction;
+  
+  // Cap velocity
+  const maxVel = newState.stats.speed * 3;
+  const velMag = Math.sqrt(newState.playerVelX ** 2 + newState.playerVelY ** 2);
+  if (velMag > maxVel) {
+    newState.playerVelX = (newState.playerVelX / velMag) * maxVel;
+    newState.playerVelY = (newState.playerVelY / velMag) * maxVel;
+  }
+  
+  // Apply velocity
+  newState.playerX += newState.playerVelX;
+  newState.playerY += newState.playerVelY;
+  
+  // Update player angle to face movement direction (smooth rotation)
+  if (velMag > 0.5) {
+    const targetAngle = Math.atan2(newState.playerVelY, newState.playerVelX);
+    newState.playerAngle = lerpAngle(newState.playerAngle, targetAngle, 0.15);
+  }
+  
+  // Update trail
+  const trailMaxLength = 12;
+  newState.trail = [
+    { x: newState.playerX, y: newState.playerY, age: 0 },
+    ...state.trail.map(p => ({ ...p, age: p.age + 1 })).filter(p => p.age < trailMaxLength)
+  ];
   
   // Clamp to arena bounds
   const padding = VM_CONFIG.arenaPadding;
