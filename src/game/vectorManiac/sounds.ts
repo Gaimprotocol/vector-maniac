@@ -9,7 +9,7 @@ function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
-export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete';
+export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -146,6 +146,27 @@ export function playVectorSound(type: VectorSoundType): void {
         
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.3);
+        break;
+      }
+      
+      case 'powerup': {
+        // Ascending arpeggio for power-up pickup
+        const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.type = 'sine';
+          const startTime = ctx.currentTime + i * 0.06;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.1, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.12);
+          
+          osc.start(startTime);
+          osc.stop(startTime + 0.12);
+        });
         break;
       }
     }

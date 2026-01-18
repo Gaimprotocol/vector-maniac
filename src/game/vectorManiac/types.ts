@@ -58,6 +58,24 @@ export interface VectorSalvage {
   magnetized: boolean;
 }
 
+export type PowerUpType = 'shield' | 'nuke' | 'doublePoints' | 'doubleShot' | 'speedBoost';
+
+export interface VectorPowerUp {
+  id: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  type: PowerUpType;
+  life: number; // Frames until despawn
+}
+
+export interface ActivePowerUps {
+  doublePoints: number; // Frames remaining
+  doubleShot: number;
+  speedBoost: number;
+}
+
 export interface VectorUpgrade {
   id: string;
   name: string;
@@ -165,6 +183,10 @@ export interface VectorState {
   projectiles: VectorProjectile[];
   particles: VectorParticle[];
   salvage: VectorSalvage[];
+  powerups: VectorPowerUp[];
+  
+  // Active power-up timers
+  activePowerUps: ActivePowerUps;
   
   // Wave/Segment management
   currentWave: number;      // 1-9

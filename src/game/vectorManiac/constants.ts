@@ -74,6 +74,19 @@ export const VM_CONFIG = {
   safeDifficultyIncrease: 1.05,
   riskDifficultyIncrease: 1.15,
   
+  // Power-ups
+  powerUpSize: 18,
+  powerUpSpawnChance: 0.08, // 8% chance per enemy kill
+  powerUpDuration: 600, // 10 seconds at 60fps
+  powerUpLifetime: 480, // 8 seconds before despawn
+  powerUpColors: {
+    shield: '#00aaff',
+    nuke: '#ff4400',
+    doublePoints: '#ffff00',
+    doubleShot: '#ff00ff',
+    speedBoost: '#00ff88',
+  },
+  
   // Visual
   bgColor1: '#050510',
   bgColor2: '#0a0a20',

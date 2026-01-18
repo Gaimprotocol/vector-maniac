@@ -18,6 +18,9 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
   // Draw salvage
   renderSalvage(ctx, state);
   
+  // Draw power-ups
+  renderPowerUps(ctx, state);
+  
   // Draw projectiles
   renderProjectiles(ctx, state);
   
@@ -117,6 +120,73 @@ function renderSalvage(ctx: CanvasRenderingContext2D, state: VectorState): void 
     ctx.beginPath();
     ctx.arc(salvage.x, salvage.y, 4, 0, Math.PI * 2);
     ctx.fill();
+  }
+}
+
+function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  for (const powerUp of state.powerups) {
+    const pulse = Math.sin(state.gameTime * 0.15 + powerUp.x) * 0.3 + 0.7;
+    const color = VM_CONFIG.powerUpColors[powerUp.type];
+    const size = VM_CONFIG.powerUpSize;
+    
+    ctx.save();
+    ctx.translate(powerUp.x, powerUp.y);
+    
+    // Outer glow ring
+    ctx.globalAlpha = 0.4 * pulse;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(0, 0, size + 4, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Rotating hexagon
+    ctx.globalAlpha = 0.8;
+    ctx.rotate(state.gameTime * 0.05);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const x = Math.cos(angle) * size;
+      const y = Math.sin(angle) * size;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Icon in center
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    let icon = '?';
+    switch (powerUp.type) {
+      case 'shield': icon = '🛡'; break;
+      case 'nuke': icon = '💥'; break;
+      case 'doublePoints': icon = '×2'; break;
+      case 'doubleShot': icon = '⚡'; break;
+      case 'speedBoost': icon = '🚀'; break;
+    }
+    ctx.fillText(icon, 0, 0);
+    
+    ctx.restore();
+    
+    // Despawn warning flash
+    if (powerUp.life < 120 && powerUp.life % 20 < 10) {
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(powerUp.x, powerUp.y, size + 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 }
 
@@ -367,6 +437,58 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.font = 'bold 16px monospace';
     ctx.textAlign = 'right';
     ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, healthBarY + 4);
+  }
+  
+  // Active power-ups indicator (top right area)
+  const activePowerUps: { name: string; color: string; remaining: number }[] = [];
+  
+  if (state.activePowerUps.doublePoints > 0) {
+    activePowerUps.push({ 
+      name: '×2 POINTS', 
+      color: VM_CONFIG.powerUpColors.doublePoints,
+      remaining: state.activePowerUps.doublePoints 
+    });
+  }
+  if (state.activePowerUps.doubleShot > 0) {
+    activePowerUps.push({ 
+      name: '×2 SHOT', 
+      color: VM_CONFIG.powerUpColors.doubleShot,
+      remaining: state.activePowerUps.doubleShot 
+    });
+  }
+  if (state.activePowerUps.speedBoost > 0) {
+    activePowerUps.push({ 
+      name: 'SPEED', 
+      color: VM_CONFIG.powerUpColors.speedBoost,
+      remaining: state.activePowerUps.speedBoost 
+    });
+  }
+  
+  if (activePowerUps.length > 0) {
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'right';
+    
+    activePowerUps.forEach((powerUp, index) => {
+      const y = 50 + index * 20;
+      const barWidth = 60;
+      const barHeight = 12;
+      const barX = arenaWidth - 15 - barWidth;
+      
+      // Background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillRect(barX, y - 6, barWidth, barHeight);
+      
+      // Progress bar
+      const progress = powerUp.remaining / VM_CONFIG.powerUpDuration;
+      ctx.fillStyle = powerUp.color;
+      ctx.globalAlpha = 0.7;
+      ctx.fillRect(barX, y - 6, barWidth * progress, barHeight);
+      ctx.globalAlpha = 1;
+      
+      // Text
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(powerUp.name, arenaWidth - 20 - barWidth, y);
+    });
   }
 }
 

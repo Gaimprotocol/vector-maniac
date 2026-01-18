@@ -1,6 +1,6 @@
 // Vector Maniac Game Logic
 
-import { VectorState, VectorEnemy, VectorProjectile, VECTOR_UPGRADES } from './types';
+import { VectorState, VectorEnemy, VectorProjectile, VECTOR_UPGRADES, VectorPowerUp } from './types';
 import { VM_CONFIG } from './constants';
 import { 
   createDrone, 
@@ -10,7 +10,8 @@ import {
   createPlayerProjectile, 
   createEnemyProjectile,
   createParticle,
-  createSalvage 
+  createSalvage,
+  createPowerUp
 } from './entities';
 import { getEnemiesForWave, isLastWaveInSegment, isFinalWave } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
@@ -29,6 +30,8 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
     projectiles: [...state.projectiles],
     particles: [...state.particles],
     salvage: [...state.salvage],
+    powerups: [...state.powerups],
+    activePowerUps: { ...state.activePowerUps },
     soundQueue: [],
   };
   
@@ -133,6 +136,16 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     if (newState.comboTimer <= 0) newState.combo = 0;
   }
   
+  // Update active power-up timers
+  if (newState.activePowerUps.doublePoints > 0) newState.activePowerUps.doublePoints--;
+  if (newState.activePowerUps.doubleShot > 0) newState.activePowerUps.doubleShot--;
+  if (newState.activePowerUps.speedBoost > 0) newState.activePowerUps.speedBoost--;
+  
+  // Apply speed boost
+  const effectiveSpeed = newState.activePowerUps.speedBoost > 0 
+    ? newState.stats.speed * 1.5 
+    : newState.stats.speed;
+  
   // Fire while touching - shoot in facing direction from ship tip
   if (isShooting && newState.fireTimer <= 0) {
     // Calculate projectile spawn position at the tip of the ship
@@ -140,15 +153,38 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
     const spawnY = newState.playerY + Math.sin(newState.playerAngle) * tipOffset;
     
-    const projectile = createPlayerProjectile(
-      spawnX,
-      spawnY,
-      newState.playerAngle, // Shoot in movement direction
-      newState.stats.bulletSpeed,
-      newState.stats.damage,
-      newState.stats.pierce
-    );
-    newState.projectiles = [...newState.projectiles, projectile];
+    // Check if double shot is active
+    if (newState.activePowerUps.doubleShot > 0) {
+      // Shoot two projectiles with slight angle offset
+      const spreadAngle = 0.15;
+      const projectile1 = createPlayerProjectile(
+        spawnX,
+        spawnY,
+        newState.playerAngle - spreadAngle,
+        newState.stats.bulletSpeed,
+        newState.stats.damage,
+        newState.stats.pierce
+      );
+      const projectile2 = createPlayerProjectile(
+        spawnX,
+        spawnY,
+        newState.playerAngle + spreadAngle,
+        newState.stats.bulletSpeed,
+        newState.stats.damage,
+        newState.stats.pierce
+      );
+      newState.projectiles = [...newState.projectiles, projectile1, projectile2];
+    } else {
+      const projectile = createPlayerProjectile(
+        spawnX,
+        spawnY,
+        newState.playerAngle,
+        newState.stats.bulletSpeed,
+        newState.stats.damage,
+        newState.stats.pierce
+      );
+      newState.projectiles = [...newState.projectiles, projectile];
+    }
     newState.fireTimer = newState.stats.fireRate;
     newState.soundQueue = [...newState.soundQueue, 'shoot'];
   }
@@ -165,10 +201,12 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   newState = updateEnemies(newState);
   newState = updateProjectiles(newState);
   newState = updateSalvage(newState);
+  newState = updatePowerUps(newState);
   newState.particles = updateParticles(newState.particles);
   
   // Check collisions
   newState = checkCollisions(newState);
+  newState = checkPowerUpCollisions(newState);
   
   // Check wave completion
   if (newState.enemiesDefeated >= newState.enemiesInWave && newState.enemies.length === 0) {
@@ -443,6 +481,111 @@ function updateParticles(particles: VectorState['particles']): VectorState['part
     .filter(p => p.life > 0);
 }
 
+function updatePowerUps(state: VectorState): VectorState {
+  let newState = { ...state };
+  const updatedPowerUps: VectorPowerUp[] = [];
+  
+  for (const powerUp of newState.powerups) {
+    const p = { ...powerUp };
+    
+    // Update position
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    
+    // Bounce off walls
+    if (p.x < VM_CONFIG.arenaPadding || p.x > VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding) {
+      p.vx *= -1;
+      p.x = clamp(p.x, VM_CONFIG.arenaPadding, VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding);
+    }
+    if (p.y < VM_CONFIG.arenaPadding || p.y > VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding) {
+      p.vy *= -1;
+      p.y = clamp(p.y, VM_CONFIG.arenaPadding, VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding);
+    }
+    
+    // Keep if still alive
+    if (p.life > 0) {
+      updatedPowerUps.push(p);
+    }
+  }
+  
+  newState.powerups = updatedPowerUps;
+  return newState;
+}
+
+function checkPowerUpCollisions(state: VectorState): VectorState {
+  let newState = { ...state };
+  const remainingPowerUps: VectorPowerUp[] = [];
+  
+  for (const powerUp of newState.powerups) {
+    const dist = distance(newState.playerX, newState.playerY, powerUp.x, powerUp.y);
+    
+    if (dist < VM_CONFIG.playerSize + VM_CONFIG.powerUpSize) {
+      // Collected!
+      newState = applyPowerUp(newState, powerUp.type);
+      newState.soundQueue = [...newState.soundQueue, 'powerup'];
+      
+      // Create pickup particles
+      const color = VM_CONFIG.powerUpColors[powerUp.type];
+      const particles = createParticle(powerUp.x, powerUp.y, color, 10);
+      newState.particles = [...newState.particles, ...particles];
+    } else {
+      remainingPowerUps.push(powerUp);
+    }
+  }
+  
+  newState.powerups = remainingPowerUps;
+  return newState;
+}
+
+function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorState {
+  let newState = { ...state };
+  
+  switch (type) {
+    case 'shield':
+      // Add a temporary shield (same as upgrade shield)
+      newState.shields++;
+      break;
+      
+    case 'nuke':
+      // Destroy all enemies on screen
+      for (const enemy of newState.enemies) {
+        // Create explosion particles
+        const particles = createParticle(
+          enemy.x, 
+          enemy.y, 
+          VM_CONFIG.enemyColors[enemy.type], 
+          enemy.type === 'bounty' ? 20 : 8
+        );
+        newState.particles = [...newState.particles, ...particles];
+        
+        // Give score (reduced since it's easy)
+        const baseScore = enemy.type === 'bounty' ? 500 : 
+                          enemy.type === 'elite' ? 100 :
+                          enemy.type === 'shooter' ? 50 : 25;
+        newState.score += baseScore;
+        newState.enemiesDefeated++;
+      }
+      newState.enemies = [];
+      newState.soundQueue = [...newState.soundQueue, 'explosion'];
+      break;
+      
+    case 'doublePoints':
+      newState.activePowerUps.doublePoints = VM_CONFIG.powerUpDuration;
+      break;
+      
+    case 'doubleShot':
+      newState.activePowerUps.doubleShot = VM_CONFIG.powerUpDuration;
+      break;
+      
+    case 'speedBoost':
+      newState.activePowerUps.speedBoost = VM_CONFIG.powerUpDuration;
+      break;
+  }
+  
+  return newState;
+}
+
 function checkCollisions(state: VectorState): VectorState {
   let newState = { ...state };
   
@@ -498,11 +641,18 @@ function checkCollisions(state: VectorState): VectorState {
       newState.combo++;
       newState.comboTimer = 120;
       
-      // Score with combo bonus
+      // Score with combo bonus (doubled if power-up active)
       const baseScore = enemy.type === 'bounty' ? 1000 : 
                         enemy.type === 'elite' ? 200 :
                         enemy.type === 'shooter' ? 100 : 50;
-      newState.score += baseScore * (1 + newState.combo * 0.1);
+      const pointMultiplier = newState.activePowerUps.doublePoints > 0 ? 2 : 1;
+      newState.score += baseScore * (1 + newState.combo * 0.1) * pointMultiplier;
+      
+      // Chance to spawn power-up
+      if (Math.random() < VM_CONFIG.powerUpSpawnChance) {
+        const powerUp = createPowerUp(enemy.x, enemy.y);
+        newState.powerups = [...newState.powerups, powerUp];
+      }
       
       // Spawn salvage
       const dropChance = VM_CONFIG.salvageDropChance[enemy.type];

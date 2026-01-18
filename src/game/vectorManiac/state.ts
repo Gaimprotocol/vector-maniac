@@ -43,6 +43,13 @@ export function createVectorManiacState(): VectorState {
     projectiles: [],
     particles: [],
     salvage: [],
+    powerups: [],
+    
+    activePowerUps: {
+      doublePoints: 0,
+      doubleShot: 0,
+      speedBoost: 0,
+    },
     
     currentWave: 1,
     currentSegment: 1,
