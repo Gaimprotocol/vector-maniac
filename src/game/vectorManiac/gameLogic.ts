@@ -114,13 +114,14 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   const isShooting = input.isTouching;
   
   if (dist > 2) {
-    const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
-    const dir = normalize(dx, dy);
-    newState.playerX += dir.x * moveSpeed;
-    newState.playerY += dir.y * moveSpeed;
-    
     // Update player angle to face movement direction
-    newState.playerAngle = lerpAngle(newState.playerAngle, Math.atan2(dy, dx), 0.15);
+    const targetAngle = Math.atan2(dy, dx);
+    newState.playerAngle = lerpAngle(newState.playerAngle, targetAngle, 0.15);
+    
+    // Move in the direction the ship is facing (360 degree movement)
+    const moveSpeed = Math.min(newState.stats.speed, dist * 0.15);
+    newState.playerX += Math.cos(newState.playerAngle) * moveSpeed;
+    newState.playerY += Math.sin(newState.playerAngle) * moveSpeed;
   }
   
   // Update camera to follow player smoothly
@@ -147,29 +148,33 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     ? newState.stats.speed * 1.5 
     : newState.stats.speed;
   
-  // Fire while touching - shoot upward from ship tip (always shoot up)
+  // Fire while touching - shoot from ship tip in direction ship is facing
   if (isShooting && newState.fireTimer <= 0) {
-    // Calculate projectile spawn position at the top of the ship
+    // Calculate projectile spawn position at the tip of the ship (where it's pointing)
     const tipOffset = VM_CONFIG.playerSize + 8; // Spawn from ship tip
-    const shootAngle = -Math.PI / 2; // Always shoot upward
-    const spawnX = newState.playerX;
-    const spawnY = newState.playerY - tipOffset; // Top of ship
+    const shootAngle = newState.playerAngle; // Shoot in direction ship is facing
+    const spawnX = newState.playerX + Math.cos(shootAngle) * tipOffset;
+    const spawnY = newState.playerY + Math.sin(shootAngle) * tipOffset;
     
     // Check if double shot is active
     if (newState.activePowerUps.doubleShot > 0) {
       // Shoot two projectiles with slight angle offset
       const spreadAngle = 0.15;
+      // Calculate perpendicular offset for side-by-side shots
+      const perpAngle = shootAngle + Math.PI / 2;
+      const offsetDist = 8;
+      
       const projectile1 = createPlayerProjectile(
-        spawnX - 8, // Offset left
-        spawnY,
+        spawnX + Math.cos(perpAngle) * offsetDist,
+        spawnY + Math.sin(perpAngle) * offsetDist,
         shootAngle - spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
       );
       const projectile2 = createPlayerProjectile(
-        spawnX + 8, // Offset right
-        spawnY,
+        spawnX - Math.cos(perpAngle) * offsetDist,
+        spawnY - Math.sin(perpAngle) * offsetDist,
         shootAngle + spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
