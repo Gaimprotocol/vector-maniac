@@ -38,10 +38,11 @@ export const ShopScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('upgrades');
   const [hoveredUpgrade, setHoveredUpgrade] = useState<string | null>(null);
   const [upgradeVersion, setUpgradeVersion] = useState(0); // Triggers ship preview re-render
+  const [purchaseFlash, setPurchaseFlash] = useState<string | null>(null); // Flash effect on purchase
   
   const { purchaseProduct, isOwned, isLoading, shouldShowAds } = usePurchases();
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
-  const { getUpgradeLevel, getUpgradeCost, isUpgradeMaxed, purchaseUpgrade, allUpgrades } = useShipUpgrades();
+  const { getUpgradeLevel, getUpgradeCost, isUpgradeMaxed, purchaseUpgrade, allUpgrades, upgrades } = useShipUpgrades();
   
   const { 
     isShowingAd, 
@@ -90,6 +91,11 @@ export const ShopScreen: React.FC = () => {
     if (spendScraps(cost)) {
       purchaseUpgrade(upgradeId);
       setUpgradeVersion(v => v + 1); // Trigger ship preview update
+      
+      // Trigger purchase flash effect
+      setPurchaseFlash(upgradeId);
+      setTimeout(() => setPurchaseFlash(null), 600);
+      
       setPopup({ type: 'success', productName: upgrade.name });
     }
   };
@@ -242,6 +248,8 @@ export const ShopScreen: React.FC = () => {
                 <div
                   key={upgrade.id}
                   className={`relative border-2 rounded-lg p-3 transition-all duration-300 animate-pop-in ${
+                    purchaseFlash === upgrade.id ? 'scale-105' : ''
+                  } ${
                     maxed 
                       ? 'border-green-500/50 bg-green-900/10' 
                       : affordable
@@ -249,24 +257,48 @@ export const ShopScreen: React.FC = () => {
                         : 'border-gray-600/40'
                   }`}
                   style={{
-                    background: maxed 
-                      ? 'linear-gradient(135deg, rgba(0, 255, 100, 0.08) 0%, rgba(0, 100, 50, 0.08) 100%)'
-                      : 'linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, rgba(255, 0, 255, 0.05) 100%)',
+                    background: purchaseFlash === upgrade.id
+                      ? 'linear-gradient(135deg, rgba(0, 255, 200, 0.3) 0%, rgba(0, 200, 255, 0.2) 100%)'
+                      : maxed 
+                        ? 'linear-gradient(135deg, rgba(0, 255, 100, 0.08) 0%, rgba(0, 100, 50, 0.08) 100%)'
+                        : 'linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, rgba(255, 0, 255, 0.05) 100%)',
                     animationDelay: `${index * 50}ms`,
                     animationFillMode: 'backwards',
+                    transition: 'all 0.3s ease-out, transform 0.2s ease-out',
+                    boxShadow: purchaseFlash === upgrade.id 
+                      ? '0 0 30px rgba(0, 255, 200, 0.5), inset 0 0 20px rgba(0, 255, 200, 0.2)' 
+                      : 'none',
                   }}
                   onMouseEnter={() => setHoveredUpgrade(upgrade.id)}
                   onMouseLeave={() => setHoveredUpgrade(null)}
                   onTouchStart={() => setHoveredUpgrade(upgrade.id)}
                   onTouchEnd={() => setHoveredUpgrade(null)}
                 >
+                  {/* Purchase flash overlay */}
+                  {purchaseFlash === upgrade.id && (
+                    <div 
+                      className="absolute inset-0 rounded-lg pointer-events-none"
+                      style={{
+                        background: 'radial-gradient(circle at center, rgba(0, 255, 200, 0.4) 0%, transparent 70%)',
+                        animation: 'pulse-flash 0.6s ease-out forwards',
+                      }}
+                    />
+                  )}
+                  
                   {/* Stat Preview Tooltip */}
-                  {hoveredUpgrade === upgrade.id && (
+                  {hoveredUpgrade === upgrade.id && !purchaseFlash && (
                     <UpgradeStatPreview upgrade={upgrade} currentLevel={level} />
                   )}
                   <div className="flex items-start justify-between mb-2">
                     <span className="text-2xl">{upgrade.icon}</span>
-                    <span className="font-pixel text-[8px] text-gray-400">
+                    <span 
+                      className={`font-pixel text-[8px] transition-all duration-300 ${
+                        purchaseFlash === upgrade.id ? 'text-green-400 scale-125' : 'text-gray-400'
+                      }`}
+                      style={{
+                        textShadow: purchaseFlash === upgrade.id ? '0 0 10px rgba(0, 255, 200, 0.8)' : 'none',
+                      }}
+                    >
                       LVL {level}/{upgrade.maxLevel}
                     </span>
                   </div>
@@ -281,19 +313,22 @@ export const ShopScreen: React.FC = () => {
                   {/* Level progress bar */}
                   <div className="w-full h-1.5 bg-gray-800 rounded-full mb-2 overflow-hidden">
                     <div 
-                      className={`h-full transition-all ${maxed ? 'bg-green-500' : 'bg-cyan-500'}`}
-                      style={{ width: `${(level / upgrade.maxLevel) * 100}%` }}
+                      className={`h-full transition-all duration-500 ${maxed ? 'bg-green-500' : 'bg-cyan-500'}`}
+                      style={{ 
+                        width: `${(level / upgrade.maxLevel) * 100}%`,
+                        boxShadow: purchaseFlash === upgrade.id ? '0 0 10px rgba(0, 255, 200, 0.8)' : 'none',
+                      }}
                     />
                   </div>
                   
                   <button
                     onClick={() => handleUpgradePurchase(upgrade.id)}
                     disabled={maxed || isLoading}
-                    className={`w-full font-pixel text-[8px] py-1.5 rounded transition-all ${
+                    className={`w-full font-pixel text-[8px] py-1.5 rounded transition-all active:scale-95 ${
                       maxed 
                         ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
                         : affordable
-                          ? 'bg-yellow-400 text-black hover:bg-yellow-300'
+                          ? 'bg-yellow-400 text-black hover:bg-yellow-300 hover:shadow-lg hover:shadow-yellow-400/30'
                           : 'bg-gray-700 text-gray-400'
                     }`}
                   >
