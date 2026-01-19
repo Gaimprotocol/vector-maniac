@@ -416,11 +416,11 @@ function updateEnemies(state: VectorState): VectorState {
         e.behaviorTimer = (e.behaviorTimer % 1000) + 1000 * mapId;
         const bossTime = e.behaviorTimer % 1000;
         
-        // Different movement patterns based on map
-        const patternType = mapId % 5;
+        // Different movement patterns based on map - 10 unique patterns
+        const patternType = mapId % 10;
         
         switch (patternType) {
-          case 0: // Orbiting pattern
+          case 0: // Orbiting pattern - circles around center
             const bossOrbitAngle = bossTime * 0.015;
             const bossOrbitRadius = 120 + Math.sin(bossTime * 0.02) * 40;
             const bossTargetX = VM_CONFIG.arenaWidth / 2 + Math.cos(bossOrbitAngle) * bossOrbitRadius;
@@ -429,13 +429,13 @@ function updateEnemies(state: VectorState): VectorState {
             e.vy = lerp(e.vy, (bossTargetY - e.y) * 0.02, 0.1);
             break;
             
-          case 1: // Chasing pattern
+          case 1: // Aggressive chase - hunts the player
             const chaseDir = normalize(dx, dy);
-            e.vx = lerp(e.vx, chaseDir.x * 1.5, 0.03);
-            e.vy = lerp(e.vy, chaseDir.y * 1.5, 0.03);
+            e.vx = lerp(e.vx, chaseDir.x * 2.0, 0.04);
+            e.vy = lerp(e.vy, chaseDir.y * 2.0, 0.04);
             break;
             
-          case 2: // Figure-8 pattern
+          case 2: // Figure-8 pattern - graceful sweeping
             const fig8Time = bossTime * 0.01;
             const fig8X = VM_CONFIG.arenaWidth / 2 + Math.sin(fig8Time * 2) * 150;
             const fig8Y = VM_CONFIG.arenaHeight / 2 + Math.sin(fig8Time) * 200;
@@ -443,41 +443,112 @@ function updateEnemies(state: VectorState): VectorState {
             e.vy = lerp(e.vy, (fig8Y - e.y) * 0.03, 0.1);
             break;
             
-          case 3: // Teleport dash pattern
+          case 3: // Teleport dash - sudden lunges
             if (bossTime % 120 < 5) {
-              // Quick dash towards player
               const dashDir = normalize(dx, dy);
-              e.vx = dashDir.x * 8;
-              e.vy = dashDir.y * 8;
+              e.vx = dashDir.x * 10;
+              e.vy = dashDir.y * 10;
             } else {
-              e.vx *= 0.95;
-              e.vy *= 0.95;
+              e.vx *= 0.92;
+              e.vy *= 0.92;
             }
             break;
             
-          case 4: // Zigzag pattern
+          case 4: // Zigzag pattern - erratic movement
             const zigzagPhase = Math.floor(bossTime / 60) % 2;
             const zigDir = normalize(dx, dy);
             const perpX = -zigDir.y;
             const perpY = zigDir.x;
             const zigOffset = zigzagPhase === 0 ? 1 : -1;
-            e.vx = lerp(e.vx, (zigDir.x + perpX * zigOffset * 0.5) * 2, 0.05);
-            e.vy = lerp(e.vy, (zigDir.y + perpY * zigOffset * 0.5) * 2, 0.05);
+            e.vx = lerp(e.vx, (zigDir.x + perpX * zigOffset * 0.5) * 2.5, 0.06);
+            e.vy = lerp(e.vy, (zigDir.y + perpY * zigOffset * 0.5) * 2.5, 0.06);
+            break;
+            
+          case 5: // Hover and strafe - stays at distance
+            const distToPlayer = Math.sqrt(dx * dx + dy * dy);
+            const idealDist = 180;
+            const strafeAngle = Math.atan2(dy, dx) + Math.PI / 2;
+            const strafeSpeed = Math.sin(bossTime * 0.03) * 2;
+            if (distToPlayer < idealDist - 30) {
+              e.vx = lerp(e.vx, -normalize(dx, dy).x * 1.5, 0.05);
+              e.vy = lerp(e.vy, -normalize(dx, dy).y * 1.5, 0.05);
+            } else if (distToPlayer > idealDist + 30) {
+              e.vx = lerp(e.vx, normalize(dx, dy).x * 1.5, 0.05);
+              e.vy = lerp(e.vy, normalize(dx, dy).y * 1.5, 0.05);
+            } else {
+              e.vx = lerp(e.vx, Math.cos(strafeAngle) * strafeSpeed, 0.08);
+              e.vy = lerp(e.vy, Math.sin(strafeAngle) * strafeSpeed, 0.08);
+            }
+            break;
+            
+          case 6: // Wave motion - sinusoidal approach
+            const waveApproach = normalize(dx, dy);
+            const waveAmplitude = Math.sin(bossTime * 0.05) * 3;
+            e.vx = lerp(e.vx, waveApproach.x * 1.2 + waveApproach.y * waveAmplitude, 0.04);
+            e.vy = lerp(e.vy, waveApproach.y * 1.2 - waveApproach.x * waveAmplitude, 0.04);
+            break;
+            
+          case 7: // Stationary turret - minimal movement, heavy fire
+            const turretCenterX = VM_CONFIG.arenaWidth / 2;
+            const turretCenterY = VM_CONFIG.arenaHeight / 3;
+            e.vx = lerp(e.vx, (turretCenterX - e.x) * 0.01, 0.1);
+            e.vy = lerp(e.vy, (turretCenterY - e.y) * 0.01, 0.1);
+            break;
+            
+          case 8: // Meteor boss - swoops from above
+            const meteorPhase = Math.floor(bossTime / 180) % 3;
+            if (meteorPhase === 0) {
+              // Rise up
+              e.vx = lerp(e.vx, 0, 0.1);
+              e.vy = lerp(e.vy, -3, 0.05);
+            } else if (meteorPhase === 1) {
+              // Dive at player
+              const diveDir = normalize(dx, dy);
+              e.vx = lerp(e.vx, diveDir.x * 5, 0.08);
+              e.vy = lerp(e.vy, diveDir.y * 5, 0.08);
+            } else {
+              // Recover
+              e.vx *= 0.95;
+              e.vy *= 0.95;
+            }
+            break;
+            
+          case 9: // Spiral outward - expands then contracts
+            const spiralPhase = (bossTime % 300) / 300;
+            const spiralRadius = 50 + spiralPhase * 150;
+            const spiralAngleM = bossTime * 0.02;
+            const spiralTargetX = VM_CONFIG.arenaWidth / 2 + Math.cos(spiralAngleM) * spiralRadius;
+            const spiralTargetY = VM_CONFIG.arenaHeight / 2 + Math.sin(spiralAngleM) * spiralRadius;
+            e.vx = lerp(e.vx, (spiralTargetX - e.x) * 0.04, 0.1);
+            e.vy = lerp(e.vy, (spiralTargetY - e.y) * 0.04, 0.1);
             break;
         }
         
         // Fire patterns based on map
         e.fireTimer--;
         if (e.fireTimer <= 0) {
-          const firePattern = mapId % 4;
+          const firePattern = mapId % 10;
+          const playerAngle = Math.atan2(dy, dx);
           
           switch (firePattern) {
-            case 0: // Ring of bullets
-              for (let i = 0; i < 10; i++) {
-                const angle = (i / 10) * Math.PI * 2;
+            case 0: // Ring of bullets - expanding circle
+              for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
                 const proj = createEnemyProjectile(
                   e.x + Math.cos(angle) * 25,
                   e.y + Math.sin(angle) * 25,
+                  e.x + Math.cos(angle) * 300,
+                  e.y + Math.sin(angle) * 300
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 1: // Aimed spread shot - 5 bullets in a fan
+              for (let i = -2; i <= 2; i++) {
+                const angle = playerAngle + i * 0.15;
+                const proj = createEnemyProjectile(
+                  e.x, e.y,
                   e.x + Math.cos(angle) * 200,
                   e.y + Math.sin(angle) * 200
                 );
@@ -485,47 +556,115 @@ function updateEnemies(state: VectorState): VectorState {
               }
               break;
               
-            case 1: // Aimed triple shot
-              for (let i = -1; i <= 1; i++) {
-                const angle = Math.atan2(dy, dx) + i * 0.2;
-                const proj = createEnemyProjectile(
-                  e.x, e.y,
-                  e.x + Math.cos(angle) * 100,
-                  e.y + Math.sin(angle) * 100
-                );
-                newState.projectiles = [...newState.projectiles, proj];
-              }
-              break;
-              
-            case 2: // Spiral burst
-              const spiralAngle = bossTime * 0.1;
-              for (let i = 0; i < 3; i++) {
-                const angle = spiralAngle + (i / 3) * Math.PI * 2;
+            case 2: // Spiral burst - rotating pattern
+              const spiralAngle = bossTime * 0.12;
+              for (let i = 0; i < 4; i++) {
+                const angle = spiralAngle + (i / 4) * Math.PI * 2;
                 const proj = createEnemyProjectile(
                   e.x + Math.cos(angle) * 20,
                   e.y + Math.sin(angle) * 20,
-                  e.x + Math.cos(angle) * 200,
-                  e.y + Math.sin(angle) * 200
+                  e.x + Math.cos(angle) * 250,
+                  e.y + Math.sin(angle) * 250
                 );
                 newState.projectiles = [...newState.projectiles, proj];
               }
               break;
               
-            case 3: // Cross pattern
+            case 3: // Cross pattern - 4 cardinal directions
               for (let i = 0; i < 4; i++) {
                 const angle = (i / 4) * Math.PI * 2;
                 const proj = createEnemyProjectile(
                   e.x + Math.cos(angle) * 20,
                   e.y + Math.sin(angle) * 20,
+                  e.x + Math.cos(angle) * 250,
+                  e.y + Math.sin(angle) * 250
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 4: // Shotgun blast - tight cluster aimed at player
+              for (let i = 0; i < 7; i++) {
+                const spreadAngle = playerAngle + (Math.random() - 0.5) * 0.4;
+                const spreadDist = 150 + Math.random() * 100;
+                const proj = createEnemyProjectile(
+                  e.x, e.y,
+                  e.x + Math.cos(spreadAngle) * spreadDist,
+                  e.y + Math.sin(spreadAngle) * spreadDist
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 5: // Double helix - two intertwined spirals
+              const helixAngle1 = bossTime * 0.08;
+              const helixAngle2 = bossTime * 0.08 + Math.PI;
+              for (const baseAngle of [helixAngle1, helixAngle2]) {
+                const proj = createEnemyProjectile(
+                  e.x + Math.cos(baseAngle) * 30,
+                  e.y + Math.sin(baseAngle) * 30,
+                  e.x + Math.cos(baseAngle) * 200,
+                  e.y + Math.sin(baseAngle) * 200
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 6: // Wave attack - horizontal sweeping bullets
+              const waveOffset = Math.sin(bossTime * 0.1) * 0.8;
+              for (let i = -1; i <= 1; i++) {
+                const angle = playerAngle + waveOffset + i * 0.3;
+                const proj = createEnemyProjectile(
+                  e.x, e.y,
                   e.x + Math.cos(angle) * 200,
                   e.y + Math.sin(angle) * 200
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 7: // Gatling gun - rapid single shots aimed at player
+              const gatlingSpread = (Math.random() - 0.5) * 0.15;
+              const gatlingProj = createEnemyProjectile(
+                e.x, e.y,
+                e.x + Math.cos(playerAngle + gatlingSpread) * 250,
+                e.y + Math.sin(playerAngle + gatlingSpread) * 250
+              );
+              newState.projectiles = [...newState.projectiles, gatlingProj];
+              // Faster fire rate for gatling
+              e.fireTimer = Math.floor(VM_CONFIG.bossFireRate * 0.3);
+              break;
+              
+            case 8: // Meteor shower - random positions falling down
+              for (let i = 0; i < 3; i++) {
+                const startX = e.x + (Math.random() - 0.5) * 200;
+                const proj = createEnemyProjectile(
+                  startX, e.y - 50,
+                  startX + (Math.random() - 0.5) * 50,
+                  e.y + 300
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              break;
+              
+            case 9: // Star burst - 8-pointed star pattern
+              for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + bossTime * 0.02;
+                const proj = createEnemyProjectile(
+                  e.x + Math.cos(angle) * 25,
+                  e.y + Math.sin(angle) * 25,
+                  e.x + Math.cos(angle) * 280,
+                  e.y + Math.sin(angle) * 280
                 );
                 newState.projectiles = [...newState.projectiles, proj];
               }
               break;
           }
           
-          e.fireTimer = VM_CONFIG.bossFireRate;
+          // Only reset timer if not already set (gatling gun sets its own)
+          if (firePattern !== 7) {
+            e.fireTimer = VM_CONFIG.bossFireRate;
+          }
         }
         break;
       }
