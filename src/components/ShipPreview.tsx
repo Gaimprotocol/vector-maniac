@@ -1,17 +1,20 @@
 import React, { useRef, useEffect } from 'react';
 import { drawMegaShip } from '@/game/megaShipRenderer';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
+import type { UpgradeState } from '@/hooks/useShipUpgrades';
 
 interface ShipPreviewProps {
   width?: number;
   height?: number;
   upgradeVersion?: number; // Triggers re-render when upgrades change
+  upgrades?: UpgradeState; // Preferred: pass current upgrades from state for immediate visuals
 }
 
 export const ShipPreview: React.FC<ShipPreviewProps> = ({ 
   width = 200, 
   height = 200,
-  upgradeVersion = 0
+  upgradeVersion = 0,
+  upgrades,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -23,45 +26,33 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let time = 0;
-    
-    // Force localStorage to be read fresh by creating a small delay
-    // This ensures getStoredUpgrades() returns updated values
     const startTime = performance.now();
 
     const draw = () => {
-      time = (performance.now() - startTime) / 1000;
+      const time = (performance.now() - startTime) / 1000;
       ctx.clearRect(0, 0, width, height);
-      
+
       const centerX = width / 2;
       const centerY = height / 2;
-      
-      // Get the currently selected ship
+
       const megaShipId = getStoredMegaShipId();
 
-      // Draw the actual selected mega ship with upgrades
-      // drawMegaShip internally calls getStoredUpgrades() which reads from localStorage
       ctx.save();
       ctx.translate(centerX, centerY);
-      ctx.scale(1.8, 1.8); // Scale up for better visibility
-      drawMegaShip(ctx, 0, 0, megaShipId, time);
+      ctx.scale(1.8, 1.8);
+      // Pass upgrades state when available so visuals update instantly on purchase
+      drawMegaShip(ctx, 0, 0, megaShipId, time, undefined, upgrades);
       ctx.restore();
 
       animationRef.current = requestAnimationFrame(draw);
     };
 
-    // Small delay to ensure localStorage is updated before first draw
-    const timeoutId = setTimeout(() => {
-      draw();
-    }, 50);
+    draw();
 
     return () => {
-      clearTimeout(timeoutId);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [width, height, upgradeVersion]);
+  }, [width, height, upgradeVersion, upgrades]);
 
   return (
     <canvas

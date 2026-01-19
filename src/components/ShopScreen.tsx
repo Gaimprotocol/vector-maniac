@@ -242,7 +242,7 @@ export const ShopScreen: React.FC = () => {
               <div className="font-pixel text-[9px] text-gray-500 mb-2 uppercase tracking-widest">
                 Your Ship
               </div>
-              <ShipPreview width={180} height={120} upgradeVersion={upgradeVersion} />
+              <ShipPreview width={180} height={120} upgradeVersion={upgradeVersion} upgrades={upgrades} />
             </div>
             
             {/* Upgrades Grid */}
