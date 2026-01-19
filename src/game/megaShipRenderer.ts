@@ -11,9 +11,119 @@ export interface ShipSkinColors {
   glow: string;
 }
 
-// Draw upgrade visuals (extra cannons, shields, etc.)
+// Draw upgrade visuals (extra cannons, shields, armor, thrusters, etc.)
 function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, time: number) {
   const stats = getComputedStats();
+  const upgrades = getStoredUpgrades();
+  
+  // Draw thruster boost flames for speed upgrades
+  const thrusterLevel = upgrades['thrusters'] || 0;
+  if (thrusterLevel > 0) {
+    ctx.save();
+    const flameIntensity = 0.3 + thrusterLevel * 0.1;
+    const flameLength = 15 + thrusterLevel * 5 + Math.random() * 8;
+    
+    // Extra thruster flames on sides
+    for (let i = 0; i < Math.min(thrusterLevel, 4); i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const tier = Math.floor(i / 2);
+      const yOffset = side * (6 + tier * 4);
+      
+      const flameGrad = ctx.createLinearGradient(centerX - 15, centerY, centerX - 15 - flameLength, centerY);
+      flameGrad.addColorStop(0, `rgba(0, 255, 255, ${flameIntensity})`);
+      flameGrad.addColorStop(0.3, `rgba(0, 200, 255, ${flameIntensity * 0.7})`);
+      flameGrad.addColorStop(0.7, `rgba(100, 100, 255, ${flameIntensity * 0.3})`);
+      flameGrad.addColorStop(1, 'transparent');
+      
+      ctx.fillStyle = flameGrad;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 15, centerY + yOffset - 2);
+      ctx.lineTo(centerX - 15 - flameLength, centerY + yOffset);
+      ctx.lineTo(centerX - 15, centerY + yOffset + 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  
+  // Draw magnet field for salvage magnet upgrades
+  const magnetLevel = upgrades['magnet_range'] || 0;
+  if (magnetLevel > 0) {
+    ctx.save();
+    const magnetPulse = Math.sin(time * 3) * 0.3 + 0.4;
+    ctx.globalAlpha = magnetPulse * 0.15;
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 6]);
+    
+    // Draw multiple magnet rings
+    for (let i = 0; i < Math.min(magnetLevel, 3); i++) {
+      const radius = 25 + i * 8;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+  
+  // Draw piercing rounds glow
+  const pierceLevel = upgrades['piercing_rounds'] || 0;
+  if (pierceLevel > 0) {
+    ctx.save();
+    const pierceGlow = Math.sin(time * 4) * 0.2 + 0.6;
+    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 8 + pierceLevel * 3;
+    ctx.strokeStyle = `rgba(255, 0, 255, ${pierceGlow * 0.4})`;
+    ctx.lineWidth = 1;
+    
+    // Piercing energy lines from nose
+    for (let i = 0; i < pierceLevel; i++) {
+      const angle = ((i / pierceLevel) - 0.5) * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(centerX + 18, centerY);
+      ctx.lineTo(centerX + 28 + pierceLevel * 3, centerY + Math.sin(angle) * 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  
+  // Draw rapid fire energy coils
+  const rapidFireLevel = upgrades['rapid_fire'] || 0;
+  if (rapidFireLevel >= 3) {
+    ctx.save();
+    const coilPulse = Math.sin(time * 6) * 0.3 + 0.5;
+    ctx.strokeStyle = `rgba(255, 200, 0, ${coilPulse * 0.4})`;
+    ctx.lineWidth = 1;
+    
+    // Energy coils around cannon
+    const coilCount = Math.min(rapidFireLevel - 2, 4);
+    for (let i = 0; i < coilCount; i++) {
+      const coilAngle = time * 5 + (i / coilCount) * Math.PI * 2;
+      const coilX = centerX + 8 + i * 3;
+      const coilY = centerY + Math.sin(coilAngle) * 3;
+      ctx.beginPath();
+      ctx.arc(coilX, coilY, 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  
+  // Draw cannon power glow
+  const cannonPowerLevel = upgrades['cannon_power'] || 0;
+  if (cannonPowerLevel >= 3) {
+    ctx.save();
+    const powerGlow = Math.sin(time * 2) * 0.2 + 0.5;
+    ctx.shadowColor = '#ff4400';
+    ctx.shadowBlur = 6 + cannonPowerLevel;
+    ctx.fillStyle = `rgba(255, 100, 0, ${powerGlow * 0.3})`;
+    
+    // Glowing cannon tip
+    ctx.beginPath();
+    ctx.arc(centerX + 20, centerY, 3 + cannonPowerLevel * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
   
   // Draw extra cannons
   if (stats.extraCannons > 0) {
@@ -21,14 +131,20 @@ function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, cent
     ctx.strokeStyle = '#ff6600';
     ctx.lineWidth = 2;
     ctx.shadowColor = '#ff6600';
-    ctx.shadowBlur = 4;
+    ctx.shadowBlur = 6;
     
-    // Side cannons
+    // Side cannons with muzzle flash
     for (let i = 0; i < Math.min(stats.extraCannons, 4); i++) {
       const yOffset = (i % 2 === 0 ? -1 : 1) * (8 + Math.floor(i / 2) * 6);
       const xOffset = -4 - Math.floor(i / 2) * 3;
       
-      // Cannon barrel
+      // Cannon barrel with gradient
+      const barrelGrad = ctx.createLinearGradient(centerX + xOffset, centerY, centerX + xOffset + 18, centerY);
+      barrelGrad.addColorStop(0, '#333355');
+      barrelGrad.addColorStop(0.5, '#555577');
+      barrelGrad.addColorStop(1, '#ff6600');
+      ctx.strokeStyle = barrelGrad;
+      ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(centerX + xOffset, centerY + yOffset);
       ctx.lineTo(centerX + xOffset + 18, centerY + yOffset);
@@ -36,42 +152,88 @@ function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, cent
       
       // Cannon mount
       ctx.fillStyle = '#444466';
-      ctx.fillRect(centerX + xOffset - 2, centerY + yOffset - 2, 6, 4);
+      ctx.fillRect(centerX + xOffset - 2, centerY + yOffset - 3, 8, 6);
+      
+      // Muzzle glow
+      const muzzleGlow = Math.sin(time * 8 + i) * 0.3 + 0.5;
+      ctx.fillStyle = `rgba(255, 100, 0, ${muzzleGlow})`;
+      ctx.beginPath();
+      ctx.arc(centerX + xOffset + 18, centerY + yOffset, 2, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
   
-  // Draw armor plating visual for high hull levels
-  const hullLevel = getStoredUpgrades()['hull_armor'] || 0;
-  if (hullLevel >= 3) {
+  // Draw armor plating visual for hull armor upgrades
+  const hullLevel = upgrades['hull_armor'] || 0;
+  if (hullLevel >= 2) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(100, 200, 255, 0.3)';
-    ctx.lineWidth = 1;
     
-    // Armor plates
-    const plateCount = Math.min(hullLevel, 6);
+    // Armor plates around the ship
+    const plateCount = Math.min(hullLevel, 8);
     for (let i = 0; i < plateCount; i++) {
-      const angle = (i / plateCount) * Math.PI * 2 + time * 0.5;
-      const dist = 20 + (i % 2) * 4;
+      const angle = (i / plateCount) * Math.PI * 2 + time * 0.3;
+      const dist = 18 + (i % 2) * 4;
+      const plateX = centerX + Math.cos(angle) * dist * 0.4;
+      const plateY = centerY + Math.sin(angle) * dist;
+      
+      // Plate gradient
+      const plateGrad = ctx.createRadialGradient(plateX, plateY, 0, plateX, plateY, 4);
+      plateGrad.addColorStop(0, 'rgba(100, 180, 255, 0.6)');
+      plateGrad.addColorStop(0.5, 'rgba(60, 120, 200, 0.4)');
+      plateGrad.addColorStop(1, 'rgba(40, 80, 150, 0.2)');
+      
+      ctx.fillStyle = plateGrad;
       ctx.beginPath();
-      ctx.arc(centerX + Math.cos(angle) * dist * 0.3, centerY + Math.sin(angle) * dist, 3, 0, Math.PI * 2);
+      ctx.arc(plateX, plateY, 3 + (hullLevel > 5 ? 1 : 0), 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Plate outline
+      ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)';
+      ctx.lineWidth = 1;
       ctx.stroke();
     }
     ctx.restore();
   }
   
-  // Draw shield aura for shield upgrades
+  // Draw shield aura for energy shield upgrades
   if (stats.bonusShields > 0) {
     ctx.save();
-    const pulse = Math.sin(time * 2) * 0.2 + 0.4;
-    ctx.globalAlpha = pulse * 0.3;
+    const pulse = Math.sin(time * 2) * 0.2 + 0.5;
+    
+    // Inner shield glow
+    ctx.globalAlpha = pulse * 0.2;
+    const shieldGrad = ctx.createRadialGradient(centerX, centerY, 15, centerX, centerY, 30 + stats.bonusShields * 3);
+    shieldGrad.addColorStop(0, 'transparent');
+    shieldGrad.addColorStop(0.5, 'rgba(0, 170, 255, 0.3)');
+    shieldGrad.addColorStop(1, 'rgba(0, 100, 255, 0.1)');
+    ctx.fillStyle = shieldGrad;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 30 + stats.bonusShields * 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Outer shield ring
+    ctx.globalAlpha = pulse * 0.5;
     ctx.strokeStyle = '#00aaff';
-    ctx.lineWidth = stats.bonusShields;
+    ctx.lineWidth = 1 + stats.bonusShields * 0.5;
     ctx.shadowColor = '#00aaff';
-    ctx.shadowBlur = 8;
+    ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(centerX, centerY, 28 + stats.bonusShields * 2, 0, Math.PI * 2);
     ctx.stroke();
+    
+    // Shield energy particles
+    ctx.globalAlpha = pulse * 0.6;
+    for (let i = 0; i < stats.bonusShields * 2; i++) {
+      const particleAngle = time * 1.5 + (i / (stats.bonusShields * 2)) * Math.PI * 2;
+      const particleX = centerX + Math.cos(particleAngle) * (26 + stats.bonusShields * 2);
+      const particleY = centerY + Math.sin(particleAngle) * (26 + stats.bonusShields * 2);
+      ctx.fillStyle = '#00ddff';
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
     ctx.restore();
   }
 }
