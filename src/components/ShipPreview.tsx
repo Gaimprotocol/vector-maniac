@@ -5,11 +5,13 @@ import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 interface ShipPreviewProps {
   width?: number;
   height?: number;
+  upgradeVersion?: number; // Triggers re-render when upgrades change
 }
 
 export const ShipPreview: React.FC<ShipPreviewProps> = ({ 
   width = 200, 
-  height = 200 
+  height = 200,
+  upgradeVersion = 0
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -50,7 +52,7 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [width, height]);
+  }, [width, height, upgradeVersion]);
 
   return (
     <canvas
