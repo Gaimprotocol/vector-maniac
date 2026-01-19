@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRewardedAds } from '@/hooks/useRewardedAds';
 import { RewardedAdOverlay } from './RewardedAdOverlay';
+import { addStoredScraps, getStoredScraps } from '@/hooks/useScrapCurrency';
 
 interface VectorManiacEndScreenProps {
   isVictory: boolean;
@@ -25,6 +26,17 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
   onContinue,
   canContinueWithAd = false,
 }) => {
+  const hasSavedScraps = useRef(false);
+  const [totalScraps, setTotalScraps] = useState(getStoredScraps());
+
+  // Save collected scraps to permanent storage (only once)
+  useEffect(() => {
+    if (!hasSavedScraps.current && salvageCount > 0) {
+      hasSavedScraps.current = true;
+      addStoredScraps(salvageCount);
+      setTotalScraps(getStoredScraps() + salvageCount);
+    }
+  }, [salvageCount]);
   const { 
     isShowingAd, 
     adProgress, 
@@ -130,13 +142,22 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
 
           <div className="flex gap-6 justify-center">
             <div>
-              <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Salvage</div>
-              <div className="font-tech text-white text-base">💎 {salvageCount}</div>
+              <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Collected</div>
+              <div className="font-tech text-yellow-400 text-base" style={{ textShadow: '0 0 10px #facc15' }}>
+                +{salvageCount} ⚙️
+              </div>
             </div>
 
             <div>
               <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Wave</div>
               <div className="font-tech text-white text-base">{wave}/9</div>
+            </div>
+          </div>
+
+          <div>
+            <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Total Scraps</div>
+            <div className="font-tech text-yellow-400 text-lg font-bold" style={{ textShadow: '0 0 15px #facc15' }}>
+              ⚙️ {totalScraps.toLocaleString()}
             </div>
           </div>
 

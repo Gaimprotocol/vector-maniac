@@ -157,6 +157,7 @@ export interface PlayerStats {
   salvageBonus: number;    // Multiplier
   shields: number;         // Extra hits
   speed: number;
+  extraCannons: number;    // Side-mounted guns from permanent upgrades
 }
 
 export interface VectorState {
