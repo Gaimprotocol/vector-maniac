@@ -946,7 +946,7 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   
   // Animated rotating hexagon frame
   ctx.save();
-  ctx.translate(centerX, centerY - 40);
+  ctx.translate(centerX, centerY - 140);
   ctx.rotate(t * 0.01);
   const hexSize = 120 + Math.sin(t * 0.05) * 10;
   ctx.strokeStyle = '#ff00ff';
