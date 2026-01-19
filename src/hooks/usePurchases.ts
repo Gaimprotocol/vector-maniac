@@ -25,7 +25,8 @@ export interface ShopProduct {
   description: string;
   price: string;
   icon: string;
-  type: 'unlock' | 'cosmetic' | 'bundle' | 'mode';
+  type: 'unlock' | 'cosmetic' | 'bundle' | 'mode' | 'scraps';
+  scrapAmount?: number; // For scrap pack products
 }
 
 // Default prices (fallback for web/testing only)
@@ -35,17 +36,13 @@ const DEFAULT_PRICES: Record<string, string> = {
   sound: '$1.99',
   survival: '$1.99',
   ultimate: '$4.99',
+  scraps_small: '$0.99',
+  scraps_medium: '$2.99',
+  scraps_large: '$4.99',
+  random_evolve: '$1.99',
 };
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
-  {
-    id: 'skins',
-    name: 'MOTHERSHIP SKINS',
-    description: '8 unique mothership color schemes',
-    price: DEFAULT_PRICES.skins,
-    icon: '🎨',
-    type: 'cosmetic',
-  },
   {
     id: 'ships',
     name: 'SHIPS MEGA PACK',
@@ -55,27 +52,38 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     type: 'bundle',
   },
   {
-    id: 'sound',
-    name: 'SOUNDTRACK PACK',
-    description: 'Six unique soundtracks to match your mood',
-    price: DEFAULT_PRICES.sound,
-    icon: '🎵',
-    type: 'cosmetic',
+    id: 'scraps_small',
+    name: 'SCRAP CRATE',
+    description: '500 scraps to upgrade your ship',
+    price: DEFAULT_PRICES.scraps_small,
+    icon: '📦',
+    type: 'scraps',
+    scrapAmount: 500,
   },
   {
-    id: 'survival',
-    name: 'SURVIVAL MODE',
-    description: 'Endless survival challenge',
-    price: DEFAULT_PRICES.survival,
-    icon: '♾️',
-    type: 'mode',
+    id: 'scraps_medium',
+    name: 'SCRAP CONTAINER',
+    description: '2000 scraps + 20% bonus',
+    price: DEFAULT_PRICES.scraps_medium,
+    icon: '🗃️',
+    type: 'scraps',
+    scrapAmount: 2400,
   },
   {
-    id: 'ultimate',
-    name: 'ULTIMATE EDITION',
-    description: 'Full unlock of all content!',
-    price: DEFAULT_PRICES.ultimate,
-    icon: '👑',
+    id: 'scraps_large',
+    name: 'SCRAP MOTHERLODE',
+    description: '5000 scraps + 40% bonus',
+    price: DEFAULT_PRICES.scraps_large,
+    icon: '💎',
+    type: 'scraps',
+    scrapAmount: 7000,
+  },
+  {
+    id: 'random_evolve',
+    name: 'MYSTERY UPGRADE',
+    description: 'Random upgrade boost (+1-3 levels)',
+    price: DEFAULT_PRICES.random_evolve,
+    icon: '🎲',
     type: 'bundle',
   },
 ];
