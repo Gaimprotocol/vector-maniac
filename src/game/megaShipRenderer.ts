@@ -1,7 +1,7 @@
 // Mega Ship rendering functions - each ship matches the designs from /ships page
 import { Player } from './types';
 import { getStoredMegaShipId, hasWingLights } from '@/hooks/useMegaShips';
-import { getStoredUpgrades, getComputedStats } from '@/hooks/useShipUpgrades';
+import { getStoredUpgrades, getComputedStats, type UpgradeState, type ComputedShipStats } from '@/hooks/useShipUpgrades';
 
 // Skin colors interface for color customization
 export interface ShipSkinColors {
@@ -12,9 +12,16 @@ export interface ShipSkinColors {
 }
 
 // Draw upgrade visuals (extra cannons, shields, armor, thrusters, etc.)
-function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, time: number) {
-  const stats = getComputedStats();
-  const upgrades = getStoredUpgrades();
+function drawUpgradeVisuals(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  time: number,
+  upgradeState?: UpgradeState,
+  computedStats?: ComputedShipStats
+) {
+  const upgrades = upgradeState ?? getStoredUpgrades();
+  const stats = computedStats ?? getComputedStats(upgrades);
   
   // Draw thruster boost flames for speed upgrades
   const thrusterLevel = upgrades['thrusters'] || 0;
@@ -90,20 +97,20 @@ function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, cent
   
   // Draw rapid fire energy coils
   const rapidFireLevel = upgrades['rapid_fire'] || 0;
-  if (rapidFireLevel >= 3) {
+  if (rapidFireLevel > 0) {
     ctx.save();
     const coilPulse = Math.sin(time * 6) * 0.3 + 0.5;
-    ctx.strokeStyle = `rgba(255, 200, 0, ${coilPulse * 0.4})`;
+    ctx.strokeStyle = `rgba(255, 200, 0, ${Math.min(0.15 + rapidFireLevel * 0.08, 0.6) * coilPulse})`;
     ctx.lineWidth = 1;
-    
-    // Energy coils around cannon
-    const coilCount = Math.min(rapidFireLevel - 2, 4);
+
+    // Energy coils around cannon (visible from level 1, stronger with level)
+    const coilCount = Math.min(rapidFireLevel, 4);
     for (let i = 0; i < coilCount; i++) {
-      const coilAngle = time * 5 + (i / coilCount) * Math.PI * 2;
+      const coilAngle = time * (4 + rapidFireLevel) + (i / coilCount) * Math.PI * 2;
       const coilX = centerX + 8 + i * 3;
-      const coilY = centerY + Math.sin(coilAngle) * 3;
+      const coilY = centerY + Math.sin(coilAngle) * (2 + rapidFireLevel * 0.4);
       ctx.beginPath();
-      ctx.arc(coilX, coilY, 2, 0, Math.PI * 2);
+      ctx.arc(coilX, coilY, 1.5 + rapidFireLevel * 0.2, 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();
@@ -111,16 +118,16 @@ function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, cent
   
   // Draw cannon power glow
   const cannonPowerLevel = upgrades['cannon_power'] || 0;
-  if (cannonPowerLevel >= 3) {
+  if (cannonPowerLevel > 0) {
     ctx.save();
-    const powerGlow = Math.sin(time * 2) * 0.2 + 0.5;
+    const powerGlow = Math.sin(time * 2) * 0.2 + 0.6;
     ctx.shadowColor = '#ff4400';
-    ctx.shadowBlur = 6 + cannonPowerLevel;
-    ctx.fillStyle = `rgba(255, 100, 0, ${powerGlow * 0.3})`;
-    
-    // Glowing cannon tip
+    ctx.shadowBlur = 3 + cannonPowerLevel * 2;
+    ctx.fillStyle = `rgba(255, 100, 0, ${Math.min(0.12 + cannonPowerLevel * 0.08, 0.55) * powerGlow})`;
+
+    // Glowing cannon tip (visible from level 1)
     ctx.beginPath();
-    ctx.arc(centerX + 20, centerY, 3 + cannonPowerLevel * 0.3, 0, Math.PI * 2);
+    ctx.arc(centerX + 20, centerY, 2.2 + cannonPowerLevel * 0.35, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -166,30 +173,30 @@ function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, cent
   
   // Draw armor plating visual for hull armor upgrades
   const hullLevel = upgrades['hull_armor'] || 0;
-  if (hullLevel >= 2) {
+  if (hullLevel > 0) {
     ctx.save();
-    
-    // Armor plates around the ship
-    const plateCount = Math.min(hullLevel, 8);
+
+    // Armor plates around the ship (visible from level 1)
+    const plateCount = Math.min(hullLevel * 2, 8);
     for (let i = 0; i < plateCount; i++) {
-      const angle = (i / plateCount) * Math.PI * 2 + time * 0.3;
-      const dist = 18 + (i % 2) * 4;
+      const angle = (i / plateCount) * Math.PI * 2 + time * (0.15 + hullLevel * 0.05);
+      const dist = 16 + (i % 2) * 4 + hullLevel * 0.6;
       const plateX = centerX + Math.cos(angle) * dist * 0.4;
       const plateY = centerY + Math.sin(angle) * dist;
-      
+
       // Plate gradient
       const plateGrad = ctx.createRadialGradient(plateX, plateY, 0, plateX, plateY, 4);
-      plateGrad.addColorStop(0, 'rgba(100, 180, 255, 0.6)');
-      plateGrad.addColorStop(0.5, 'rgba(60, 120, 200, 0.4)');
-      plateGrad.addColorStop(1, 'rgba(40, 80, 150, 0.2)');
-      
+      plateGrad.addColorStop(0, `rgba(100, 180, 255, ${0.25 + hullLevel * 0.05})`);
+      plateGrad.addColorStop(0.5, `rgba(60, 120, 200, ${0.18 + hullLevel * 0.04})`);
+      plateGrad.addColorStop(1, 'rgba(40, 80, 150, 0.05)');
+
       ctx.fillStyle = plateGrad;
       ctx.beginPath();
-      ctx.arc(plateX, plateY, 3 + (hullLevel > 5 ? 1 : 0), 0, Math.PI * 2);
+      ctx.arc(plateX, plateY, 2.2 + hullLevel * 0.12, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Plate outline
-      ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)';
+      ctx.strokeStyle = `rgba(150, 200, 255, ${0.15 + hullLevel * 0.04})`;
       ctx.lineWidth = 1;
       ctx.stroke();
     }
@@ -806,15 +813,16 @@ export function drawValkyrieShip(ctx: CanvasRenderingContext2D, centerX: number,
 
 // Main function to draw the selected mega ship with optional skin colors
 export function drawMegaShip(
-  ctx: CanvasRenderingContext2D, 
-  centerX: number, 
-  centerY: number, 
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
   megaShipId: string,
   time: number,
-  skinColors?: ShipSkinColors
+  skinColors?: ShipSkinColors,
+  upgradeState?: UpgradeState
 ) {
   // Draw upgrade visuals first (behind ship)
-  drawUpgradeVisuals(ctx, centerX, centerY, time);
+  drawUpgradeVisuals(ctx, centerX, centerY, time, upgradeState);
   
   switch (megaShipId) {
     case 'blue_hawk':
