@@ -10,6 +10,7 @@ import { AdRewardPopup } from './AdRewardPopup';
 import { useMusicContext } from '@/contexts/MusicContext';
 import { ShopIcon } from './ShopIcons';
 import { ShipPreview } from './ShipPreview';
+import { UpgradeStatPreview } from './UpgradeStatPreview';
 import { playPopSoundsWithDelays } from '@/utils/popSound';
 
 // Map product IDs to icon types
@@ -35,6 +36,7 @@ export const ShopScreen: React.FC = () => {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [popup, setPopup] = useState<{ type: 'success' | 'already_owned' | 'not_enough'; productName: string } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('upgrades');
+  const [hoveredUpgrade, setHoveredUpgrade] = useState<string | null>(null);
   
   const { purchaseProduct, isOwned, isLoading, shouldShowAds } = usePurchases();
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
@@ -237,7 +239,7 @@ export const ShopScreen: React.FC = () => {
               return (
                 <div
                   key={upgrade.id}
-                  className={`border-2 rounded-lg p-3 transition-all duration-300 animate-pop-in ${
+                  className={`relative border-2 rounded-lg p-3 transition-all duration-300 animate-pop-in ${
                     maxed 
                       ? 'border-green-500/50 bg-green-900/10' 
                       : affordable
@@ -251,7 +253,15 @@ export const ShopScreen: React.FC = () => {
                     animationDelay: `${index * 50}ms`,
                     animationFillMode: 'backwards',
                   }}
+                  onMouseEnter={() => setHoveredUpgrade(upgrade.id)}
+                  onMouseLeave={() => setHoveredUpgrade(null)}
+                  onTouchStart={() => setHoveredUpgrade(upgrade.id)}
+                  onTouchEnd={() => setHoveredUpgrade(null)}
                 >
+                  {/* Stat Preview Tooltip */}
+                  {hoveredUpgrade === upgrade.id && (
+                    <UpgradeStatPreview upgrade={upgrade} currentLevel={level} />
+                  )}
                   <div className="flex items-start justify-between mb-2">
                     <span className="text-2xl">{upgrade.icon}</span>
                     <span className="font-pixel text-[8px] text-gray-400">
