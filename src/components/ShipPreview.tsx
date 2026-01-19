@@ -24,9 +24,13 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
     if (!ctx) return;
 
     let time = 0;
+    
+    // Force localStorage to be read fresh by creating a small delay
+    // This ensures getStoredUpgrades() returns updated values
+    const startTime = performance.now();
 
     const draw = () => {
-      time += 0.016;
+      time = (performance.now() - startTime) / 1000;
       ctx.clearRect(0, 0, width, height);
       
       const centerX = width / 2;
@@ -36,6 +40,7 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
       const megaShipId = getStoredMegaShipId();
 
       // Draw the actual selected mega ship with upgrades
+      // drawMegaShip internally calls getStoredUpgrades() which reads from localStorage
       ctx.save();
       ctx.translate(centerX, centerY);
       ctx.scale(1.8, 1.8); // Scale up for better visibility
@@ -45,9 +50,13 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
       animationRef.current = requestAnimationFrame(draw);
     };
 
-    draw();
+    // Small delay to ensure localStorage is updated before first draw
+    const timeoutId = setTimeout(() => {
+      draw();
+    }, 50);
 
     return () => {
+      clearTimeout(timeoutId);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
