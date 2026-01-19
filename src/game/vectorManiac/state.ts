@@ -2,18 +2,26 @@
 
 import { VectorState, PlayerStats } from './types';
 import { VM_CONFIG } from './constants';
+import { getComputedStats } from '@/hooks/useShipUpgrades';
 
 export function createDefaultStats(): PlayerStats {
+  const upgrades = getComputedStats();
+  
   return {
-    fireRate: VM_CONFIG.baseFireRate,
+    fireRate: VM_CONFIG.baseFireRate * (1 / upgrades.fireRateMultiplier), // Lower = faster
     bulletSpeed: VM_CONFIG.baseBulletSpeed,
-    damage: VM_CONFIG.baseDamage,
-    pierce: 1,
-    magnetRange: VM_CONFIG.baseMagnetRange,
+    damage: VM_CONFIG.baseDamage * upgrades.damageMultiplier,
+    pierce: 1 + upgrades.bonusPierce,
+    magnetRange: VM_CONFIG.baseMagnetRange * upgrades.magnetRangeMultiplier,
     salvageBonus: 1.0,
-    shields: 0,
-    speed: VM_CONFIG.playerSpeed,
+    shields: upgrades.bonusShields,
+    speed: VM_CONFIG.playerSpeed * upgrades.speedMultiplier,
   };
+}
+
+export function getInitialHealth(): number {
+  const upgrades = getComputedStats();
+  return Math.floor(VM_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
 }
 
 export function getRandomWavesForMap(): number {
@@ -24,6 +32,9 @@ export function createVectorManiacState(): VectorState {
   const centerX = VM_CONFIG.arenaWidth / 2;
   const centerY = VM_CONFIG.arenaHeight / 2;
   const initialWavesInMap = getRandomWavesForMap();
+  
+  const initialHealth = getInitialHealth();
+  const stats = createDefaultStats();
   
   return {
     phase: 'entering',
@@ -37,12 +48,12 @@ export function createVectorManiacState(): VectorState {
     targetX: centerX,
     targetY: centerY,
     fireTimer: 0,
-    health: VM_CONFIG.playerMaxHealth,
-    maxHealth: VM_CONFIG.playerMaxHealth,
-    shields: 0,
+    health: initialHealth,
+    maxHealth: initialHealth,
+    shields: stats.shields,
     invulnerableTimer: 0,
     
-    stats: createDefaultStats(),
+    stats,
     
     enemies: [],
     projectiles: [],

@@ -1,6 +1,7 @@
 // Mega Ship rendering functions - each ship matches the designs from /ships page
 import { Player } from './types';
 import { getStoredMegaShipId, hasWingLights } from '@/hooks/useMegaShips';
+import { getStoredUpgrades, getComputedStats } from '@/hooks/useShipUpgrades';
 
 // Skin colors interface for color customization
 export interface ShipSkinColors {
@@ -8,6 +9,71 @@ export interface ShipSkinColors {
   secondary: string;
   accent: string;
   glow: string;
+}
+
+// Draw upgrade visuals (extra cannons, shields, etc.)
+function drawUpgradeVisuals(ctx: CanvasRenderingContext2D, centerX: number, centerY: number, time: number) {
+  const stats = getComputedStats();
+  
+  // Draw extra cannons
+  if (stats.extraCannons > 0) {
+    ctx.save();
+    ctx.strokeStyle = '#ff6600';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#ff6600';
+    ctx.shadowBlur = 4;
+    
+    // Side cannons
+    for (let i = 0; i < Math.min(stats.extraCannons, 4); i++) {
+      const yOffset = (i % 2 === 0 ? -1 : 1) * (8 + Math.floor(i / 2) * 6);
+      const xOffset = -4 - Math.floor(i / 2) * 3;
+      
+      // Cannon barrel
+      ctx.beginPath();
+      ctx.moveTo(centerX + xOffset, centerY + yOffset);
+      ctx.lineTo(centerX + xOffset + 18, centerY + yOffset);
+      ctx.stroke();
+      
+      // Cannon mount
+      ctx.fillStyle = '#444466';
+      ctx.fillRect(centerX + xOffset - 2, centerY + yOffset - 2, 6, 4);
+    }
+    ctx.restore();
+  }
+  
+  // Draw armor plating visual for high hull levels
+  const hullLevel = getStoredUpgrades()['hull_armor'] || 0;
+  if (hullLevel >= 3) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(100, 200, 255, 0.3)';
+    ctx.lineWidth = 1;
+    
+    // Armor plates
+    const plateCount = Math.min(hullLevel, 6);
+    for (let i = 0; i < plateCount; i++) {
+      const angle = (i / plateCount) * Math.PI * 2 + time * 0.5;
+      const dist = 20 + (i % 2) * 4;
+      ctx.beginPath();
+      ctx.arc(centerX + Math.cos(angle) * dist * 0.3, centerY + Math.sin(angle) * dist, 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  
+  // Draw shield aura for shield upgrades
+  if (stats.bonusShields > 0) {
+    ctx.save();
+    const pulse = Math.sin(time * 2) * 0.2 + 0.4;
+    ctx.globalAlpha = pulse * 0.3;
+    ctx.strokeStyle = '#00aaff';
+    ctx.lineWidth = stats.bonusShields;
+    ctx.shadowColor = '#00aaff';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 28 + stats.bonusShields * 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 // Draw engine flame (common for all ships) with glow halo
@@ -585,6 +651,9 @@ export function drawMegaShip(
   time: number,
   skinColors?: ShipSkinColors
 ) {
+  // Draw upgrade visuals first (behind ship)
+  drawUpgradeVisuals(ctx, centerX, centerY, time);
+  
   switch (megaShipId) {
     case 'blue_hawk':
       drawBlueHawkShip(ctx, centerX, centerY, time, skinColors);
