@@ -37,6 +37,7 @@ export const ShopScreen: React.FC = () => {
   const [popup, setPopup] = useState<{ type: 'success' | 'already_owned' | 'not_enough'; productName: string } | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('upgrades');
   const [hoveredUpgrade, setHoveredUpgrade] = useState<string | null>(null);
+  const [upgradeVersion, setUpgradeVersion] = useState(0); // Triggers ship preview re-render
   
   const { purchaseProduct, isOwned, isLoading, shouldShowAds } = usePurchases();
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
@@ -88,6 +89,7 @@ export const ShopScreen: React.FC = () => {
     
     if (spendScraps(cost)) {
       purchaseUpgrade(upgradeId);
+      setUpgradeVersion(v => v + 1); // Trigger ship preview update
       setPopup({ type: 'success', productName: upgrade.name });
     }
   };
@@ -225,7 +227,7 @@ export const ShopScreen: React.FC = () => {
               <div className="font-pixel text-[9px] text-gray-500 mb-2 uppercase tracking-widest">
                 Your Ship
               </div>
-              <ShipPreview width={180} height={120} />
+              <ShipPreview width={180} height={120} upgradeVersion={upgradeVersion} />
             </div>
             
             {/* Upgrades Grid */}
