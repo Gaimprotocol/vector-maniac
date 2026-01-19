@@ -9,6 +9,7 @@ import { RewardedAdOverlay } from './RewardedAdOverlay';
 import { AdRewardPopup } from './AdRewardPopup';
 import { useMusicContext } from '@/contexts/MusicContext';
 import { ShopIcon } from './ShopIcons';
+import { ShipPreview } from './ShipPreview';
 import { playPopSoundsWithDelays } from '@/utils/popSound';
 
 // Map product IDs to icon types
@@ -216,8 +217,17 @@ export const ShopScreen: React.FC = () => {
       {/* Scrollable Content Area */}
       <div className="relative z-10 w-full max-w-md flex-1 overflow-y-auto pb-4">
         {activeTab === 'upgrades' ? (
-          /* Upgrades Grid */
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-4">
+            {/* Ship Preview */}
+            <div className="flex flex-col items-center">
+              <div className="font-pixel text-[9px] text-gray-500 mb-2 uppercase tracking-widest">
+                Your Ship
+              </div>
+              <ShipPreview width={180} height={120} />
+            </div>
+            
+            {/* Upgrades Grid */}
+            <div className="grid grid-cols-2 gap-2">
             {allUpgrades.map((upgrade, index) => {
               const level = getUpgradeLevel(upgrade.id);
               const cost = getUpgradeCost(upgrade.id);
@@ -280,6 +290,7 @@ export const ShopScreen: React.FC = () => {
                 </div>
               );
             })}
+            </div>
           </div>
         ) : (
           /* Store Products */

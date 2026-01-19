@@ -16,6 +16,7 @@ export function createDefaultStats(): PlayerStats {
     salvageBonus: 1.0,
     shields: upgrades.bonusShields,
     speed: VM_CONFIG.playerSpeed * upgrades.speedMultiplier,
+    extraCannons: upgrades.extraCannons,
   };
 }
 

@@ -154,38 +154,76 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
     const spawnY = newState.playerY + Math.sin(newState.playerAngle) * tipOffset;
     
+    const newProjectiles: VectorProjectile[] = [];
+    
     // Check if double shot is active
     if (newState.activePowerUps.doubleShot > 0) {
       // Shoot two projectiles with slight angle offset (tighter spread)
       const spreadAngle = 0.08;
-      const projectile1 = createPlayerProjectile(
+      newProjectiles.push(createPlayerProjectile(
         spawnX,
         spawnY,
         newState.playerAngle - spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
-      );
-      const projectile2 = createPlayerProjectile(
+      ));
+      newProjectiles.push(createPlayerProjectile(
         spawnX,
         spawnY,
         newState.playerAngle + spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
-      );
-      newState.projectiles = [...newState.projectiles, projectile1, projectile2];
+      ));
     } else {
-      const projectile = createPlayerProjectile(
+      newProjectiles.push(createPlayerProjectile(
         spawnX,
         spawnY,
         newState.playerAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
         newState.stats.pierce
-      );
-      newState.projectiles = [...newState.projectiles, projectile];
+      ));
     }
+    
+    // Fire extra cannons (from permanent upgrades)
+    const extraCannons = newState.stats.extraCannons || 0;
+    if (extraCannons > 0) {
+      // Each extra cannon fires from the side of the ship
+      for (let i = 0; i < Math.min(extraCannons, 4); i++) {
+        // Alternate sides: even = right, odd = left
+        const side = i % 2 === 0 ? 1 : -1;
+        const tier = Math.floor(i / 2); // 0 for first pair, 1 for second pair
+        
+        // Calculate perpendicular offset from ship angle
+        const perpAngle = newState.playerAngle + (Math.PI / 2) * side;
+        const sideOffset = 8 + tier * 6; // Distance from center
+        const backOffset = -4 - tier * 3; // How far back the cannon is
+        
+        // Calculate spawn position
+        const cannonX = newState.playerX + 
+          Math.cos(newState.playerAngle) * backOffset +
+          Math.cos(perpAngle) * sideOffset;
+        const cannonY = newState.playerY + 
+          Math.sin(newState.playerAngle) * backOffset +
+          Math.sin(perpAngle) * sideOffset;
+        
+        // Extra cannons fire forward with slight spread
+        const cannonAngle = newState.playerAngle + (side * 0.15 * (tier + 1));
+        
+        newProjectiles.push(createPlayerProjectile(
+          cannonX,
+          cannonY,
+          cannonAngle,
+          newState.stats.bulletSpeed * 0.9, // Slightly slower
+          newState.stats.damage * 0.7, // Less damage
+          Math.max(0, newState.stats.pierce - 1) // Less pierce
+        ));
+      }
+    }
+    
+    newState.projectiles = [...newState.projectiles, ...newProjectiles];
     newState.fireTimer = newState.stats.fireRate;
     newState.soundQueue = [...newState.soundQueue, 'shoot'];
   }
