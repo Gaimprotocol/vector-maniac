@@ -947,6 +947,20 @@ function checkCollisions(state: VectorState): VectorState {
       if (enemy.type === 'boss') {
         newState.bossDefeated = true;
         newState.bossActive = false;
+        
+        // Boss reward: spawn 5-10 salvage pieces
+        const bossRewardCount = 5 + Math.floor(Math.random() * 6);
+        for (let i = 0; i < bossRewardCount; i++) {
+          const angle = (i / bossRewardCount) * Math.PI * 2;
+          const distance = 30 + Math.random() * 20;
+          const salvage = createSalvage(
+            enemy.x + Math.cos(angle) * distance,
+            enemy.y + Math.sin(angle) * distance,
+            VM_CONFIG.salvageValue.elite, // Use elite value for boss reward
+            Math.random() < 0.3 // 30% chance for rare salvage
+          );
+          newState.salvage = [...newState.salvage, salvage];
+        }
       }
       
       // Score with combo bonus (doubled if power-up active)
