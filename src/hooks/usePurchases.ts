@@ -257,6 +257,13 @@ export function usePurchases() {
         newPurchases.ultimate = true;
         success = true;
         break;
+      case 'scraps_small':
+      case 'scraps_medium':
+      case 'scraps_large':
+      case 'random_evolve':
+        // Consumable products - always allow purchase
+        success = true;
+        break;
       default:
         console.warn(`[IAP] Unknown product: ${productId}`);
         return false;
