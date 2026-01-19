@@ -27,7 +27,7 @@ export function createVectorManiacState(): VectorState {
   
   return {
     phase: 'entering',
-    phaseTimer: 60,
+    phaseTimer: 120,
     gameTime: 0,
     
     // Player starts at center

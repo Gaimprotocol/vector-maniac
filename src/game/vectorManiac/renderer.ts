@@ -1033,30 +1033,30 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.font = 'bold 48px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('VECTOR', centerX, centerY - 70);
+  ctx.fillText('VECTOR', centerX, centerY - 170);
   
   // Double stroke effect
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1;
-  ctx.strokeText('VECTOR', centerX, centerY - 70);
+  ctx.strokeText('VECTOR', centerX, centerY - 170);
   
   // "MANIAC" with cyan glow
   ctx.shadowColor = '#00ffff';
   ctx.shadowBlur = 40;
   ctx.fillStyle = '#00ffff';
-  ctx.fillText('MANIAC', centerX, centerY - 15);
+  ctx.fillText('MANIAC', centerX, centerY - 115);
   ctx.strokeStyle = '#ffffff';
-  ctx.strokeText('MANIAC', centerX, centerY - 15);
+  ctx.strokeText('MANIAC', centerX, centerY - 115);
   ctx.restore();
   
   // Subtitle with tech style
   ctx.fillStyle = '#888888';
   ctx.font = '10px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('[ TACTICAL ARENA COMBAT SYSTEM v2.0 ]', centerX, centerY + 30);
+  ctx.fillText('[ TACTICAL ARENA COMBAT SYSTEM v2.0 ]', centerX, centerY - 70);
   
   // Animated "INITIALIZING" / "READY" text
-  const phase = Math.floor(t / 30) % 3;
+  const phase = Math.floor(t / 60) % 3;
   const blink = Math.sin(t * 0.15) > 0;
   
   ctx.save();
@@ -1070,7 +1070,7 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.font = 'bold 18px monospace';
   
   const statusTexts = ['>> SYSTEMS ONLINE <<', '>> WEAPONS HOT <<', '>> ENGAGE <<'];
-  ctx.fillText(statusTexts[phase], centerX, centerY + 80);
+  ctx.fillText(statusTexts[phase], centerX, centerY - 20);
   ctx.restore();
   
   // Bottom status bar
@@ -1082,7 +1082,7 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.strokeRect(60, barY, arenaWidth - 120, 30);
   
   // Loading bar animation
-  const loadProgress = Math.min(1, t / 60);
+  const loadProgress = Math.min(1, t / 120);
   ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
   ctx.fillRect(62, barY + 2, (arenaWidth - 124) * loadProgress, 26);
   
