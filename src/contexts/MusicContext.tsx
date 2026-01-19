@@ -34,8 +34,8 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (hasInitialized.current) return;
     hasInitialized.current = true;
     
-    // Always use Startscreen for the menu
-    startMusicRef.current = new Audio('/audio/Startscreen.mp3');
+    // Always use Startmenu for the menu
+    startMusicRef.current = new Audio('/audio/Startmenu.mp3');
     startMusicRef.current.loop = true;
     startMusicRef.current.volume = 0;
     startMusicRef.current.preload = 'auto';
