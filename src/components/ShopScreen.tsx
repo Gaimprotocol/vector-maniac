@@ -11,7 +11,7 @@ import { useMusicContext } from '@/contexts/MusicContext';
 import { ShopIcon } from './ShopIcons';
 import { ShipPreview } from './ShipPreview';
 import { UpgradeStatPreview } from './UpgradeStatPreview';
-import { playPopSoundsWithDelays } from '@/utils/popSound';
+import { playPopSoundsWithDelays, playPurchaseSound, triggerHapticFeedback } from '@/utils/popSound';
 
 // Map product IDs to icon types
 const getIconType = (productId: string): string => {
@@ -91,6 +91,10 @@ export const ShopScreen: React.FC = () => {
     if (spendScraps(cost)) {
       const success = purchaseUpgrade(upgradeId);
       if (success) {
+        // Play purchase sound and haptic feedback
+        playPurchaseSound();
+        triggerHapticFeedback('success');
+        
         // Trigger ship preview update with slight delay to ensure localStorage is updated
         setTimeout(() => {
           setUpgradeVersion(v => v + 1);
