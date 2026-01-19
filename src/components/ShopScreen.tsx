@@ -89,14 +89,19 @@ export const ShopScreen: React.FC = () => {
     }
     
     if (spendScraps(cost)) {
-      purchaseUpgrade(upgradeId);
-      setUpgradeVersion(v => v + 1); // Trigger ship preview update
-      
-      // Trigger purchase flash effect
-      setPurchaseFlash(upgradeId);
-      setTimeout(() => setPurchaseFlash(null), 600);
-      
-      setPopup({ type: 'success', productName: upgrade.name });
+      const success = purchaseUpgrade(upgradeId);
+      if (success) {
+        // Trigger ship preview update with slight delay to ensure localStorage is updated
+        setTimeout(() => {
+          setUpgradeVersion(v => v + 1);
+        }, 10);
+        
+        // Trigger purchase flash effect
+        setPurchaseFlash(upgradeId);
+        setTimeout(() => setPurchaseFlash(null), 800);
+        
+        setPopup({ type: 'success', productName: upgrade.name });
+      }
     }
   };
 
@@ -239,9 +244,10 @@ export const ShopScreen: React.FC = () => {
             {/* Upgrades Grid */}
             <div className="grid grid-cols-2 gap-2">
             {allUpgrades.map((upgrade, index) => {
-              const level = getUpgradeLevel(upgrade.id);
+              // Force re-read from state to get current level
+              const level = upgrades[upgrade.id] || 0;
               const cost = getUpgradeCost(upgrade.id);
-              const maxed = isUpgradeMaxed(upgrade.id);
+              const maxed = level >= upgrade.maxLevel;
               const affordable = canAfford(cost);
               
               return (
@@ -324,13 +330,17 @@ export const ShopScreen: React.FC = () => {
                   <button
                     onClick={() => handleUpgradePurchase(upgrade.id)}
                     disabled={maxed || isLoading}
-                    className={`w-full font-pixel text-[8px] py-1.5 rounded transition-all active:scale-95 ${
+                    className={`w-full font-pixel text-[8px] py-1.5 rounded transition-all duration-200 transform
+                      hover:scale-105 active:scale-90 ${
                       maxed 
                         ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
                         : affordable
-                          ? 'bg-yellow-400 text-black hover:bg-yellow-300 hover:shadow-lg hover:shadow-yellow-400/30'
+                          ? 'bg-yellow-400 text-black hover:bg-yellow-300 hover:shadow-lg hover:shadow-yellow-400/50'
                           : 'bg-gray-700 text-gray-400'
                     }`}
+                    style={{
+                      transition: 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s, box-shadow 0.2s',
+                    }}
                   >
                     {maxed ? '✓ MAXED' : `⚙️ ${cost}`}
                   </button>
