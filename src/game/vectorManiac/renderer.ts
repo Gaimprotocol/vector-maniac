@@ -800,8 +800,8 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   // Map name display (when transitioning to new map) - only during waveComplete phase
   if (state.showMapName && state.mapNameTimer > 0 && state.phase === 'waveComplete') {
     const theme = getMapTheme(state.currentMap);
-    // Quick fade: show for 1.5 seconds, fade out in last 0.5 seconds
-    const displayTime = 90; // 1.5 seconds total display
+    // Quick fade: show for 3 seconds, fade out in last 0.5 seconds
+    const displayTime = 180; // 3 seconds total display
     const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
     const fadeOutStart = 30; // Start fading at 0.5 seconds remaining
     const alpha = effectiveTimer < fadeOutStart ? effectiveTimer / fadeOutStart : 1;
