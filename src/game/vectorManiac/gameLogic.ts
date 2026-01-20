@@ -1188,7 +1188,7 @@ function completeWave(state: VectorState): VectorState {
     
     // Show new map name
     newState.showMapName = true;
-    newState.mapNameTimer = 126; // ~2.1 seconds (same as wave complete)
+    newState.mapNameTimer = 156; // ~2.6 seconds (same as wave complete)
     
     // Upgrade pick after every boss (map completion)
     newState.upgradesPending = 1;
