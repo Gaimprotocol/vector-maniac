@@ -77,6 +77,14 @@ function updateEnteringPhase(state: VectorState): VectorState {
   if (state.phaseTimer === 120) {
     playGameStartVoice();
   }
+
+  // Map name timer (so map info can show during the intro too)
+  if (newState.mapNameTimer > 0) {
+    newState.mapNameTimer--;
+    if (newState.mapNameTimer <= 0) {
+      newState.showMapName = false;
+    }
+  }
   
   // Create entrance particles
   if (newState.phaseTimer % 3 === 0) {
@@ -140,6 +148,14 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   if (newState.comboTimer > 0) {
     newState.comboTimer--;
     if (newState.comboTimer <= 0) newState.combo = 0;
+  }
+
+  // Map name timer (allows map info to stay visible into the playing phase)
+  if (newState.mapNameTimer > 0) {
+    newState.mapNameTimer--;
+    if (newState.mapNameTimer <= 0) {
+      newState.showMapName = false;
+    }
   }
   
   // Update active power-up timers
@@ -313,7 +329,7 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
     newState.spawnTimer = 30;
     newState.bossActive = false;
     newState.bossDefeated = false;
-    newState.showMapName = false;
+    // Keep showMapName controlled by mapNameTimer so map info can remain on-screen
     newState.phase = 'playing';
   }
   
