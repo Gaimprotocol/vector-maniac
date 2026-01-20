@@ -805,8 +805,8 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
     const fadeOutStart = 30; // Start fading at 0.5 seconds remaining
     const alpha = effectiveTimer < fadeOutStart ? effectiveTimer / fadeOutStart : 1;
-    // Pop-up scale effect (starts at 0.3 and pops to 1.0 with slight overshoot)
-    const popProgress = Math.min(1, (displayTime - effectiveTimer) / 12);
+    // Pop-up scale effect (fast pop - completes in ~0.1 seconds)
+    const popProgress = Math.min(1, (displayTime - effectiveTimer) / 6);
     const easeOutBack = (t: number) => 1 + 2.5 * Math.pow(t - 1, 3) + 1.5 * Math.pow(t - 1, 2);
     const scale = 0.3 + 0.7 * easeOutBack(popProgress);
     
