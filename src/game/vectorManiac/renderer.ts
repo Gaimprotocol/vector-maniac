@@ -59,14 +59,117 @@ function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): vo
   // Get theme for current map
   const theme = getMapTheme(state.currentMap);
   
-  const gradient = ctx.createRadialGradient(
-    arenaWidth / 2, arenaHeight / 2, 0,
-    arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
-  );
+  // Create varied gradient types based on map
+  const gradientType = state.currentMap % 4;
+  let gradient: CanvasGradient;
+  
+  if (gradientType === 0) {
+    // Radial from center
+    gradient = ctx.createRadialGradient(
+      arenaWidth / 2, arenaHeight / 2, 0,
+      arenaWidth / 2, arenaHeight / 2, arenaHeight / 1.5
+    );
+  } else if (gradientType === 1) {
+    // Top to bottom
+    gradient = ctx.createLinearGradient(0, 0, 0, arenaHeight);
+  } else if (gradientType === 2) {
+    // Diagonal
+    gradient = ctx.createLinearGradient(0, 0, arenaWidth, arenaHeight);
+  } else {
+    // Radial from top
+    gradient = ctx.createRadialGradient(
+      arenaWidth / 2, 0, 0,
+      arenaWidth / 2, arenaHeight / 2, arenaHeight
+    );
+  }
+  
   gradient.addColorStop(0, theme.bg2);
+  gradient.addColorStop(0.6, theme.bg1);
   gradient.addColorStop(1, theme.bg1);
   
   ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  // Add nebula effect for some maps
+  if (theme.nebulaColor) {
+    renderNebula(ctx, state, theme);
+  }
+  
+  // Add star field for some maps
+  if (theme.hasStars) {
+    renderStarField(ctx, state, theme);
+  }
+  
+  // Add ambient glow
+  if (theme.glowIntensity > 0.5) {
+    renderAmbientGlow(ctx, state, theme);
+  }
+}
+
+function renderNebula(ctx: CanvasRenderingContext2D, state: VectorState, theme: any): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  
+  // Draw 2-3 nebula clouds
+  const nebulaCount = 2 + (state.currentMap % 2);
+  
+  for (let i = 0; i < nebulaCount; i++) {
+    const seed = state.currentMap * 100 + i * 50;
+    const x = (Math.sin(seed) * 0.5 + 0.5) * arenaWidth;
+    const y = (Math.cos(seed * 1.3) * 0.5 + 0.5) * arenaHeight;
+    const radius = 150 + (i * 80);
+    
+    // Animate nebula slightly
+    const offsetX = Math.sin(state.gameTime * 0.01 + i) * 20;
+    const offsetY = Math.cos(state.gameTime * 0.008 + i) * 15;
+    
+    const nebGradient = ctx.createRadialGradient(
+      x + offsetX, y + offsetY, 0,
+      x + offsetX, y + offsetY, radius
+    );
+    nebGradient.addColorStop(0, theme.nebulaColor);
+    nebGradient.addColorStop(0.5, theme.nebulaColor.replace('0.15', '0.05'));
+    nebGradient.addColorStop(1, 'transparent');
+    
+    ctx.fillStyle = nebGradient;
+    ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  }
+}
+
+function renderStarField(ctx: CanvasRenderingContext2D, state: VectorState, theme: any): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  
+  // Use map seed for consistent star positions
+  const starCount = 30 + (state.currentMap % 20);
+  
+  for (let i = 0; i < starCount; i++) {
+    const seed = state.currentMap * 1000 + i;
+    const x = ((seed * 9301 + 49297) % 233280) / 233280 * arenaWidth;
+    const y = ((seed * 7919 + 21649) % 181081) / 181081 * arenaHeight;
+    
+    // Twinkling effect
+    const twinkle = Math.sin(state.gameTime * 0.05 + i * 0.7) * 0.5 + 0.5;
+    const size = 1 + (i % 3) * 0.5;
+    const alpha = 0.3 + twinkle * 0.4;
+    
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.fill();
+  }
+}
+
+function renderAmbientGlow(ctx: CanvasRenderingContext2D, state: VectorState, theme: any): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  
+  // Pulsing corner glows
+  const pulse = Math.sin(state.gameTime * 0.02 * theme.pulseSpeed) * 0.3 + 0.7;
+  const glowAlpha = theme.glowIntensity * 0.1 * pulse;
+  
+  // Bottom glow
+  const bottomGlow = ctx.createLinearGradient(0, arenaHeight * 0.7, 0, arenaHeight);
+  bottomGlow.addColorStop(0, 'transparent');
+  bottomGlow.addColorStop(1, theme.accentColor.replace(')', `, ${glowAlpha})`).replace('hsl', 'hsla'));
+  ctx.fillStyle = bottomGlow;
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
 }
 
@@ -74,7 +177,8 @@ function renderPattern(ctx: CanvasRenderingContext2D, state: VectorState): void 
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   const theme = getMapTheme(state.currentMap);
   const gridSize = 40;
-  const offset = (state.gameTime * 0.5) % gridSize;
+  const animSpeed = theme.pulseSpeed || 1;
+  const offset = (state.gameTime * 0.5 * animSpeed) % gridSize;
   
   ctx.strokeStyle = theme.gridColor;
   ctx.lineWidth = 1;
@@ -119,7 +223,7 @@ function renderPattern(ctx: CanvasRenderingContext2D, state: VectorState): void 
       
     case 'circles':
       for (let i = 1; i <= 8; i++) {
-        const radius = i * 100 + Math.sin(state.gameTime * 0.02 + i) * 20;
+        const radius = i * 100 + Math.sin(state.gameTime * 0.02 * animSpeed + i) * 20;
         ctx.beginPath();
         ctx.arc(arenaWidth / 2, arenaHeight / 2, radius, 0, Math.PI * 2);
         ctx.stroke();
@@ -170,7 +274,7 @@ function renderPattern(ctx: CanvasRenderingContext2D, state: VectorState): void 
       for (let y = 0; y < arenaHeight; y += gridSize) {
         ctx.beginPath();
         for (let x = 0; x <= arenaWidth; x += 10) {
-          const wave = Math.sin((x + state.gameTime * 2) * 0.03) * 15;
+          const wave = Math.sin((x + state.gameTime * 2 * animSpeed) * 0.03) * 15;
           if (x === 0) ctx.moveTo(x, y + wave);
           else ctx.lineTo(x, y + wave);
         }
@@ -202,13 +306,85 @@ function renderPattern(ctx: CanvasRenderingContext2D, state: VectorState): void 
     case 'spiral':
       ctx.beginPath();
       for (let a = 0; a < Math.PI * 10; a += 0.1) {
-        const r = a * 30 + state.gameTime * 0.5;
+        const r = a * 30 + state.gameTime * 0.5 * animSpeed;
         const x = arenaWidth / 2 + Math.cos(a) * r;
         const y = arenaHeight / 2 + Math.sin(a) * r;
         if (a === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
+      break;
+      
+    case 'crosshatch':
+      // Diagonal lines both directions
+      for (let i = -arenaHeight; i < arenaWidth + arenaHeight; i += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(i + offset, 0);
+        ctx.lineTo(i + arenaHeight + offset, arenaHeight);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(i - offset + arenaWidth, 0);
+        ctx.lineTo(i - arenaHeight - offset + arenaWidth, arenaHeight);
+        ctx.stroke();
+      }
+      break;
+      
+    case 'dots':
+      const dotSpacing = gridSize * 0.8;
+      for (let row = 0; row < arenaHeight / dotSpacing + 1; row++) {
+        for (let col = 0; col < arenaWidth / dotSpacing + 1; col++) {
+          const cx = col * dotSpacing + (row % 2) * dotSpacing * 0.5;
+          const cy = row * dotSpacing;
+          const pulse = Math.sin(state.gameTime * 0.03 * animSpeed + row * 0.2 + col * 0.3) * 0.5 + 0.5;
+          const radius = 2 + pulse * 2;
+          
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.fillStyle = theme.gridColor;
+          ctx.fill();
+        }
+      }
+      break;
+      
+    case 'scanlines':
+      // Horizontal scanlines with varying intensity
+      for (let y = 0; y < arenaHeight; y += 4) {
+        const intensity = Math.sin(y * 0.1 + state.gameTime * 0.05 * animSpeed) * 0.3 + 0.7;
+        ctx.globalAlpha = intensity;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(arenaWidth, y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      break;
+      
+    case 'radial':
+      // Radial lines from center
+      const lineCount = 24;
+      const centerX = arenaWidth / 2;
+      const centerY = arenaHeight / 2;
+      const maxRadius = Math.max(arenaWidth, arenaHeight);
+      
+      for (let i = 0; i < lineCount; i++) {
+        const angle = (i / lineCount) * Math.PI * 2 + state.gameTime * 0.005 * animSpeed;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(
+          centerX + Math.cos(angle) * maxRadius,
+          centerY + Math.sin(angle) * maxRadius
+        );
+        ctx.stroke();
+      }
+      
+      // Concentric circles
+      for (let r = 80; r < maxRadius; r += 120) {
+        const pulseR = r + Math.sin(state.gameTime * 0.02 * animSpeed + r * 0.01) * 10;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, pulseR, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       break;
   }
 }
