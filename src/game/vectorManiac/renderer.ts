@@ -797,9 +797,8 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, healthBarY + 4);
   }
   
-  // Map name display (when transitioning to new map) - only during waveComplete phase
-  if (state.showMapName && state.mapNameTimer > 0 && state.phase === 'waveComplete') {
-    const theme = getMapTheme(state.currentMap);
+  // Map name display (when starting a new map)
+  if (state.showMapName && state.mapNameTimer > 0) {
     // Quick fade: show for 3 seconds, fade out in last 0.5 seconds
     const displayTime = 180; // 3 seconds total display
     const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
