@@ -52,8 +52,8 @@ export const VM_CONFIG = {
   
   // Spawn timing
   spawnInterval: 60,
-  waveTransitionTime: 30,
-  mapTransitionTime: 45,
+  waveTransitionTime: 10,
+  mapTransitionTime: 15,
   
   // Salvage
   salvageDropChance: {
