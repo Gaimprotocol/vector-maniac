@@ -73,40 +73,45 @@ export const ShopScreen: React.FC = () => {
   }, [activeTab, allUpgrades]);
 
   const handleUpgradePurchase = (upgradeId: string) => {
-    const cost = getUpgradeCost(upgradeId);
     const upgrade = SHIP_UPGRADES.find(u => u.id === upgradeId);
-    
     if (!upgrade) return;
-    
+
+    const cost = getUpgradeCost(upgradeId);
+
+    // Guard rails: never spend scraps unless the upgrade purchase actually succeeds
     if (isUpgradeMaxed(upgradeId)) {
       setPopup({ type: 'already_owned', productName: upgrade.name });
       return;
     }
-    
+
     if (!canAfford(cost)) {
       setPopup({ type: 'not_enough', productName: upgrade.name });
       return;
     }
-    
-    if (spendScraps(cost)) {
-      const success = purchaseUpgrade(upgradeId);
-      if (success) {
-        // Play purchase sound and haptic feedback
-        playPurchaseSound();
-        triggerHapticFeedback('success');
-        
-        // Trigger ship preview update with slight delay to ensure localStorage is updated
-        setTimeout(() => {
-          setUpgradeVersion(v => v + 1);
-        }, 10);
-        
-        // Trigger purchase flash effect
-        setPurchaseFlash(upgradeId);
-        setTimeout(() => setPurchaseFlash(null), 800);
-        
-        setPopup({ type: 'success', productName: upgrade.name });
-      }
+
+    // Spend currency first, but immediately refund if the upgrade fails for any reason.
+    if (!spendScraps(cost)) return;
+
+    const success = purchaseUpgrade(upgradeId);
+    if (!success) {
+      // Safety refund (prevents “scraps lost but nothing happened”)
+      addScraps(cost);
+      setPopup({ type: 'already_owned', productName: upgrade.name });
+      return;
     }
+
+    // Play purchase sound and haptic feedback
+    playPurchaseSound();
+    triggerHapticFeedback('success');
+
+    // Force preview refresh (also used as key to remount ShipPreview below)
+    setUpgradeVersion(v => v + 1);
+
+    // Trigger purchase flash effect
+    setPurchaseFlash(upgradeId);
+    setTimeout(() => setPurchaseFlash(null), 800);
+
+    setPopup({ type: 'success', productName: upgrade.name });
   };
 
   const handleStorePurchase = async (item: ShopProduct) => {
@@ -242,7 +247,13 @@ export const ShopScreen: React.FC = () => {
               <div className="font-pixel text-[9px] text-gray-500 mb-2 uppercase tracking-widest">
                 Your Ship
               </div>
-              <ShipPreview width={180} height={120} upgradeVersion={upgradeVersion} upgrades={upgrades} />
+              <ShipPreview
+                key={upgradeVersion}
+                width={180}
+                height={120}
+                upgradeVersion={upgradeVersion}
+                upgrades={upgrades}
+              />
             </div>
             
             {/* Upgrades Grid */}
@@ -302,11 +313,11 @@ export const ShopScreen: React.FC = () => {
                   <div className="flex items-start justify-between mb-2">
                     <span className="text-2xl">{upgrade.icon}</span>
                     <span 
-                      className={`font-pixel text-[8px] transition-all duration-300 ${
-                        purchaseFlash === upgrade.id ? 'text-green-400 scale-125' : 'text-gray-400'
+                      className={`font-pixel text-[10px] transition-all duration-300 ${
+                        purchaseFlash === upgrade.id ? 'text-green-400 scale-110' : 'text-gray-200'
                       }`}
                       style={{
-                        textShadow: purchaseFlash === upgrade.id ? '0 0 10px rgba(0, 255, 200, 0.8)' : 'none',
+                        textShadow: purchaseFlash === upgrade.id ? '0 0 10px rgba(0, 255, 200, 0.8)' : '0 0 8px rgba(0,0,0,0.6)',
                       }}
                     >
                       LVL {level}/{upgrade.maxLevel}
