@@ -128,11 +128,13 @@ export function useShipUpgrades() {
 
   // Save upgrades to localStorage
   const saveUpgrades = useCallback((newUpgrades: UpgradeState) => {
+    // Always update React state first so UI updates even if persistence fails
+    setUpgrades(newUpgrades);
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newUpgrades));
-      setUpgrades(newUpgrades);
     } catch (error) {
-      console.error('[Upgrades] Failed to save:', error);
+      console.error('[Upgrades] Failed to persist (UI still updated):', error);
     }
   }, []);
 
