@@ -2,7 +2,10 @@
 
 let audioCtx: AudioContext | null = null;
 let laserBuffer: AudioBuffer | null = null;
+let gameStartBuffer: AudioBuffer | null = null;
 let isLaserLoading = false;
+let isGameStartLoading = false;
+let gameStartPlayed = false;
 
 function getAudioContext(): AudioContext {
   if (!audioCtx) {
@@ -27,8 +30,52 @@ async function loadLaserSound(): Promise<void> {
   isLaserLoading = false;
 }
 
+// Preload game start voice line
+async function loadGameStartSound(): Promise<void> {
+  if (gameStartBuffer || isGameStartLoading) return;
+  isGameStartLoading = true;
+  
+  try {
+    const ctx = getAudioContext();
+    const response = await fetch('/audio/Game_start.mp3');
+    const arrayBuffer = await response.arrayBuffer();
+    gameStartBuffer = await ctx.decodeAudioData(arrayBuffer);
+  } catch (e) {
+    console.error('Failed to load game start sound:', e);
+  }
+  isGameStartLoading = false;
+}
+
+// Play the game start voice line
+export function playGameStartVoice(): void {
+  if (gameStartPlayed) return; // Only play once per game session
+  
+  try {
+    const ctx = getAudioContext();
+    
+    if (gameStartBuffer) {
+      gameStartPlayed = true;
+      const source = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      source.buffer = gameStartBuffer;
+      source.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.7, ctx.currentTime);
+      source.start(ctx.currentTime);
+    }
+  } catch (e) {
+    console.error('Failed to play game start sound:', e);
+  }
+}
+
+// Reset game start voice (call when starting a new game)
+export function resetGameStartVoice(): void {
+  gameStartPlayed = false;
+}
+
 // Start loading immediately
 loadLaserSound();
+loadGameStartSound();
 
 export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage';
 
