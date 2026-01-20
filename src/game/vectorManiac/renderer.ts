@@ -805,21 +805,12 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
     const fadeOutStart = 30; // Start fading at 0.5 seconds remaining
     const alpha = effectiveTimer < fadeOutStart ? effectiveTimer / fadeOutStart : 1;
-    // Pop-up scale effect (fast pop - completes in ~0.1 seconds)
-    const popProgress = Math.min(1, (displayTime - effectiveTimer) / 6);
-    const easeOutBack = (t: number) => 1 + 2.5 * Math.pow(t - 1, 3) + 1.5 * Math.pow(t - 1, 2);
-    const scale = 0.3 + 0.7 * easeOutBack(popProgress);
     
     ctx.save();
     ctx.globalAlpha = alpha * 0.95;
     
     const centerX = arenaWidth / 2;
     const centerY = VM_CONFIG.arenaHeight / 2 - 160;
-    
-    // Apply scale transform from center (always centered, no slide)
-    ctx.translate(centerX, centerY);
-    ctx.scale(scale, scale);
-    ctx.translate(-centerX, -centerY);
     
     // Glow effect behind text
     ctx.shadowColor = theme.accentColor;
