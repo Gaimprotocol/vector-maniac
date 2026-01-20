@@ -18,15 +18,15 @@ interface ActivationEffect {
   y: number;
 }
 
-// Theme colors for map name display
+// Theme colors for map name display (neon green palette)
 const MAP_NAME_COLORS = [
-  '#00ffff', // cyan
-  '#ff00ff', // magenta
-  '#00ff88', // green
+  '#00ff66', // neon green
+  '#88ff00', // lime
+  '#00ffaa', // cyan-green
   '#ffaa00', // orange
-  '#ff6688', // pink
-  '#88aaff', // light blue
-  '#ffff00', // yellow
+  '#66ff88', // light green
+  '#aaff44', // yellow-green
+  '#00ff44', // bright green
 ];
 
 export const GameUI: React.FC<GameUIProps> = ({ 
