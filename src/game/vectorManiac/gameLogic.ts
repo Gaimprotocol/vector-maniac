@@ -895,12 +895,33 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
           enemy.x, 
           enemy.y, 
           VM_CONFIG.enemyColors[enemy.type], 
-          enemy.type === 'bounty' ? 20 : 8
+          enemy.type === 'bounty' || enemy.type === 'boss' ? 20 : 8
         );
         newState.particles = [...newState.particles, ...particles];
         
+        // Check if this was the boss
+        if (enemy.type === 'boss') {
+          newState.bossDefeated = true;
+          newState.bossActive = false;
+          
+          // Boss reward: spawn 5-10 salvage pieces
+          const bossRewardCount = 5 + Math.floor(Math.random() * 6);
+          for (let i = 0; i < bossRewardCount; i++) {
+            const angle = (i / bossRewardCount) * Math.PI * 2;
+            const dist = 30 + Math.random() * 20;
+            const salvage = createSalvage(
+              enemy.x + Math.cos(angle) * dist,
+              enemy.y + Math.sin(angle) * dist,
+              VM_CONFIG.salvageValue.elite,
+              Math.random() < 0.3
+            );
+            newState.salvage = [...newState.salvage, salvage];
+          }
+        }
+        
         // Give score (reduced since it's easy)
-        const baseScore = enemy.type === 'bounty' ? 500 : 
+        const baseScore = enemy.type === 'boss' ? 1000 :
+                          enemy.type === 'bounty' ? 500 : 
                           enemy.type === 'elite' ? 100 :
                           enemy.type === 'shooter' ? 50 : 25;
         newState.score += baseScore;
