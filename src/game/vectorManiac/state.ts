@@ -3,6 +3,7 @@
 import { VectorState, PlayerStats } from './types';
 import { VM_CONFIG } from './constants';
 import { getComputedStats } from '@/hooks/useShipUpgrades';
+import { resetGameStartVoice } from './sounds';
 
 export function createDefaultStats(): PlayerStats {
   const upgrades = getComputedStats();
@@ -30,6 +31,9 @@ export function getRandomWavesForMap(): number {
 }
 
 export function createVectorManiacState(): VectorState {
+  // Reset the game start voice so it plays again for new games
+  resetGameStartVoice();
+  
   const centerX = VM_CONFIG.arenaWidth / 2;
   const centerY = VM_CONFIG.arenaHeight / 2;
   const initialWavesInMap = getRandomWavesForMap();

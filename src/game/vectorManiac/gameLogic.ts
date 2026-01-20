@@ -16,7 +16,7 @@ import {
 } from './entities';
 import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
-import { playVectorSound } from './sounds';
+import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './sounds';
 interface VectorInput {
   touchX: number;
   touchY: number;
@@ -72,6 +72,11 @@ export const updateVectorManiac = updateVectorState;
 function updateEnteringPhase(state: VectorState): VectorState {
   let newState = { ...state };
   newState.phaseTimer--;
+  
+  // Play game start voice at the beginning of the entering phase
+  if (state.phaseTimer === 120) {
+    playGameStartVoice();
+  }
   
   // Create entrance particles
   if (newState.phaseTimer % 3 === 0) {
