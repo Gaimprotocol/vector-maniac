@@ -45,7 +45,7 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
       newState = updatePlayingPhase(newState, input);
       break;
     case 'waveComplete':
-      newState = updateWaveCompletePhase(newState);
+      newState = updateWaveCompletePhase(newState, input);
       break;
     case 'portalChoice':
     case 'upgradePick':
@@ -109,7 +109,8 @@ function updateEnteringPhase(state: VectorState): VectorState {
   return newState;
 }
 
-function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState {
+// Core playing logic that can be used during wave transitions too
+function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEnemies: boolean): VectorState {
   let newState = { ...state };
   
   // Update player position (drag-to-move)
@@ -249,29 +250,31 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     newState.soundQueue = [...newState.soundQueue, 'shoot'];
   }
   
-  // Spawn enemies
-  if (newState.spawnTimer > 0) {
-    newState.spawnTimer--;
-  } else {
-    const lastWave = isLastWaveInMap(newState);
+  // Spawn enemies (only during playing phase, not during wave transitions)
+  if (spawnEnemies) {
+    if (newState.spawnTimer > 0) {
+      newState.spawnTimer--;
+    } else {
+      const lastWave = isLastWaveInMap(newState);
 
-    // On the last wave of a map: spawn normal enemies first, then spawn the boss as the финал.
-    const shouldSpawnBossNow =
-      lastWave &&
-      newState.enemiesSpawned >= newState.enemiesInWave &&
-      !newState.bossActive &&
-      !newState.bossDefeated;
+      // On the last wave of a map: spawn normal enemies first, then spawn the boss as the финал.
+      const shouldSpawnBossNow =
+        lastWave &&
+        newState.enemiesSpawned >= newState.enemiesInWave &&
+        !newState.bossActive &&
+        !newState.bossDefeated;
 
-    if (shouldSpawnBossNow) {
-      const boss = createBoss(newState.currentMap, newState.currentLevel);
-      boss.health *= newState.difficultyMultiplier;
-      boss.maxHealth = boss.health;
-      newState.enemies = [...newState.enemies, boss];
-      newState.bossActive = true;
-      newState.spawnTimer = 30; // small breather before boss starts firing/moving fully
-    } else if (!newState.bossActive && newState.enemiesSpawned < newState.enemiesInWave) {
-      newState = spawnEnemy(newState);
-      newState.spawnTimer = VM_CONFIG.spawnInterval;
+      if (shouldSpawnBossNow) {
+        const boss = createBoss(newState.currentMap, newState.currentLevel);
+        boss.health *= newState.difficultyMultiplier;
+        boss.maxHealth = boss.health;
+        newState.enemies = [...newState.enemies, boss];
+        newState.bossActive = true;
+        newState.spawnTimer = 30; // small breather before boss starts firing/moving fully
+      } else if (!newState.bossActive && newState.enemiesSpawned < newState.enemiesInWave) {
+        newState = spawnEnemy(newState);
+        newState.spawnTimer = VM_CONFIG.spawnInterval;
+      }
     }
   }
   
@@ -285,6 +288,12 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   // Check collisions
   newState = checkCollisions(newState);
   newState = checkPowerUpCollisions(newState);
+  
+  return newState;
+}
+
+function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState {
+  let newState = updatePlayingPhaseCore(state, input, true);
   
   // Check wave completion
   // Last wave of a map: must clear the wave enemies AND defeat the boss.
@@ -306,7 +315,7 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   return newState;
 }
 
-function updateWaveCompletePhase(state: VectorState): VectorState {
+function updateWaveCompletePhase(state: VectorState, input: VectorInput): VectorState {
   let newState = { ...state };
   newState.phaseTimer--;
   
@@ -317,8 +326,6 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
       newState.showMapName = false;
     }
   }
-  
-  newState.particles = updateParticles(newState.particles);
   
   if (newState.phaseTimer <= 0) {
     // Advance to next wave within this map
@@ -332,6 +339,10 @@ function updateWaveCompletePhase(state: VectorState): VectorState {
     // Keep showMapName controlled by mapNameTimer so map info can remain on-screen
     newState.phase = 'playing';
   }
+  
+  // Continue running game logic during wave transition (player, projectiles, particles)
+  // but don't spawn new enemies
+  newState = updatePlayingPhaseCore(newState, input, false);
   
   return newState;
 }
