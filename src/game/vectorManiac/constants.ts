@@ -102,17 +102,6 @@ export const VM_CONFIG = {
   },
 };
 
-// Generate 50 unique map themes with varied backgrounds
-export interface MapTheme {
-  id: number;
-  name: string;
-  bg1: string;
-  bg2: string;
-  gridColor: string;
-  pattern: 'grid' | 'hexagon' | 'circles' | 'triangles' | 'diamonds' | 'waves' | 'stars' | 'spiral';
-  accentColor: string;
-}
-
 // Helper to generate HSL color
 function hsl(h: number, s: number, l: number): string {
   return `hsl(${h}, ${s}%, ${l}%)`;
@@ -121,28 +110,6 @@ function hsl(h: number, s: number, l: number): string {
 function hsla(h: number, s: number, l: number, a: number): string {
   return `hsla(${h}, ${s}%, ${l}%, ${a})`;
 }
-
-// Generate 50 unique map themes
-export const VM_MAP_THEMES: MapTheme[] = Array.from({ length: 50 }, (_, i) => {
-  const mapId = i + 1;
-  const hue = (i * 137.5) % 360; // Golden angle distribution for variety
-  const patterns: MapTheme['pattern'][] = ['grid', 'hexagon', 'circles', 'triangles', 'diamonds', 'waves', 'stars', 'spiral'];
-  const pattern = patterns[i % patterns.length];
-  
-  // Create distinct color schemes
-  const saturation = 60 + (i % 3) * 15;
-  const baseLightness = 3 + (i % 5);
-  
-  return {
-    id: mapId,
-    name: getMapName(mapId),
-    bg1: hsl(hue, saturation, baseLightness),
-    bg2: hsl((hue + 20) % 360, saturation - 10, baseLightness + 5),
-    gridColor: hsla(hue, 80, 50, 0.06),
-    pattern,
-    accentColor: hsl(hue, 80, 60),
-  };
-});
 
 function getMapName(mapId: number): string {
   const names = [
@@ -159,6 +126,91 @@ function getMapName(mapId: number): string {
   ];
   return names[mapId - 1] || `Sector ${mapId}`;
 }
+
+// Generate 50 unique map themes with varied backgrounds
+export interface MapTheme {
+  id: number;
+  name: string;
+  bg1: string;
+  bg2: string;
+  gridColor: string;
+  pattern: 'grid' | 'hexagon' | 'circles' | 'triangles' | 'diamonds' | 'waves' | 'stars' | 'spiral' | 'crosshatch' | 'dots' | 'scanlines' | 'radial';
+  accentColor: string;
+  // New visual effects
+  glowIntensity: number; // 0-1 for ambient glow
+  nebulaColor?: string;
+  hasStars: boolean;
+  pulseSpeed: number; // Pattern animation speed multiplier
+}
+
+// Color palettes for variety
+const COLOR_PALETTES = [
+  // Neon Cyan
+  { primary: 180, secondary: 200, name: 'cyan' },
+  // Hot Pink / Magenta
+  { primary: 320, secondary: 340, name: 'magenta' },
+  // Electric Purple
+  { primary: 270, secondary: 290, name: 'purple' },
+  // Toxic Green
+  { primary: 120, secondary: 140, name: 'green' },
+  // Solar Orange
+  { primary: 30, secondary: 15, name: 'orange' },
+  // Blood Red
+  { primary: 0, secondary: 350, name: 'red' },
+  // Golden Yellow
+  { primary: 50, secondary: 40, name: 'gold' },
+  // Ice Blue
+  { primary: 210, secondary: 220, name: 'ice' },
+  // Sunset Gradient
+  { primary: 350, secondary: 30, name: 'sunset' },
+  // Deep Ocean
+  { primary: 240, secondary: 200, name: 'ocean' },
+];
+
+// Generate 50 unique map themes
+export const VM_MAP_THEMES: MapTheme[] = Array.from({ length: 50 }, (_, i) => {
+  const mapId = i + 1;
+  
+  // Use varied color palettes instead of golden angle
+  const paletteIndex = i % COLOR_PALETTES.length;
+  const palette = COLOR_PALETTES[paletteIndex];
+  
+  // Add variation within palette
+  const hueShift = Math.floor(i / COLOR_PALETTES.length) * 15;
+  const hue = (palette.primary + hueShift) % 360;
+  const secondaryHue = (palette.secondary + hueShift) % 360;
+  
+  const patterns: MapTheme['pattern'][] = [
+    'grid', 'hexagon', 'circles', 'triangles', 'diamonds', 
+    'waves', 'stars', 'spiral', 'crosshatch', 'dots', 'scanlines', 'radial'
+  ];
+  const pattern = patterns[i % patterns.length];
+  
+  // Vary saturation and lightness for more contrast between maps
+  const satGroup = i % 3;
+  const saturation = satGroup === 0 ? 80 : satGroup === 1 ? 60 : 100;
+  
+  const lightGroup = i % 5;
+  const baseLightness = lightGroup === 0 ? 3 : lightGroup === 1 ? 5 : lightGroup === 2 ? 2 : lightGroup === 3 ? 7 : 4;
+  
+  // Some maps have brighter backgrounds
+  const isBrightMap = i % 7 === 0;
+  const bgLightness = isBrightMap ? baseLightness + 4 : baseLightness;
+  
+  return {
+    id: mapId,
+    name: getMapName(mapId),
+    bg1: hsl(hue, saturation - 20, bgLightness),
+    bg2: hsl(secondaryHue, saturation, bgLightness + 6),
+    gridColor: hsla(hue, 90, 55, 0.08 + (i % 4) * 0.02),
+    pattern,
+    accentColor: hsl(hue, 90, 60),
+    glowIntensity: 0.3 + (i % 5) * 0.15,
+    nebulaColor: i % 3 === 0 ? hsla(secondaryHue, 70, 40, 0.15) : undefined,
+    hasStars: i % 2 === 0,
+    pulseSpeed: 0.5 + (i % 4) * 0.3,
+  };
+});
 
 export function getMapTheme(mapId: number): MapTheme {
   const index = ((mapId - 1) % VM_MAP_THEMES.length);
