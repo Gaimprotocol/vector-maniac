@@ -169,47 +169,31 @@ const Index = () => {
       {waitingForLandscape && !isLandscape && !vectorManiacStarted && (
         <div 
           className="fixed inset-0 flex flex-col items-center justify-center gap-4 z-50"
-          style={{ background: '#000000' }}
+          style={{ background: 'linear-gradient(135deg, #050810 0%, #0a1020 50%, #100818 100%)' }}
         >
-          <p 
-            className="font-vector text-xs tracking-[0.3em]"
-            style={{ color: '#00ff66', textShadow: '0 0 10px #00ff6660' }}
-          >
-            GAIM STUDIOS
-          </p>
-          <h1 
-            className="font-vector text-3xl tracking-[0.15em]"
-            style={{ color: '#00ff66', textShadow: '0 0 30px #00ff66, 0 0 60px #00ff6680' }}
-          >
-            VECTOR MANIAC
+          <p className="font-pixel text-[8px] text-white/40">GAIM STUDIOS PRESENTS</p>
+          <h1 className="font-pixel text-2xl text-cyan-400 animate-pulse">
+            GALACTIC OVERDRIVE
           </h1>
           <div 
             className="text-5xl mt-4"
             style={{ 
               animation: 'rotate-phone 1.5s ease-in-out infinite',
-              filter: 'drop-shadow(0 0 10px #00ff66)',
             }}
           >
             📱
           </div>
-          <p 
-            className="font-vector text-sm text-center px-4 mt-2"
-            style={{ color: '#00ff66', textShadow: '0 0 10px #00ff6680' }}
-          >
-            Rotate to landscape
+          <p className="text-cyan-400 text-sm font-bold text-center px-4 mt-2">
+            Rotate your phone to landscape
           </p>
-          <p 
-            className="font-vector text-[10px] text-center px-8"
-            style={{ color: '#00ff6680' }}
-          >
+          <p className="text-cyan-600 text-[10px] text-center px-8">
             Game will start automatically
           </p>
           <button
-            className="font-vector text-xs mt-6 border px-4 py-2 transition-all hover:bg-[#00ff6615]"
-            style={{ borderColor: '#00ff6660', color: '#00ff6680' }}
+            className="font-pixel text-[9px] text-gray-500 mt-6 underline"
             onClick={() => setWaitingForLandscape(false)}
           >
-            ← BACK
+            ← Back to menu
           </button>
           <style>{`
             @keyframes rotate-phone {
@@ -224,147 +208,115 @@ const Index = () => {
       {!waitingForLandscape && !gameStarted && (
         <div 
           className="fixed inset-0 flex flex-col items-center justify-center z-50 overflow-hidden"
-          style={{ background: '#000000' }}
+          style={{ 
+            background: 'linear-gradient(180deg, #000510 0%, #050015 50%, #100520 100%)'
+          }}
         >
-          {/* Floating neon green particles */}
+          {/* Animated grid background */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 255, 0.03) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px',
+              animation: 'gridMove 20s linear infinite',
+            }}
+          />
+          
+          {/* Glowing orbs */}
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-20 blur-3xl"
+               style={{ background: 'radial-gradient(circle, #ff00ff 0%, transparent 70%)' }} />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full opacity-20 blur-3xl"
+               style={{ background: 'radial-gradient(circle, #00ffff 0%, transparent 70%)' }} />
+
+          {/* Floating vector particles */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(40)].map((_, i) => (
+            {[...Array(30)].map((_, i) => (
               <div
                 key={i}
-                className="absolute rounded-full"
+                className="absolute"
                 style={{
-                  width: i % 5 === 0 ? '4px' : i % 3 === 0 ? '3px' : '2px',
-                  height: i % 5 === 0 ? '4px' : i % 3 === 0 ? '3px' : '2px',
-                  left: `${(i * 17 + 5) % 100}%`,
-                  top: `${(i * 23 + 10) % 100}%`,
-                  background: '#00ff66',
-                  boxShadow: '0 0 8px #00ff66, 0 0 15px #00ff6680',
-                  opacity: 0.4 + (i % 5) * 0.15,
-                  animation: `floatParticle ${15 + (i % 10) * 2}s ease-in-out infinite`,
-                  animationDelay: `-${(i * 1.3) % 15}s`,
+                  width: i % 3 === 0 ? '3px' : '2px',
+                  height: i % 3 === 0 ? '3px' : '2px',
+                  left: Math.random() * 100 + '%',
+                  top: Math.random() * 100 + '%',
+                  background: i % 2 === 0 ? '#ff00ff' : '#00ffff',
+                  boxShadow: i % 2 === 0 ? '0 0 10px #ff00ff' : '0 0 10px #00ffff',
+                  opacity: Math.random() * 0.8 + 0.2,
+                  animation: `floatParticle ${Math.random() * 15 + 10}s ease-in-out infinite`,
+                  animationDelay: `-${Math.random() * 10}s`,
                 }}
               />
             ))}
           </div>
 
-          {/* Subtle radial glow in center */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at center, rgba(0,255,102,0.08) 0%, transparent 60%)',
-            }}
-          />
-
-          {/* Studio name with diamonds */}
-          <div className="flex items-center gap-3 mb-6">
-            <div 
-              className="w-2 h-2 rotate-45" 
-              style={{ 
-                background: '#00ff66',
-                boxShadow: '0 0 8px #00ff66',
-              }} 
-            />
-            <p 
-              className="font-vector text-sm tracking-[0.4em] uppercase"
-              style={{ 
-                color: '#00ff66',
-                textShadow: '0 0 20px #00ff6680',
-              }}
-            >
-              GAIM STUDIOS
-            </p>
-            <div 
-              className="w-2 h-2 rotate-45" 
-              style={{ 
-                background: '#00ff66',
-                boxShadow: '0 0 8px #00ff66',
-              }} 
-            />
+          {/* Top decorative line */}
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
+            <div className="w-24 h-px bg-gradient-to-l from-magenta to-transparent" />
+            <div className="w-3 h-3 rotate-45 border-2 border-magenta" style={{ boxShadow: '0 0 10px #ff00ff' }} />
+            <div className="w-24 h-px bg-gradient-to-r from-cyan-400 to-transparent" />
           </div>
 
           {/* Main title - VECTOR MANIAC */}
-          <h1 
-            className="font-vector font-black text-5xl md:text-6xl tracking-[0.2em] mb-2"
-            style={{ 
-              color: '#00ff66',
-              textShadow: '0 0 30px #00ff66, 0 0 60px #00ff6680, 0 0 100px #00ff6640',
-            }}
-          >
-            VECTOR MANIAC
-          </h1>
-
-          {/* Subtitle */}
-          <p 
-            className="font-vector text-xl md:text-2xl tracking-[0.3em] mb-6"
-            style={{ 
-              color: '#00ff66',
-              textShadow: '0 0 20px #00ff6680',
-            }}
-          >
-            NEON SIEGE
-          </p>
-
-          {/* Decorative line with diamond */}
-          <div className="flex items-center gap-2 mb-6">
-            <div 
-              className="w-28 h-0.5"
-              style={{ 
-                background: 'linear-gradient(90deg, transparent, #00ff66)',
-                boxShadow: '0 0 10px #00ff6660',
-              }} 
-            />
-            <div 
-              className="w-3 h-3 rotate-45 border"
-              style={{ 
-                borderColor: '#00ff66',
-                boxShadow: '0 0 10px #00ff66',
-              }} 
-            />
-            <div 
-              className="w-28 h-0.5"
-              style={{ 
-                background: 'linear-gradient(90deg, #00ff66, transparent)',
-                boxShadow: '0 0 10px #00ff6660',
-              }} 
-            />
+          <div className="relative mb-4">
+            <h1 className="font-vector font-black text-5xl flex flex-col items-center gap-0 relative tracking-wider">
+              <span 
+                className="text-magenta"
+                style={{ 
+                  textShadow: '0 0 40px #ff00ff, 0 0 80px #ff00ff60',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                VECTOR
+              </span>
+              <span 
+                className="text-cyan-400"
+                style={{ 
+                  textShadow: '0 0 40px #00ffff, 0 0 80px #00ffff60',
+                  letterSpacing: '0.15em',
+                }}
+              >
+                MANIAC
+              </span>
+            </h1>
+            {/* Underline accent */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-0.5 bg-gradient-to-r from-magenta via-white to-cyan-400" />
           </div>
 
-          {/* Tagline */}
-          <p 
-            className="font-vector text-xs tracking-[0.3em] mb-10"
-            style={{ 
-              color: '#00ff66',
-              textShadow: '0 0 10px #00ff6660',
-            }}
-          >
-            INTERCEPT &nbsp;•&nbsp; DESTROY &nbsp;•&nbsp; SURVIVE
+          {/* Publisher */}
+          <p className="font-tech text-[10px] tracking-[0.5em] text-cyan-400/50 mb-3 uppercase">
+            A GAIM STUDIOS Production
+          </p>
+          
+          {/* Subtitle */}
+          <p className="font-tech text-sm tracking-[0.4em] text-gray-400 mb-1 uppercase">
+            Tactical Arena Combat
+          </p>
+          <p className="font-tech text-xs tracking-widest text-magenta/70 mb-8">
+            // SYSTEM v2.0 //
           </p>
 
-          {/* INITIALIZE button - shown first */}
+          {/* ENTER button - shown first */}
           {!hasEnteredGalaxy && (
             <button
-              className="font-vector font-bold text-base tracking-[0.2em] px-14 py-5 relative overflow-hidden
-                         transition-all duration-300 group uppercase border-2"
+              className="font-vector font-bold text-sm border-2 px-12 py-4 relative overflow-hidden
+                         transition-all duration-300 group uppercase tracking-wider"
               style={{ 
-                background: 'transparent',
-                borderColor: '#00ff66',
-                color: '#00ff66',
-                boxShadow: '0 0 20px #00ff6640, inset 0 0 30px #00ff6610',
+                background: 'linear-gradient(180deg, rgba(255,0,255,0.15) 0%, rgba(0,255,255,0.1) 100%)',
+                borderColor: '#ff00ff',
+                boxShadow: '0 0 30px rgba(255, 0, 255, 0.4), inset 0 0 40px rgba(255, 0, 255, 0.1)',
+                clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
               }}
               onClick={enterGalaxy}
               onTouchEnd={(e) => { e.preventDefault(); enterGalaxy(); }}
             >
-              <span className="relative z-10 flex items-center gap-3">
-                <span style={{ fontSize: '0.8em' }}>▶</span>
-                INITIALIZE
+              <span className="relative z-10 text-white group-hover:text-cyan-400 transition-colors">
+                ▶ Initialize
               </span>
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ 
-                  background: 'rgba(0,255,102,0.15)',
-                  boxShadow: 'inset 0 0 40px #00ff6630',
-                }}
-              />
+              <div className="absolute inset-0 bg-gradient-to-r from-magenta/0 via-cyan-400/30 to-magenta/0 
+                              translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
             </button>
           )}
 
@@ -376,102 +328,98 @@ const Index = () => {
           >
             {/* Start button - Start Vector Maniac */}
             <button
-              className="font-vector font-bold text-base tracking-[0.2em] px-14 py-5 mb-4 
-                         transition-all duration-300 hover:bg-[#00ff6615] uppercase border-2"
+              className="font-vector font-semibold text-sm text-cyan-400 border-2 border-cyan-400/60 px-10 py-3 mb-3 
+                         transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:bg-cyan-400/20 uppercase tracking-wider"
               style={{ 
-                background: 'transparent',
-                borderColor: '#00ff66',
-                color: '#00ff66',
-                boxShadow: '0 0 20px #00ff6640, inset 0 0 30px #00ff6610',
+                boxShadow: '0 0 25px rgba(0, 255, 255, 0.25)',
+                clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
               }}
               onClick={handleVectorManiacStart}
             >
-              <span className="flex items-center gap-3">
-                <span style={{ fontSize: '0.8em' }}>▶</span>
-                START GAME
-              </span>
+              Start Game
             </button>
-            
             {/* Secondary buttons */}
-            <div className={`flex gap-3 mb-3 ${isLandscape ? 'flex-row flex-wrap justify-center' : 'flex-col items-center'}`}>
-              <div className="flex gap-3">
+            <div className={`flex gap-2 mb-3 ${isLandscape ? 'flex-row flex-wrap justify-center' : 'flex-col items-center'}`}>
+              <div className="flex gap-2">
                 <button
-                  className={`font-vector text-xs tracking-wider px-6 py-3 uppercase border
-                             transition-all duration-300 hover:bg-[#00ff6615]
+                  className={`font-tech font-semibold text-xs text-yellow-400 border border-yellow-400/50 px-4 py-2 
+                             transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
-                    borderColor: '#00ff6680',
-                    color: '#00ff66',
-                    boxShadow: '0 0 15px #00ff6630',
+                    boxShadow: '0 0 15px rgba(255, 255, 0, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '200ms',
                     animationFillMode: 'backwards',
                   }}
                   onClick={() => navigate('/shop')}
                 >
-                  SHOP
+                  Shop
                 </button>
                 <button
-                  className={`font-vector text-xs tracking-wider px-6 py-3 uppercase border
-                             transition-all duration-300 hover:bg-[#00ff6615]
+                  className={`font-tech font-semibold text-xs text-purple-400 border border-purple-400/50 px-4 py-2 
+                             transition-all duration-300 hover:border-purple-400 hover:bg-purple-400/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
-                    borderColor: '#00ff6680',
-                    color: '#00ff66',
-                    boxShadow: '0 0 15px #00ff6630',
+                    boxShadow: '0 0 15px rgba(170, 0, 255, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '300ms',
                     animationFillMode: 'backwards',
                   }}
                   onClick={() => navigate('/equipment')}
                 >
-                  GEAR
+                  Gear
                 </button>
                 <button
-                  className={`font-vector text-xs tracking-wider px-6 py-3 uppercase border
-                             transition-all duration-300 hover:bg-[#00ff6615]
+                  className={`font-tech font-semibold text-xs text-magenta border border-magenta/50 px-4 py-2 
+                             transition-all duration-300 hover:border-magenta hover:bg-magenta/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
-                    borderColor: '#00ff6680',
-                    color: '#00ff66',
-                    boxShadow: '0 0 15px #00ff6630',
+                    boxShadow: '0 0 15px rgba(255, 0, 255, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '400ms',
                     animationFillMode: 'backwards',
                   }}
                   onClick={() => navigate('/info')}
                 >
-                  INFO
+                  Info
                 </button>
               </div>
               
               {/* Bonus Maps + Maps Locked indicator + Reward on same row in landscape */}
-              <div className="flex gap-3 flex-wrap justify-center">
+              <div className="flex gap-2 flex-wrap justify-center">
                 {/* Maps locked indicator for non-Ultimate users */}
                 {!hasGoldenSkin() && (
                   <button
-                    className={`font-vector text-xs tracking-wider px-5 py-2.5 uppercase border
-                                transition-all duration-300 hover:bg-[#00ff6615]
+                    className={`font-tech font-medium text-xs text-yellow-500 border border-yellow-500/50 px-4 py-2
+                                transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-500/10 uppercase
                                 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                     style={{ 
-                      borderColor: '#00ff6650',
-                      color: '#00ff6690',
-                      boxShadow: '0 0 10px #00ff6620',
+                      boxShadow: '0 0 15px rgba(255, 200, 0, 0.15)',
+                      clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                       animationDelay: '450ms',
                       animationFillMode: 'backwards',
                     }}
                     onClick={() => navigate('/shop')}
                   >
-                    🔒 MAPS 21-50
+                    🔒 Maps 21-50
                   </button>
                 )}
                 
                 {/* Bonus Maps button */}
                 <button
-                  className={`font-vector text-xs tracking-wider px-5 py-2.5 uppercase border
-                              transition-all duration-300 hover:bg-[#00ff6615]
-                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+                  className={`font-tech font-medium text-xs border px-4 py-2 uppercase
+                              transition-all duration-300 ${
+                                hasGoldenSkin()
+                                  ? bonusMapsEnabled 
+                                    ? 'text-green-400 border-green-400/50 hover:border-green-400 hover:bg-green-400/10' 
+                                    : 'text-gray-500 border-gray-500/50 hover:border-gray-500 hover:bg-gray-500/10'
+                                  : 'text-purple-400 border-purple-400/50 hover:border-purple-300 hover:bg-purple-400/10'
+                              } ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
-                    borderColor: hasGoldenSkin() && bonusMapsEnabled ? '#00ff66' : '#00ff6650',
-                    color: hasGoldenSkin() && bonusMapsEnabled ? '#00ff66' : '#00ff6680',
-                    boxShadow: hasGoldenSkin() && bonusMapsEnabled ? '0 0 15px #00ff6640' : '0 0 10px #00ff6620',
+                    boxShadow: hasGoldenSkin() 
+                      ? (bonusMapsEnabled ? '0 0 15px rgba(74, 222, 128, 0.15)' : 'none')
+                      : '0 0 15px rgba(170, 0, 255, 0.15)',
+                    clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '500ms',
                     animationFillMode: 'backwards',
                   }}
@@ -485,25 +433,24 @@ const Index = () => {
                     localStorage.setItem('bonusMapsEnabled', String(newValue));
                   }}
                 >
-                  {!hasGoldenSkin() ? '🔒 BONUS' : bonusMapsEnabled ? '✓ BONUS' : '✗ BONUS'}
+                  {!hasGoldenSkin() ? '🔒 Bonus Maps' : bonusMapsEnabled ? '✓ Bonus' : '✗ Bonus'}
                 </button>
                 
                 {canWatchAd() && (
                   <button
                     onClick={handleWatchAd}
                     disabled={isShowingAd}
-                    className={`font-vector text-xs tracking-wider px-5 py-2.5 uppercase border
-                               transition-all duration-300 hover:bg-[#00ff6615] disabled:opacity-50
+                    className={`font-tech font-medium text-xs text-green-400 border border-green-400/50 px-4 py-2 uppercase
+                               transition-all duration-300 hover:border-green-400 hover:bg-green-400/10 disabled:opacity-50
                                ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                     style={{ 
-                      borderColor: '#00ff66',
-                      color: '#00ff66',
-                      boxShadow: '0 0 15px #00ff6640',
+                      boxShadow: '0 0 15px rgba(0, 255, 100, 0.15)',
+                      clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                       animationDelay: '600ms',
                       animationFillMode: 'backwards',
                     }}
                   >
-                    REWARD ({remainingAdWatches()})
+                    Reward ({remainingAdWatches()})
                   </button>
                 )}
               </div>
@@ -512,29 +459,20 @@ const Index = () => {
 
             {highScore > 0 && (
               <p 
-                className={`font-vector text-sm tracking-wider mb-3 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
-                style={{ 
-                  color: '#00ff6680',
-                  textShadow: '0 0 10px #00ff6640',
-                  animationDelay: '700ms', 
-                  animationFillMode: 'backwards' 
-                }}
+                className={`font-tech text-sm text-cyan-400/60 mb-2 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+                style={{ animationDelay: '700ms', animationFillMode: 'backwards' }}
               >
                 HIGH SCORE: {highScore}
               </p>
             )}
 
             <div 
-              className={`font-vector text-xs text-center space-y-1 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
-              style={{ 
-                color: '#00ff6650',
-                animationDelay: '800ms', 
-                animationFillMode: 'backwards' 
-              }}
+              className={`font-tech text-xs text-gray-500 text-center space-y-0.5 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+              style={{ animationDelay: '800ms', animationFillMode: 'backwards' }}
             >
               <p>Touch to fly • Auto-fire</p>
               <p>Double-tap for bomb</p>
-              <p className="text-[10px] mt-2" style={{ color: '#00ff6630' }}>v{__BUILD_TIME__}</p>
+              <p className="text-[10px] text-gray-600 mt-2">v{__BUILD_TIME__}</p>
             </div>
           </div>
 
@@ -550,18 +488,18 @@ const Index = () => {
               100% { transform: translateY(40px); }
             }
             @keyframes glow {
-              0% { box-shadow: 0 0 20px rgba(0, 255, 100, 0.2); }
-              100% { box-shadow: 0 0 40px rgba(0, 255, 100, 0.4), 0 0 60px rgba(100, 255, 0, 0.3); }
+              0% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.2); }
+              100% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.3); }
             }
             @keyframes pop-in {
               0% { 
                 opacity: 0; 
                 transform: scale(0.3);
-                filter: drop-shadow(0 0 30px rgba(0, 255, 100, 0.8)) drop-shadow(0 0 60px rgba(100, 255, 0, 0.5));
+                filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 60px rgba(0, 255, 255, 0.5));
               }
               50% { 
                 transform: scale(1.1);
-                filter: drop-shadow(0 0 20px rgba(0, 255, 100, 0.6)) drop-shadow(0 0 40px rgba(100, 255, 0, 0.3));
+                filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.6)) drop-shadow(0 0 40px rgba(0, 255, 255, 0.3));
               }
               100% { 
                 opacity: 1; 
