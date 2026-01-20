@@ -799,10 +799,11 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   
   // Map name display (when starting a new map)
   if (state.showMapName && state.mapNameTimer > 0) {
-    // Quick fade: show for 3 seconds, fade out in last 0.5 seconds
-    const displayTime = 180; // 3 seconds total display
+    const theme = getMapTheme(state.currentMap);
+    // Quick fade: show for ~2.1 seconds, fade out in last 0.35 seconds
+    const displayTime = 126; // ~2.1 seconds total display
     const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
-    const fadeOutStart = 30; // Start fading at 0.5 seconds remaining
+    const fadeOutStart = 21; // Start fading at ~0.35 seconds remaining
     const alpha = effectiveTimer < fadeOutStart ? effectiveTimer / fadeOutStart : 1;
     
     ctx.save();

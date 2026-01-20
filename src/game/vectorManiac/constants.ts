@@ -52,7 +52,7 @@ export const VM_CONFIG = {
   
   // Spawn timing
   spawnInterval: 60,
-  waveTransitionTime: 10,
+  waveTransitionTime: 126, // ~2.1 seconds for wave complete text
   mapTransitionTime: 15,
   
   // Salvage
