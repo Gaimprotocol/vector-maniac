@@ -810,7 +810,7 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.save();
     ctx.globalAlpha = alpha * 0.95;
     
-    const centerY = VM_CONFIG.arenaHeight / 2 - 60;
+    const centerY = VM_CONFIG.arenaHeight / 2 - 160;
     
     // Map name with slide-in effect (no black background)
     const slideOffset = (1 - slideIn) * 80;
