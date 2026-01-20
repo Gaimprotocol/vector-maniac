@@ -2,7 +2,7 @@ import { GameData, Player, Enemy, Civilian, Pickup, Particle, TerrainSegment, St
 import { COLORS, GAME_CONFIG } from './constants';
 import { drawMegaShip, ShipSkinColors } from './megaShipRenderer';
 import { getStoredMegaShipId, getMegaShipById } from '@/hooks/useMegaShips';
-
+import { getStoredUpgrades } from '@/hooks/useShipUpgrades';
 // Re-export ShipSkinColors for use in other files
 export type { ShipSkinColors };
 
@@ -1022,9 +1022,10 @@ export class GameRenderer {
 
     const centerX = x + player.width / 2;
     const centerY = y + player.height / 2;
-    
-    // Draw the selected mega ship with skin colors
-    drawMegaShip(this.ctx, centerX, centerY, activeShipId, time, skinColors);
+
+    // Draw the selected mega ship with skin colors + current upgrades
+    const upgradeState = getStoredUpgrades();
+    drawMegaShip(this.ctx, centerX, centerY, activeShipId, time, skinColors, upgradeState);
 
     // Weapon glow when triple shot active
     if (player.hasTripleShot) {

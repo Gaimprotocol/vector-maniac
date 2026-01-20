@@ -5,7 +5,7 @@ import { VM_CONFIG, getMapTheme, MapTheme } from './constants';
 import { drawMegaShip } from '../megaShipRenderer';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getStoredSkinColors } from '@/hooks/useEquipment';
-
+import { getStoredUpgrades } from '@/hooks/useShipUpgrades';
 export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   
@@ -589,8 +589,9 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
   // Draw the mega ship
   const megaShipId = getStoredMegaShipId();
   const skinColors = getStoredSkinColors();
-  drawMegaShip(ctx, 0, 0, megaShipId, state.gameTime * 0.003, skinColors);
-  
+  const upgradeState = getStoredUpgrades();
+  drawMegaShip(ctx, 0, 0, megaShipId, state.gameTime * 0.003, skinColors, upgradeState);
+
   ctx.restore();
   
   // Magnet range indicator (subtle)

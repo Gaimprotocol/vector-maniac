@@ -1,9 +1,10 @@
 import React from 'react';
-import { ShipUpgrade, getComputedStats, getStoredUpgrades } from '@/hooks/useShipUpgrades';
+import { ShipUpgrade, getComputedStats, type UpgradeState, getStoredUpgrades } from '@/hooks/useShipUpgrades';
 
 interface UpgradeStatPreviewProps {
   upgrade: ShipUpgrade;
   currentLevel: number;
+  upgrades?: UpgradeState; // pass current state for instant preview updates
 }
 
 const STAT_LABELS: Record<string, string> = {
@@ -28,17 +29,17 @@ const STAT_ICONS: Record<string, string> = {
   extraCannons: '🔫',
 };
 
-export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade, currentLevel }) => {
+export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade, currentLevel, upgrades }) => {
   const isMaxed = currentLevel >= upgrade.maxLevel;
-  
-  // Get current stats
-  const currentUpgrades = getStoredUpgrades();
+
+  // Use passed-in upgrade state when available (shop), fallback to localStorage (in-game/other)
+  const currentUpgrades = upgrades ?? getStoredUpgrades();
   const currentStats = getComputedStats(currentUpgrades);
-  
+
   // Get stats after upgrade
   const nextUpgrades = { ...currentUpgrades, [upgrade.id]: currentLevel + 1 };
   const nextStats = getComputedStats(nextUpgrades);
-  
+
   const stat = upgrade.effect.stat;
   const valuePerLevel = upgrade.effect.valuePerLevel;
   

@@ -297,7 +297,7 @@ export const ShopScreen: React.FC = () => {
                   
                   {/* Stat Preview Tooltip */}
                   {hoveredUpgrade === upgrade.id && !purchaseFlash && (
-                    <UpgradeStatPreview upgrade={upgrade} currentLevel={level} />
+                    <UpgradeStatPreview upgrade={upgrade} currentLevel={level} upgrades={upgrades} />
                   )}
                   <div className="flex items-start justify-between mb-2">
                     <span className="text-2xl">{upgrade.icon}</span>
