@@ -281,12 +281,12 @@ const Index = () => {
                 MANIAC
               </span>
             </h1>
-            {/* Underline accent */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-0.5 bg-gradient-to-r from-magenta via-white to-cyan-400" />
+          {/* Underline accent */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-0.5 bg-gradient-to-r from-primary via-white to-secondary" />
           </div>
 
           {/* Publisher */}
-          <p className="font-tech text-[10px] tracking-[0.5em] text-cyan-400/50 mb-3 uppercase">
+          <p className="font-tech text-[10px] tracking-[0.5em] text-primary/50 mb-3 uppercase">
             A GAIM STUDIOS Production
           </p>
           
@@ -294,7 +294,7 @@ const Index = () => {
           <p className="font-tech text-sm tracking-[0.4em] text-gray-400 mb-1 uppercase">
             Tactical Arena Combat
           </p>
-          <p className="font-tech text-xs tracking-widest text-magenta/70 mb-8">
+          <p className="font-tech text-xs tracking-widest text-secondary/70 mb-8">
             // SYSTEM v2.0 //
           </p>
 
@@ -304,18 +304,18 @@ const Index = () => {
               className="font-vector font-bold text-sm border-2 px-12 py-4 relative overflow-hidden
                          transition-all duration-300 group uppercase tracking-wider"
               style={{ 
-                background: 'linear-gradient(180deg, rgba(255,0,255,0.15) 0%, rgba(0,255,255,0.1) 100%)',
-                borderColor: '#ff00ff',
-                boxShadow: '0 0 30px rgba(255, 0, 255, 0.4), inset 0 0 40px rgba(255, 0, 255, 0.1)',
+                background: 'linear-gradient(180deg, rgba(0,255,100,0.15) 0%, rgba(100,255,0,0.1) 100%)',
+                borderColor: '#00ff66',
+                boxShadow: '0 0 30px rgba(0, 255, 100, 0.4), inset 0 0 40px rgba(0, 255, 100, 0.1)',
                 clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))',
               }}
               onClick={enterGalaxy}
               onTouchEnd={(e) => { e.preventDefault(); enterGalaxy(); }}
             >
-              <span className="relative z-10 text-white group-hover:text-cyan-400 transition-colors">
+              <span className="relative z-10 text-white group-hover:text-primary transition-colors">
                 ▶ Initialize
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-magenta/0 via-cyan-400/30 to-magenta/0 
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-secondary/30 to-primary/0 
                               translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
             </button>
           )}
@@ -328,10 +328,10 @@ const Index = () => {
           >
             {/* Start button - Start Vector Maniac */}
             <button
-              className="font-vector font-semibold text-sm text-cyan-400 border-2 border-cyan-400/60 px-10 py-3 mb-3 
-                         transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:bg-cyan-400/20 uppercase tracking-wider"
+              className="font-vector font-semibold text-sm text-primary border-2 border-primary/60 px-10 py-3 mb-3 
+                         transition-all duration-300 hover:border-primary hover:bg-primary/10 active:bg-primary/20 uppercase tracking-wider"
               style={{ 
-                boxShadow: '0 0 25px rgba(0, 255, 255, 0.25)',
+                boxShadow: '0 0 25px rgba(0, 255, 100, 0.25)',
                 clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
               }}
               onClick={handleVectorManiacStart}
@@ -356,11 +356,11 @@ const Index = () => {
                   Shop
                 </button>
                 <button
-                  className={`font-tech font-semibold text-xs text-purple-400 border border-purple-400/50 px-4 py-2 
-                             transition-all duration-300 hover:border-purple-400 hover:bg-purple-400/10 uppercase
+                  className={`font-tech font-semibold text-xs text-secondary border border-secondary/50 px-4 py-2 
+                             transition-all duration-300 hover:border-secondary hover:bg-secondary/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
-                    boxShadow: '0 0 15px rgba(170, 0, 255, 0.15)',
+                    boxShadow: '0 0 15px rgba(150, 255, 0, 0.15)',
                     clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '300ms',
                     animationFillMode: 'backwards',
@@ -370,11 +370,11 @@ const Index = () => {
                   Gear
                 </button>
                 <button
-                  className={`font-tech font-semibold text-xs text-magenta border border-magenta/50 px-4 py-2 
-                             transition-all duration-300 hover:border-magenta hover:bg-magenta/10 uppercase
+                  className={`font-tech font-semibold text-xs text-accent border border-accent/50 px-4 py-2 
+                             transition-all duration-300 hover:border-accent hover:bg-accent/10 uppercase
                              ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
-                    boxShadow: '0 0 15px rgba(255, 0, 255, 0.15)',
+                    boxShadow: '0 0 15px rgba(0, 255, 150, 0.15)',
                     clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '400ms',
                     animationFillMode: 'backwards',
@@ -411,14 +411,14 @@ const Index = () => {
                               transition-all duration-300 ${
                                 hasGoldenSkin()
                                   ? bonusMapsEnabled 
-                                    ? 'text-green-400 border-green-400/50 hover:border-green-400 hover:bg-green-400/10' 
+                                    ? 'text-primary border-primary/50 hover:border-primary hover:bg-primary/10' 
                                     : 'text-gray-500 border-gray-500/50 hover:border-gray-500 hover:bg-gray-500/10'
-                                  : 'text-purple-400 border-purple-400/50 hover:border-purple-300 hover:bg-purple-400/10'
+                                  : 'text-secondary border-secondary/50 hover:border-secondary hover:bg-secondary/10'
                               } ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                   style={{ 
                     boxShadow: hasGoldenSkin() 
-                      ? (bonusMapsEnabled ? '0 0 15px rgba(74, 222, 128, 0.15)' : 'none')
-                      : '0 0 15px rgba(170, 0, 255, 0.15)',
+                      ? (bonusMapsEnabled ? '0 0 15px rgba(0, 255, 100, 0.15)' : 'none')
+                      : '0 0 15px rgba(150, 255, 0, 0.15)',
                     clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
                     animationDelay: '500ms',
                     animationFillMode: 'backwards',
@@ -440,8 +440,8 @@ const Index = () => {
                   <button
                     onClick={handleWatchAd}
                     disabled={isShowingAd}
-                    className={`font-tech font-medium text-xs text-green-400 border border-green-400/50 px-4 py-2 uppercase
-                               transition-all duration-300 hover:border-green-400 hover:bg-green-400/10 disabled:opacity-50
+                    className={`font-tech font-medium text-xs text-primary border border-primary/50 px-4 py-2 uppercase
+                               transition-all duration-300 hover:border-primary hover:bg-primary/10 disabled:opacity-50
                                ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                     style={{ 
                       boxShadow: '0 0 15px rgba(0, 255, 100, 0.15)',
@@ -459,7 +459,7 @@ const Index = () => {
 
             {highScore > 0 && (
               <p 
-                className={`font-tech text-sm text-cyan-400/60 mb-2 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
+                className={`font-tech text-sm text-primary/60 mb-2 ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
                 style={{ animationDelay: '700ms', animationFillMode: 'backwards' }}
               >
                 HIGH SCORE: {highScore}
@@ -488,18 +488,18 @@ const Index = () => {
               100% { transform: translateY(40px); }
             }
             @keyframes glow {
-              0% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.2); }
-              100% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 255, 255, 0.3); }
+              0% { box-shadow: 0 0 20px rgba(0, 255, 100, 0.2); }
+              100% { box-shadow: 0 0 40px rgba(0, 255, 100, 0.4), 0 0 60px rgba(100, 255, 0, 0.3); }
             }
             @keyframes pop-in {
               0% { 
                 opacity: 0; 
                 transform: scale(0.3);
-                filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 60px rgba(0, 255, 255, 0.5));
+                filter: drop-shadow(0 0 30px rgba(0, 255, 100, 0.8)) drop-shadow(0 0 60px rgba(100, 255, 0, 0.5));
               }
               50% { 
                 transform: scale(1.1);
-                filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.6)) drop-shadow(0 0 40px rgba(0, 255, 255, 0.3));
+                filter: drop-shadow(0 0 20px rgba(0, 255, 100, 0.6)) drop-shadow(0 0 40px rgba(100, 255, 0, 0.3));
               }
               100% { 
                 opacity: 1; 

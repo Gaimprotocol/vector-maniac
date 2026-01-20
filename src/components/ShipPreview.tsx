@@ -59,10 +59,10 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
       ref={canvasRef}
       width={width}
       height={height}
-      className="border border-cyan-400/30 rounded-lg"
+      className="border border-primary/30 rounded-lg"
       style={{
-        background: 'radial-gradient(ellipse at center, rgba(0, 30, 60, 0.8) 0%, rgba(0, 10, 20, 0.9) 100%)',
-        boxShadow: '0 0 20px rgba(0, 229, 255, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.5)',
+        background: 'radial-gradient(ellipse at center, rgba(0, 40, 20, 0.8) 0%, rgba(0, 15, 10, 0.9) 100%)',
+        boxShadow: '0 0 20px rgba(0, 255, 100, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.5)',
       }}
     />
   );
