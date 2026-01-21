@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import BonusTest from "./pages/BonusTest";
 import { ShopScreen } from "./components/ShopScreen";
 import { InfoScreen } from "./components/InfoScreen";
 import { EquipmentPanel } from "./components/EquipmentPanel";
@@ -35,7 +34,6 @@ const App = () => {
               <Route path="/info" element={<InfoScreen />} />
               <Route path="/equipment" element={<EquipmentPanel />} />
               <Route path="/ships" element={<ShipSelector />} />
-              <Route path="/bonus-test" element={<BonusTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

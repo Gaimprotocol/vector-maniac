@@ -39,7 +39,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   }, [canvasRef, gameState]);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return;
+    if (gameState !== 'playing' && gameState !== 'vectorManiac') return;
     e.preventDefault();
 
     const now = Date.now();
@@ -77,7 +77,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   }, [gameState, getCanvasCoords, onInputChange]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return;
+    if (gameState !== 'playing' && gameState !== 'vectorManiac') return;
     e.preventDefault();
 
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -152,9 +152,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     window.setTimeout(() => onInputChange({ rescue: false }), 100);
   }, [onInputChange]);
 
-  if (gameState !== 'playing' && gameState !== 'bunker' && gameState !== 'rover' && gameState !== 'underwater' && gameState !== 'arena' && gameState !== 'survival' && gameState !== 'pilotRunner' && gameState !== 'paratrooper' && gameState !== 'forwardFlight' && gameState !== 'vectorManiac') return null;
-
-  const showJumpButton = gameState === 'pilotRunner';
+  if (gameState !== 'playing' && gameState !== 'vectorManiac') return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-20">
@@ -176,27 +174,6 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
           II
         </span>
       </button>
-
-      {/* Jump button for Pilot Runner mode */}
-      {showJumpButton && (
-        <button
-          className="absolute w-16 h-16 rounded-full border-2 border-cyan-400/80 active:bg-cyan-400/40 flex items-center justify-center pointer-events-auto touch-none"
-          style={{
-            bottom: 40,
-            left: 30,
-            background: 'linear-gradient(180deg, rgba(0,200,255,0.3) 0%, rgba(0,100,200,0.4) 100%)',
-            boxShadow: '0 0 20px rgba(0,200,255,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
-          }}
-          onPointerDown={handleJumpPress}
-        >
-          <span 
-            className="font-pixel text-lg text-cyan-300"
-            style={{ textShadow: '0 0 10px rgba(0,255,255,0.8)' }}
-          >
-            ↑
-          </span>
-        </button>
-      )}
     </div>
   );
 };

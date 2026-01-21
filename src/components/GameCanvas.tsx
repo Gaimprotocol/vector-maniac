@@ -2,17 +2,8 @@ import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react
 import { GameData } from '@/game/types';
 import { GameRenderer, ShipSkinColors, DEFAULT_SHIP_COLORS } from '@/game/renderer';
 import { GAME_CONFIG } from '@/game/constants';
-import { renderBunkerScene, BunkerState } from '@/game/bunkerDefense';
-import { renderRoverScene, MoonRoverState } from '@/game/moonRover';
-import { renderUnderwaterScene, UnderwaterState } from '@/game/underwater';
-import { renderArenaMode, ArenaState } from '@/game/arenaMode';
-import { renderSurvivalMode, SurvivalState } from '@/game/survivalMode';
-import { renderEscortPlane, EscortPlane } from '@/game/escort';
 import { getMap, getTerrainType, WARP_DURATION, QUICK_WARP_DURATION } from '@/game/maps';
 import { SHIP_SKINS } from '@/hooks/useEquipment';
-import { renderPilotRunner, PilotRunnerState } from '@/game/pilotRunner';
-import { renderParatrooper, ParatrooperState } from '@/game/paratrooper';
-import { renderForwardFlight, ForwardFlightState } from '@/game/forwardFlight';
 import { renderVectorManiac, VectorState, VM_CONFIG } from '@/game/vectorManiac';
 import { getStoredMegaShipId, hasStealthMode, hasBlueProjectiles } from '@/hooks/useMegaShips';
 
@@ -42,162 +33,6 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
 
       const renderer = rendererRef.current;
 
-      // Render bunker scene if in bunker mode
-      if (gameData.state === 'bunker' && gameData.bunkerState) {
-        renderBunkerScene(ctx, gameData.bunkerState as BunkerState);
-        return;
-      }
-      
-      // Render rover scene if in rover mode
-      if (gameData.state === 'rover' && gameData.roverState) {
-        renderRoverScene(ctx, gameData.roverState as MoonRoverState);
-        return;
-      }
-      
-      // Render underwater scene if in underwater mode
-      if (gameData.state === 'underwater' && gameData.underwaterState) {
-        renderUnderwaterScene(ctx, gameData.underwaterState as UnderwaterState);
-        return;
-      }
-      
-      // Render arena scene if in arena mode
-      if (gameData.state === 'arena' && gameData.arenaState) {
-        renderArenaMode(ctx, gameData.arenaState as ArenaState);
-        return;
-      }
-      
-      // Render survival scene if in survival mode
-      if (gameData.state === 'survival' && gameData.survivalState) {
-        try {
-          renderSurvivalMode(ctx, gameData.survivalState as SurvivalState);
-        } catch (e) {
-          const err = e as any;
-          const name = String(err?.name || 'Error');
-          const message = String(err?.message || err?.toString?.() || 'Unknown error');
-          const stackLines = String(err?.stack || '')
-            .split('\n')
-            .map((l: string) => l.trim())
-            .filter(Boolean)
-            .slice(0, 10);
-
-          const safeStringify = (v: any) => {
-            try {
-              return JSON.stringify(v, Object.getOwnPropertyNames(v), 2);
-            } catch {
-              try {
-                return String(v);
-              } catch {
-                return '[unstringifiable]';
-              }
-            }
-          };
-
-          console.error('renderSurvivalMode failed', e);
-
-          const wrapText = (text: string, maxChars: number) => {
-            const out: string[] = [];
-            const words = text.split(' ');
-            let line = '';
-            for (const w of words) {
-              const next = line ? `${line} ${w}` : w;
-              if (next.length > maxChars) {
-                if (line) out.push(line);
-                line = w;
-              } else {
-                line = next;
-              }
-            }
-            if (line) out.push(line);
-            return out;
-          };
-
-          ctx.save();
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-          ctx.globalAlpha = 1;
-          ctx.shadowBlur = 0;
-          ctx.clearRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
-          ctx.fillStyle = 'black';
-          ctx.fillRect(0, 0, GAME_CONFIG.canvasWidth, GAME_CONFIG.canvasHeight);
-
-          // Big headline (so we know overlay is drawing)
-          ctx.fillStyle = 'rgba(255,255,255,0.9)';
-          ctx.font = '18px monospace';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('SURVIVAL RENDER ERROR', GAME_CONFIG.canvasWidth / 2, 70);
-
-          // Panel
-          const pad = 28;
-          const panelW = GAME_CONFIG.canvasWidth - pad * 2;
-          const panelH = 320;
-          const px = pad;
-          const py = 100;
-
-          ctx.fillStyle = 'rgba(255,255,255,0.08)';
-          ctx.fillRect(px, py, panelW, panelH);
-          ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(px, py, panelW, panelH);
-
-          ctx.font = '14px monospace';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-
-          let y = py + 14;
-          const x = px + 14;
-
-          ctx.fillStyle = 'rgba(255,255,255,0.95)';
-          ctx.fillText('Kopiera detta:', x, y);
-          y += 22;
-
-          ctx.fillStyle = 'rgba(255, 200, 200, 0.98)';
-          ctx.fillText(`${name}: ${message}`, x, y);
-          y += 22;
-
-          // Stack
-          ctx.fillStyle = 'rgba(200, 220, 255, 0.95)';
-          const stackToShow = stackLines.length ? stackLines : ['(ingen stack)'];
-          stackToShow.slice(0, 8).forEach((line: string) => {
-            wrapText(line, 95).slice(0, 2).forEach((wl) => {
-              ctx.fillText(wl, x, y);
-              y += 18;
-            });
-          });
-
-          y += 10;
-          ctx.fillStyle = 'rgba(255,255,255,0.85)';
-          ctx.fillText('Raw error object (för debug):', x, y);
-          y += 18;
-
-          ctx.fillStyle = 'rgba(255,255,255,0.7)';
-          wrapText(safeStringify(err).slice(0, 600), 95).slice(0, 6).forEach((line) => {
-            ctx.fillText(line, x, y);
-            y += 18;
-          });
-
-          ctx.restore();
-        }
-        return;
-      }
-      
-      // Render pilot runner scene
-      if (gameData.state === 'pilotRunner' && gameData.pilotRunnerState) {
-        renderPilotRunner(ctx, gameData.pilotRunnerState as PilotRunnerState);
-        return;
-      }
-      
-      // Render paratrooper scene
-      if (gameData.state === 'paratrooper' && gameData.paratrooperState) {
-        renderParatrooper(ctx, gameData.paratrooperState as ParatrooperState);
-        return;
-      }
-      
-      // Render forward flight (deep drill) scene
-      if (gameData.state === 'forwardFlight' && gameData.forwardFlightState) {
-        renderForwardFlight(ctx, gameData.forwardFlightState as ForwardFlightState, GAME_CONFIG);
-        return;
-      }
-      
       // Render Vector Maniac top-down arena
       if (gameData.state === 'vectorManiac' && gameData.vectorManiacState) {
         renderVectorManiac(ctx, gameData.vectorManiacState as VectorState);
@@ -249,10 +84,6 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
       renderer.renderCivilians(gameData.civilians, gameData.scrollOffset);
       renderer.renderEnemies(gameData.enemies, gameData.scrollOffset);
       
-      // Render escort planes
-      gameData.escorts.forEach((escort: EscortPlane) => {
-        renderEscortPlane(ctx, escort, gameData.scrollOffset);
-      });
       
       // Render bombs with blue color for Valkyrie
       renderBombsWithColors(ctx, gameData);
