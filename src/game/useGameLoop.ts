@@ -68,14 +68,6 @@ export function useGameLoop({ gameData, setGameData, inputState, adRewardChecker
   useEffect(() => {
     if (
       gameData.state === 'playing' ||
-      gameData.state === 'bunker' ||
-      gameData.state === 'rover' ||
-      gameData.state === 'underwater' ||
-      gameData.state === 'arena' ||
-      gameData.state === 'survival' ||
-      gameData.state === 'pilotRunner' ||
-      gameData.state === 'paratrooper' ||
-      gameData.state === 'forwardFlight' ||
       gameData.state === 'vectorManiac'
     ) {
       frameRef.current = requestAnimationFrame(gameLoop);

@@ -3,151 +3,9 @@ import { GAME_CONFIG, ENEMY_CONFIG, SPAWN_CONFIG, TERRAIN_CONFIG, TOUCH_CONFIG, 
 import { getDifficultyMultipliers } from '@/hooks/useDifficulty';
 import { createPlayer, createBullet, createBomb, createEnemy, createCivilian, createPickup, createDebris } from './entities';
 import { checkCollision, createExplosion, generateTerrain, createStar, clamp, playSound, lerp, getShipShootSound, getShipBombSound } from './utils';
-import { getMap, MAP_DURATION, WARP_DURATION, QUICK_WARP_DURATION, getNextMapId, isNewWave, getTerrainType, isMapLocked, LAST_FREE_MAP } from './maps';
-import { createEscortPlane, updateEscortPlanes, EscortPlane } from './escort';
-import { createBunkerState, updateBunkerState, BunkerState } from './bunkerDefense';
-import { createRoverState, updateRoverState, MoonRoverState } from './moonRover';
-import { createUnderwaterState, updateUnderwaterState, UnderwaterState } from './underwater';
-import { createArenaState, updateArenaState, ArenaState } from './arenaMode';
-import { createSurvivalState, updateSurvivalState, SurvivalState, playSurvivalSound, SurvivalSoundType } from './survivalMode';
+import { getMap, MAP_DURATION, getNextMapId, isNewWave, getTerrainType, isMapLocked } from './maps';
 import { getStoredMegaShipId, hasLaserAbility, hasDoubleBombs, hasSpeedBoost, hasMultiDirectionalShots, hasStealthMode } from '@/hooks/useMegaShips';
-import { 
-  createPilotRunnerState, 
-  updatePilotRunnerState, 
-  PilotRunnerState 
-} from './pilotRunner';
-import {
-  createParatrooperState,
-  updateParatrooper,
-  ParatrooperState
-} from './paratrooper';
-import {
-  createForwardFlightState,
-  updateForwardFlight,
-  ForwardFlightState
-} from './forwardFlight';
-
 import { createVectorManiacState, updateVectorManiac } from './vectorManiac';
-
-// Bonus level schedule - each bonus level appears at specific map numbers
-// This prevents overlapping and ensures proper spacing with main game between bonus levels
-// Pattern: 1 bonus level followed by 3 regular maps, then next bonus level
-// Bonus, Regular, Regular, Regular, Bonus, Regular, Regular, Regular...
-const BONUS_INTERVAL = 4; // Bonus every 4th map position after map 3
-
-export type BonusLevelType = 'bunker' | 'pilotRunner' | 'rover' | 'underwater' | 'arena' | 'paratrooper' | 'forwardFlight' | null;
-
-// Available bonus types (paratrooper excluded from early pool)
-const EARLY_BONUS_TYPES: BonusLevelType[] = ['bunker', 'pilotRunner', 'rover', 'underwater', 'arena'];
-const ALL_BONUS_TYPES: BonusLevelType[] = ['bunker', 'pilotRunner', 'rover', 'underwater', 'arena', 'paratrooper'];
-
-// Track bonus level history to avoid repeats
-let lastBonusType: BonusLevelType = null;
-let bonusCount = 0;
-
-// Reset bonus tracking (call when starting new game)
-export function resetBonusTracking(): void {
-  lastBonusType = null;
-  bonusCount = 0;
-}
-
-// Get random bonus type that's not the same as last one (ONLY call when actually starting a bonus)
-function getRandomBonusType(): BonusLevelType {
-  // Use paratrooper only after 3 bonus levels have been played
-  const availableTypes = bonusCount >= 3 ? ALL_BONUS_TYPES : EARLY_BONUS_TYPES;
-  
-  // Filter out the last bonus type to prevent repeats
-  const validTypes = availableTypes.filter(t => t !== lastBonusType);
-  
-  // Pick random from valid types
-  const randomIndex = Math.floor(Math.random() * validTypes.length);
-  const selected = validTypes[randomIndex];
-  
-  // Track this selection
-  lastBonusType = selected;
-  bonusCount++;
-  
-  return selected;
-}
-
-// Check if a given level position should be a bonus level (NO side effects)
-export function isBonusLevelPosition(totalLevelsPlayed: number): boolean {
-  if (totalLevelsPlayed < 3) return false; // First two levels are always regular gameplay
-  
-  // Check if this level position should have a bonus level
-  // Bonus at positions: 3, 7, 11, 15, 19, 23... (every 4th starting from 3)
-  const positionFromStart = totalLevelsPlayed - 3;
-  return positionFromStart % BONUS_INTERVAL === 0;
-}
-
-// Determine which bonus level (if any) should trigger - ONLY call when actually transitioning
-// This function has side effects (tracks bonus history)
-export function getBonusLevelForMap(totalLevelsPlayed: number): BonusLevelType {
-  if (!isBonusLevelPosition(totalLevelsPlayed)) return null;
-  return getRandomBonusType();
-}
-
-// Legacy check functions - now use the centralized getBonusLevelForMap
-export function isPilotRunnerLevel(mapId: number): boolean {
-  return getBonusLevelForMap(mapId) === 'pilotRunner';
-}
-
-export function isParatrooperLevel(mapId: number): boolean {
-  return getBonusLevelForMap(mapId) === 'paratrooper';
-}
-
-export function isForwardFlightLevel(mapId: number): boolean {
-  // DISABLED: Deep drill map temporarily disabled in main game
-  return false;
-}
-
-// Helper function to transition to next level after completing current one
-// Returns the new state object with proper bonus level detection
-// NOTE: This should be called AFTER totalLevelsPlayed has been incremented
-function transitionToNextLevel(data: GameData): { state: GameData['state'], bonusState: Partial<GameData>, isBonus: boolean } {
-  // Check current level position (totalLevelsPlayed should already be incremented)
-  const currentLevel = data.totalLevelsPlayed;
-  
-  // Only trigger bonus if bonus maps are enabled
-  if (!data.bonusMapsEnabled || !isBonusLevelPosition(currentLevel)) {
-    return { state: 'playing', bonusState: {}, isBonus: false };
-  }
-  
-  // Get the actual bonus type (this has side effects - only call when actually starting bonus)
-  const bonusType = getRandomBonusType();
-  
-  switch (bonusType) {
-    case 'bunker':
-      return { state: 'bunker', bonusState: { bunkerState: createBunkerState(data.currentMapId) }, isBonus: true };
-    case 'rover':
-      return { state: 'rover', bonusState: { roverState: createRoverState(data.currentMapId) }, isBonus: true };
-    case 'underwater':
-      return { state: 'underwater', bonusState: { underwaterState: createUnderwaterState(data.currentMapId) }, isBonus: true };
-    case 'arena':
-      return { state: 'arena', bonusState: { arenaState: createArenaState(data.currentMapId) }, isBonus: true };
-    case 'pilotRunner':
-      return { state: 'pilotRunner', bonusState: { pilotRunnerState: createPilotRunnerState() }, isBonus: true };
-    case 'paratrooper':
-      return { state: 'paratrooper', bonusState: { paratrooperState: createParatrooperState(data.rescuedCount) }, isBonus: true };
-    case 'forwardFlight':
-      return { state: 'forwardFlight', bonusState: { forwardFlightState: createForwardFlightState(data.rescuedCount, GAME_CONFIG) }, isBonus: true };
-    default:
-      return { state: 'playing', bonusState: {}, isBonus: false };
-  }
-}
-
-// Helper function to safely advance to next map
-// Loops back to map 1 for non-Ultimate users after map 20
-function advanceToNextMap(data: GameData): { nextMapId: number, state: GameData['state'] } {
-  const nextId = getNextMapId(data.currentMapId);
-  
-  // For non-Ultimate users, loop back to map 1 after completing map 20
-  if (isMapLocked(nextId, data.hasUltimateEdition)) {
-    return { nextMapId: 1, state: 'playing' };
-  }
-  
-  return { nextMapId: nextId, state: 'playing' };
-}
 
 export function createInitialGameData(): GameData {
   const terrain = generateTerrain(0, 150, 50, 50);
@@ -182,19 +40,7 @@ export function createInitialGameData(): GameData {
     waveNumber: 1,
     totalLevelsPlayed: 1,
     mapScrollOffset: 0,
-    isWarping: false,
-    isBonusWarp: false,
     levelGlowTimer: 0,
-    warpTimer: 0,
-    escorts: [],
-    bunkerState: null,
-    roverState: null,
-    underwaterState: null,
-    arenaState: null,
-    survivalState: null,
-    pilotRunnerState: null,
-    paratrooperState: null,
-    forwardFlightState: null,
     vectorManiacState: null,
     isHyperspace: false,
     hyperspaceTimer: 0,
@@ -216,33 +62,17 @@ export function createInitialGameData(): GameData {
     isStealthActive: false,
     // Crimson Hawk multi-shot timer
     multiShotTimer: 0,
-    // Bonus maps toggle - load from localStorage
-    bonusMapsEnabled: localStorage.getItem('bonusMapsEnabled') !== 'false',
     // Ultimate Edition flag - will be updated by Game.tsx
     hasUltimateEdition: false,
   };
 }
 
 export function startGame(data: GameData): GameData {
-  // Reset bonus level tracking for new game
-  resetBonusTracking();
-  
   return {
     ...createInitialGameData(),
     state: 'playing',
     highScore: data.highScore,
-    bonusMapsEnabled: data.bonusMapsEnabled,
     hasUltimateEdition: data.hasUltimateEdition,
-  };
-}
-
-export function startSurvivalGame(data: GameData): GameData {
-  const survivalState = createSurvivalState();
-  return {
-    ...createInitialGameData(),
-    state: 'survival',
-    survivalState,
-    highScore: survivalState.highScore, // Use survival-specific highscore
   };
 }
 
@@ -277,530 +107,12 @@ export function updateGame(data: GameData, input: InputState, deltaTime: number)
     // Update score in main game data (for high score tracking)
     newData.score = Math.floor(newData.vectorManiacState.score);
 
-    // Don't change state - vectorManiac handles its own game over/victory phases
-    // The VectorManiacEndScreen component will show when phase is 'gameOver' or 'victory'
-
-    return newData;
-  }
-  
-  // Handle survival mode
-  if (data.state === 'survival' && data.survivalState) {
-    let newData = { ...data };
-    const survivalInput = {
-      up: input.up,
-      down: input.down,
-      left: input.left,
-      right: input.right,
-      fire: input.fire || input.isTouching,
-    };
-    
-    // Handle touch input for survival mode
-    if (input.isTouching) {
-      const targetX = input.touchX - 40; // Offset from finger (to the left)
-      const targetY = input.touchY; // Ship at same Y as finger (not above)
-      newData.survivalState = {
-        ...newData.survivalState,
-        player: {
-          ...newData.survivalState.player,
-          targetX,
-          targetY,
-        },
-      };
-    }
-    
-    newData.survivalState = updateSurvivalState(newData.survivalState as SurvivalState, survivalInput);
-    
-    // Play queued sounds for survival mode
-    if (newData.survivalState.soundQueue && newData.survivalState.soundQueue.length > 0) {
-      newData.survivalState.soundQueue.forEach(sound => {
-        playSurvivalSound(sound as SurvivalSoundType);
-      });
-    }
-    
-    // Check if survival game is over
-    if (newData.survivalState.phase === 'gameover') {
-      newData.state = 'gameover';
-      newData.score = newData.survivalState.score;
-      newData.highScore = newData.survivalState.highScore; // Use survival-specific highscore
-    }
-    
-    return newData;
-  }
-  
-  // Handle bunker defense mode
-  if (data.state === 'bunker' && data.bunkerState) {
-    let newData = { ...data };
-    const bunkerInput = {
-      touchX: input.touchX,
-      touchY: input.touchY,
-      isTouching: input.isTouching,
-      fire: input.fire || input.isTouching,
-    };
-    newData.bunkerState = updateBunkerState(data.bunkerState as BunkerState, bunkerInput);
-    
-    // Check if bunker is destroyed - bonus map ends (no game over on bonus maps)
-    if (newData.bunkerState.bunkerDestroyed) {
-      newData.score += newData.bunkerState.bonusScore;
-      newData.bunkerState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        // Transition to next regular map
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        const mapTransition = advanceToNextMap(newData);
-        newData.currentMapId = mapTransition.nextMapId;
-        newData.state = mapTransition.state;
-      }
-      return newData;
-    }
-    
-    // Check if bunker defense is complete
-    if (newData.bunkerState.phase === 'complete') {
-      newData.score += newData.bunkerState.bonusScore;
-      newData.bunkerState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        const mapTransition = advanceToNextMap(newData);
-        newData.currentMapId = mapTransition.nextMapId;
-        newData.state = mapTransition.state;
-      }
-    }
-    
-    return newData;
-  }
-  
-  // Handle moon rover mode
-  if (data.state === 'rover' && data.roverState) {
-    let newData = { ...data };
-    const roverInput = {
-      touchX: input.touchX,
-      touchY: input.touchY,
-      isTouching: input.isTouching,
-      fire: input.fire || input.isTouching,
-    };
-    newData.roverState = updateRoverState(data.roverState as MoonRoverState, roverInput);
-    
-    // Check if rover is destroyed - bonus map ends (no game over on bonus maps)
-    if (newData.roverState.roverDestroyed) {
-      newData.score += newData.roverState.bonusScore;
-      newData.roverState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        const mapTransition = advanceToNextMap(newData);
-        newData.currentMapId = mapTransition.nextMapId;
-        newData.state = mapTransition.state;
-      }
-      return newData;
-    }
-    
-    // Check if rover mission is complete
-    if (newData.roverState.phase === 'complete') {
-      newData.score += newData.roverState.bonusScore;
-      newData.roverState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        const mapTransition = advanceToNextMap(newData);
-        newData.currentMapId = mapTransition.nextMapId;
-        newData.state = mapTransition.state;
-      }
-    }
-    
-    return newData;
-  }
-  
-  // Handle underwater mode
-  if (data.state === 'underwater' && data.underwaterState) {
-    let newData = { ...data };
-    const underwaterInput = {
-      touchX: input.touchX,
-      touchY: input.touchY,
-      isTouching: input.isTouching,
-      fire: input.fire || input.isTouching,
-    };
-    newData.underwaterState = updateUnderwaterState(data.underwaterState as UnderwaterState, underwaterInput);
-    
-    // Check if sub is destroyed - bonus map ends (no game over on bonus maps)
-    if (newData.underwaterState.subDestroyed) {
-      newData.score += newData.underwaterState.bonusScore;
-      newData.underwaterState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-      return newData;
-    }
-    
-    // Check if underwater mission is complete
-    if (newData.underwaterState.phase === 'complete') {
-      newData.score += newData.underwaterState.bonusScore;
-      newData.underwaterState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-    }
-    
-    return newData;
-  }
-  
-  // Handle arena mode
-  if (data.state === 'arena' && data.arenaState) {
-    let newData = { ...data };
-    const arenaInput = {
-      touchX: input.touchX,
-      touchY: input.touchY,
-      isTouching: input.isTouching,
-      fire: input.fire || input.isTouching,
-    };
-    newData.arenaState = updateArenaState(data.arenaState as ArenaState, arenaInput);
-    
-    // Check if arena mode is complete
-    if (newData.arenaState.phase === 'complete') {
-      newData.score += newData.arenaState.bonusScore;
-      
-      // Reset player to good starting position for next level
-      newData.player = {
-        ...newData.player,
-        x: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        y: GAME_CONFIG.canvasHeight / 2,
-        targetX: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        targetY: GAME_CONFIG.canvasHeight / 2,
-        health: Math.min(newData.player.maxHealth, newData.player.health + 30), // Bonus health
-        invulnerable: true,
-        invulnerableTimer: 120,
-      };
-      
-      newData.arenaState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      
-      // Clear any lingering entities from before arena
-      newData.enemies = [];
-      newData.bullets = [];
-      newData.civilians = [];
-      
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-      return newData;
-    }
-    
-    // Check if player died in arena - bonus map ends (no game over on bonus maps)
-    if (newData.arenaState && newData.arenaState.health <= 0) {
-      newData.score += newData.arenaState.bonusScore;
-      
-      // Reset player to good starting position for next level
-      newData.player = {
-        ...newData.player,
-        x: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        y: GAME_CONFIG.canvasHeight / 2,
-        targetX: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        targetY: GAME_CONFIG.canvasHeight / 2,
-        invulnerable: true,
-        invulnerableTimer: 120,
-      };
-      
-      newData.arenaState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      newData.enemies = [];
-      newData.bullets = [];
-      newData.civilians = [];
-      
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-      return newData;
-    }
-    
-    return newData;
-  }
-  
-  // Handle pilot runner mode
-  if (data.state === 'pilotRunner' && data.pilotRunnerState) {
-    let newData = { ...data };
-    const runnerInput = {
-      left: input.left,
-      right: input.right,
-      up: input.up,
-      down: input.down,
-      fire: input.fire || input.isTouching,
-      jump: input.rescue, // Use 'R' key for jump (rescue button), separate from up which is for aiming
-      special: input.bomb,
-      touchX: input.touchX,
-      touchY: input.touchY,
-      isTouching: input.isTouching,
-    };
-    newData.pilotRunnerState = updatePilotRunnerState(data.pilotRunnerState as PilotRunnerState, runnerInput);
-    
-    // Check if pilot runner is complete (includes when pilot dies - no game over on bonus maps)
-    if (newData.pilotRunnerState.phase === 'complete') {
-      newData.score += newData.pilotRunnerState.bonusScore || 0;
-      newData.pilotRunnerState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      
-      // Use centralized bonus level detection
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-        
-        // Reset player for normal map
-        newData.player = {
-          ...newData.player,
-          x: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-          y: GAME_CONFIG.canvasHeight / 2,
-          targetX: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-          targetY: GAME_CONFIG.canvasHeight / 2,
-          invulnerable: true,
-          invulnerableTimer: 120,
-        };
-      }
-    }
-    
-    return newData;
-  }
-  
-  // Handle paratrooper mode
-  if (data.state === 'paratrooper' && data.paratrooperState) {
-    let newData = { ...data };
-    const paraInput = {
-      left: input.left,
-      right: input.right,
-      tap: input.fire || input.isTouching,
-      tapX: input.touchX,
-      tapY: input.touchY,
-    };
-    newData.paratrooperState = updateParatrooper(data.paratrooperState as ParatrooperState, paraInput);
-    
-    // Check if paratrooper mission is complete
-    if (newData.paratrooperState.phase === 'complete') {
-      newData.score += newData.paratrooperState.score;
-      newData.pilotRunnerState = null;
-      newData.paratrooperState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      
-      // Reset player position
-      newData.player = {
-        ...newData.player,
-        x: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        y: GAME_CONFIG.canvasHeight / 2,
-        targetX: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        targetY: GAME_CONFIG.canvasHeight / 2,
-        invulnerable: true,
-        invulnerableTimer: 120,
-      };
-      
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-    }
-    
-    // Check if mission failed
-    if (newData.paratrooperState && newData.paratrooperState.phase === 'failed') {
-      newData.score += newData.paratrooperState.score;
-      newData.paratrooperState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-    }
-    
-    return newData;
-  }
-  
-  // Handle forward flight (deep drill) mode
-  if (data.state === 'forwardFlight' && data.forwardFlightState) {
-    let newData = { ...data };
-    const drillInput = {
-      left: input.left,
-      right: input.right,
-      up: input.up,
-      down: input.down,
-      fire: input.fire || input.isTouching,
-      special: input.bomb,
-      touchX: input.touchX,
-      touchY: input.touchY,
-      isTouching: input.isTouching,
-    };
-    newData.forwardFlightState = updateForwardFlight(
-      data.forwardFlightState as ForwardFlightState, 
-      drillInput, 
-      16.67, 
-      GAME_CONFIG
-    );
-    
-    // Check if drill mission is complete
-    if (newData.forwardFlightState.phase === 'complete') {
-      newData.score += newData.forwardFlightState.score;
-      newData.forwardFlightState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      
-      // Reset player position
-      newData.player = {
-        ...newData.player,
-        x: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        y: GAME_CONFIG.canvasHeight / 2,
-        targetX: newData.scrollOffset + GAME_CONFIG.canvasWidth / 4,
-        targetY: GAME_CONFIG.canvasHeight / 2,
-        invulnerable: true,
-        invulnerableTimer: 120,
-      };
-      
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-    }
-    
-    // Check if drill vehicle destroyed - bonus map ends (no game over)
-    if (newData.forwardFlightState && newData.forwardFlightState.phase === 'failed') {
-      newData.score += newData.forwardFlightState.score;
-      newData.forwardFlightState = null;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-      } else {
-        if (isNewWave(newData.currentMapId)) {
-          newData.waveNumber++;
-        }
-        newData.currentMapId = getNextMapId(newData.currentMapId);
-        newData.state = 'playing';
-      }
-    }
-    
     return newData;
   }
   
   if (data.state !== 'playing') return data;
 
   let newData = { ...data };
-
-  // Handle warp transition (triggered when going to a bonus level)
-  if (newData.isWarping) {
-    newData.warpTimer--;
-    if (newData.warpTimer <= 0) {
-      newData.isWarping = false;
-      newData.totalLevelsPlayed++;
-      newData.mapScrollOffset = 0;
-      
-      // Use centralized bonus level detection - we already know this is a bonus level
-      const transition = transitionToNextLevel(newData);
-      if (transition.isBonus) {
-        newData.state = transition.state;
-        Object.assign(newData, transition.bonusState);
-        return newData;
-      }
-      
-      // Fallback to regular map if for some reason no bonus
-      if (isNewWave(newData.currentMapId)) {
-        newData.waveNumber++;
-      }
-      newData.currentMapId = getNextMapId(newData.currentMapId);
-      newData.enemies = [];
-    }
-    return newData;
-  }
 
   // Handle hyperspace mode (fast forward)
   if (newData.isHyperspace) {
@@ -816,7 +128,7 @@ export function updateGame(data: GameData, input: InputState, deltaTime: number)
     if (Math.floor(newData.mapScrollOffset / hyperspaceInterval) > Math.floor((newData.mapScrollOffset - newData.scrollSpeed) / hyperspaceInterval) && 
         newData.mapScrollOffset > 500 && newData.mapScrollOffset < MAP_DURATION - 500) {
       newData.isHyperspace = true;
-      newData.hyperspaceTimer = 300; // 5 seconds of hyperspace (doubled from 2.5s)
+      newData.hyperspaceTimer = 300; // 5 seconds of hyperspace
       newData.scrollSpeed = GAME_CONFIG.scrollSpeed * 3; // Triple speed
     }
   }
@@ -834,35 +146,33 @@ export function updateGame(data: GameData, input: InputState, deltaTime: number)
   // Check for map transition
   newData.mapScrollOffset += newData.scrollSpeed;
   if (newData.mapScrollOffset >= MAP_DURATION) {
-    // Check if next level (totalLevelsPlayed + 1) would be a bonus (only if bonus maps are enabled)
-    const isNextBonus = newData.bonusMapsEnabled && isBonusLevelPosition(newData.totalLevelsPlayed + 1);
+    // Instant transition for regular levels - trigger level glow and switch map immediately
+    newData.totalLevelsPlayed++;
+    newData.levelGlowTimer = 90; // 1.5 seconds of glow
     
-    // Only show warp effect for bonus levels, regular levels transition instantly
-    if (isNextBonus) {
-      newData.isWarping = true;
-      newData.isBonusWarp = true;
-      newData.warpTimer = WARP_DURATION;
-    } else {
-      // Instant transition for regular levels - trigger level glow and switch map immediately
-      newData.totalLevelsPlayed++;
-      newData.levelGlowTimer = 90; // 1.5 seconds of glow
-      
-      // Advance to next map (only for regular maps, not bonus)
-      if (isNewWave(newData.currentMapId)) {
-        newData.waveNumber++;
-      }
-      newData.currentMapId = getNextMapId(newData.currentMapId);
-      newData.mapScrollOffset = 0;
-      
-      // Check if new map is a space map (no terrain)
-      const nextMap = getMap(newData.currentMapId);
-      if (!nextMap.hasTerrain) {
-        // Remove ground-based enemies that don't make sense floating in space
-        newData.enemies = newData.enemies.filter(e => 
-          e.type !== 'turret' && e.type !== 'hostilePerson' && e.type !== 'sniper' && e.type !== 'tank'
-        );
-      }
+    // Advance to next map
+    if (isNewWave(newData.currentMapId)) {
+      newData.waveNumber++;
     }
+    
+    // For non-Ultimate users, loop back to map 1 after completing map 20
+    const nextId = getNextMapId(newData.currentMapId);
+    if (isMapLocked(nextId, newData.hasUltimateEdition)) {
+      newData.currentMapId = 1;
+    } else {
+      newData.currentMapId = nextId;
+    }
+    newData.mapScrollOffset = 0;
+    
+    // Check if new map is a space map (no terrain)
+    const nextMap = getMap(newData.currentMapId);
+    if (!nextMap.hasTerrain) {
+      // Remove ground-based enemies that don't make sense floating in space
+      newData.enemies = newData.enemies.filter(e => 
+        e.type !== 'turret' && e.type !== 'hostilePerson' && e.type !== 'sniper' && e.type !== 'tank'
+      );
+    }
+    
     newData.level++;
     newData.isHyperspace = false;
     newData.scrollSpeed = GAME_CONFIG.scrollSpeed;
@@ -873,18 +183,6 @@ export function updateGame(data: GameData, input: InputState, deltaTime: number)
 
   // Update player with touch-follow mechanic
   newData = updatePlayer(newData, input);
-
-  // Update escort planes
-  if (newData.escorts.length > 0) {
-    const escortResult = updateEscortPlanes(
-      newData.escorts as EscortPlane[],
-      newData.player.x,
-      newData.player.y,
-      newData.scrollOffset
-    );
-    newData.escorts = escortResult.escorts;
-    newData.bullets = [...newData.bullets, ...escortResult.bullets];
-  }
 
   // Update entities
   newData = updateBullets(newData);
@@ -979,25 +277,24 @@ function updatePlayer(data: GameData, input: InputState): GameData {
 
   // Update trail
   player.trail = [
-    { x: prevX, y: prevY + player.height / 2, alpha: 1 },
-    ...player.trail.map(p => ({ ...p, alpha: p.alpha * 0.92 }))
-  ].filter(p => p.alpha > 0.05).slice(0, 12);
+    { x: prevX, y: prevY, alpha: 1 },
+    ...player.trail.slice(0, 9).map((t, i) => ({ ...t, alpha: 1 - (i + 1) * 0.1 })),
+  ];
 
-  // Keep player on screen (relative to scroll)
-  const minX = data.scrollOffset + 30;
-  const maxX = data.scrollOffset + GAME_CONFIG.canvasWidth - player.width - 60;
-  player.x = clamp(player.x, minX, maxX);
-
-  // Vertical bounds based on terrain
+  // Constrain to game area with camera offset
+  const viewLeft = data.scrollOffset + 20;
+  const viewRight = data.scrollOffset + GAME_CONFIG.canvasWidth - player.width - 20;
+  player.x = clamp(player.x, viewLeft, viewRight);
+  
+  // Get current terrain for vertical constraints
+  const terrainAtPlayer = data.terrain.find(t =>
+    t.x <= player.x && t.x + TERRAIN_CONFIG.segmentWidth > player.x
+  );
+  
+  // Get current map to check terrain behavior
   const currentMap = getMap(data.currentMapId);
   const hasTerrain = currentMap.hasTerrain;
   
-  const terrainAtPlayer = hasTerrain ? data.terrain.find(t => 
-    t.x <= player.x + player.width / 2 && 
-    t.x + TERRAIN_CONFIG.segmentWidth > player.x + player.width / 2
-  ) : null;
-  
-  // On open space maps (no terrain), allow full vertical movement
   // On terrain maps, constrain to cave/terrain boundaries
   const minY = hasTerrain && terrainAtPlayer ? terrainAtPlayer.topHeight + 20 : 20;
   const maxY = hasTerrain && terrainAtPlayer 
@@ -1437,11 +734,11 @@ function updateEnemies(data: GameData): GameData {
 
       // Calculate aim angle for ground-based enemies
       const dx = data.player.x - enemy.x;
-      const dy = data.player.y - enemy.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dyAim = data.player.y - enemy.y;
+      const dist = Math.sqrt(dx * dx + dyAim * dyAim);
       
       if (enemy.type === 'turret' || enemy.type === 'sniper' || enemy.type === 'tank') {
-        newEnemy.aimAngle = Math.atan2(dy, dx);
+        newEnemy.aimAngle = Math.atan2(dyAim, dx);
       }
 
       newEnemy.fireTimer--;
@@ -1467,36 +764,22 @@ function updateEnemies(data: GameData): GameData {
               createBullet(
                 barrelX,
                 barrelY,
-                (dx / dist) * 3, // Reduced from 4 - slower bullets
-                (dy / dist) * 3,
+                (dx / dist) * 3.5,
+                (dyAim / dist) * 3.5,
                 false,
                 8
               )
             );
-          } else if (enemy.type === 'drone') {
+          } else if (enemy.type === 'hostilePerson') {
+            // Shoot from gun position
             bullets.push(
               createBullet(
-                enemy.x,
+                enemy.x + enemy.width / 2,
                 enemy.y + enemy.height / 2,
-                -6,
-                0,
+                (dx / dist) * 3,
+                (dyAim / dist) * 3,
                 false,
                 6
-              )
-            );
-          } else if (enemy.type === 'hostilePerson') {
-            // Red hostile person shoots smaller bullets at player
-            bullets.push(
-              createBullet(
-                enemy.x - 5,
-                enemy.y + 5,
-                (dx / dist) * 2.5, // Reduced from 3.5 - slower bullets
-                (dy / dist) * 2.5,
-                false,
-                6,
-                false,
-                SPRITE_SIZE.bulletSmall.width,
-                SPRITE_SIZE.bulletSmall.height
               )
             );
           } else if (enemy.type === 'sniper') {
@@ -1509,7 +792,7 @@ function updateEnemies(data: GameData): GameData {
                 barrelX,
                 barrelY,
                 (dx / dist) * 5, // Reduced from 8 - slower sniper bullets
-                (dy / dist) * 5,
+                (dyAim / dist) * 5,
                 false,
                 12
               )
@@ -1524,7 +807,7 @@ function updateEnemies(data: GameData): GameData {
                 barrelX,
                 barrelY,
                 (dx / dist) * 3,
-                (dy / dist) * 3,
+                (dyAim / dist) * 3,
                 false,
                 20
               )
@@ -1591,7 +874,6 @@ function updateCivilians(data: GameData, input: InputState): GameData {
 
 function updatePickups(data: GameData): GameData {
   let player = { ...data.player };
-  let escorts = [...data.escorts];
   let enemies = [...data.enemies];
   let particles = [...data.particles];
   let screenShake = data.screenShake;
@@ -1630,11 +912,6 @@ function updatePickups(data: GameData): GameData {
           screenShake = 10;
           playSound('megaBomb');
           break;
-        case 'escort':
-          // Spawn escort planes
-          escorts.push(createEscortPlane(player.x, player.y, 'shooter'));
-          escorts.push(createEscortPlane(player.x, player.y, 'bomber'));
-          break;
         case 'tripleShot':
           player.hasTripleShot = true;
           player.tripleShotTimer = 300; // 5 seconds at 60fps
@@ -1664,7 +941,7 @@ function updatePickups(data: GameData): GameData {
     return screenX > -40;
   });
 
-  return { ...data, player, pickups, escorts, enemies, particles, screenShake, score };
+  return { ...data, player, pickups, enemies, particles, screenShake, score };
 }
 
 function updateParticles(data: GameData): GameData {
@@ -1866,7 +1143,7 @@ function spawnEntities(data: GameData): GameData {
   if (debrisMap.hasFallingDebris) {
     // Random chance to spawn debris - slightly higher for surface maps (more dramatic)
     const spawnChance = debrisTerrainType === 'surface' ? 0.02 : 0.015;
-    
+
     if (Math.random() < spawnChance) {
       if (debrisTerrainType === 'cave' || debrisTerrainType === 'ceiling') {
         // Spawn from ceiling in caves
@@ -2145,12 +1422,11 @@ function checkAllCollisions(data: GameData): GameData {
 }
 
 // Helper function to get a random power-up type
-function getRandomPowerUp(): 'shield' | 'homingMissile' | 'megaBomb' | 'escort' | 'tripleShot' | 'electricPulse' {
+function getRandomPowerUp(): 'shield' | 'homingMissile' | 'megaBomb' | 'tripleShot' | 'electricPulse' {
   const rand = Math.random();
   if (rand < 0.25) return 'shield';
   if (rand < 0.45) return 'homingMissile';
-  if (rand < 0.55) return 'megaBomb';
-  if (rand < 0.70) return 'escort';
-  if (rand < 0.85) return 'tripleShot';
+  if (rand < 0.60) return 'megaBomb';
+  if (rand < 0.80) return 'tripleShot';
   return 'electricPulse';
 }
