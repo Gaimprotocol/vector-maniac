@@ -51,15 +51,7 @@ export const Game: React.FC<GameProps> = ({
   const { inputState, updateInput } = useTouchInput();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mainMusicRef = useRef<HTMLAudioElement | null>(null);
-  const bunkerMusicRef = useRef<HTMLAudioElement | null>(null);
-  const roverMusicRef = useRef<HTMLAudioElement | null>(null);
-  const underwaterMusicRef = useRef<HTMLAudioElement | null>(null);
-  const arenaMusicRef = useRef<HTMLAudioElement | null>(null);
   const hazardMusicRef = useRef<HTMLAudioElement | null>(null);
-  const pilotRunnerMusicRef = useRef<HTMLAudioElement | null>(null);
-  const paratrooperMusicRef = useRef<HTMLAudioElement | null>(null);
-  const forwardFlightMusicRef = useRef<HTMLAudioElement | null>(null);
-  const survivalMusicRef = useRef<HTMLAudioElement | null>(null);
   const vectorManiacMusicRef = useRef<HTMLAudioElement | null>(null);
   const hasAutoStarted = useRef(false);
   
@@ -117,19 +109,11 @@ export const Game: React.FC<GameProps> = ({
     };
     
     mainMusicRef.current = initAudio(currentSoundtrackFile, 0.128);
-    bunkerMusicRef.current = initAudio('/audio/Bunker_map.mp3', 0.128);
-    roverMusicRef.current = initAudio('/audio/Buggy.mp3', 0.128);
-    underwaterMusicRef.current = initAudio('/audio/Sub.mp3', 0.128);
-    arenaMusicRef.current = initAudio('/audio/Arena_level.mp3', 0.128);
     hazardMusicRef.current = initAudio('/audio/Hazard_zone.mp3', 0.128);
-    pilotRunnerMusicRef.current = initAudio('/audio/Pilote_shooter.mp3', 0.128);
-    paratrooperMusicRef.current = initAudio('/audio/Paratrooper.mp3', 0.128);
-    forwardFlightMusicRef.current = initAudio('/audio/Underground_Drilling_Assault.mp3', 0.128);
-    survivalMusicRef.current = initAudio('/audio/Survival_map.mp3', 0.128);
     vectorManiacMusicRef.current = initAudio('/audio/Main_music.mp3', 0.128);
     
     return () => {
-      [mainMusicRef, bunkerMusicRef, roverMusicRef, underwaterMusicRef, arenaMusicRef, hazardMusicRef, pilotRunnerMusicRef, paratrooperMusicRef, forwardFlightMusicRef, survivalMusicRef, vectorManiacMusicRef].forEach(ref => {
+      [mainMusicRef, hazardMusicRef, vectorManiacMusicRef].forEach(ref => {
         if (ref.current) {
           ref.current.pause();
           ref.current = null;
@@ -159,38 +143,15 @@ export const Game: React.FC<GameProps> = ({
   // Control music based on game state and mute settings with smooth crossfades
   useEffect(() => {
     const mainMusic = mainMusicRef.current;
-    const bunkerMusic = bunkerMusicRef.current;
-    const roverMusic = roverMusicRef.current;
-    const underwaterMusic = underwaterMusicRef.current;
-    const arenaMusic = arenaMusicRef.current;
     const hazardMusic = hazardMusicRef.current;
-    const pilotRunnerMusic = pilotRunnerMusicRef.current;
-    const paratrooperMusic = paratrooperMusicRef.current;
-    const forwardFlightMusic = forwardFlightMusicRef.current;
-    const survivalMusic = survivalMusicRef.current;
     const vectorManiacMusic = vectorManiacMusicRef.current;
-    if (!mainMusic || !bunkerMusic || !roverMusic || !underwaterMusic || !arenaMusic || !hazardMusic || !pilotRunnerMusic || !paratrooperMusic || !forwardFlightMusic || !survivalMusic || !vectorManiacMusic) return;
+    if (!mainMusic || !hazardMusic || !vectorManiacMusic) return;
     
-    const allMusic = [mainMusic, bunkerMusic, roverMusic, underwaterMusic, arenaMusic, hazardMusic, pilotRunnerMusic, paratrooperMusic, forwardFlightMusic, survivalMusic, vectorManiacMusic];
+    const allMusic = [mainMusic, hazardMusic, vectorManiacMusic];
     allMusic.forEach(m => m.muted = musicMuted);
     
     const FADE_DURATION = 500; // Duration for sequential fade (out then in)
     const HAZARD_CROSSFADE = 300; // Quick crossfade for hazard zone
-    
-    // Sequential fade helper - fade out first, then fade in (no overlap)
-    const sequentialToTrack = async (targetTrack: HTMLAudioElement, preserveMainPosition: boolean = true) => {
-      const preserveTracks = preserveMainPosition ? [mainMusic] : [];
-      const playingTracks = allMusic.filter(m => !m.paused && m !== targetTrack);
-      
-      // Fade out all playing tracks first
-      await Promise.all(playingTracks.map(track => {
-        const shouldReset = !preserveTracks.includes(track);
-        return fadeOut(track, FADE_DURATION, shouldReset);
-      }));
-      
-      // Then fade in target
-      await fadeIn(targetTrack, 0.128, FADE_DURATION);
-    };
     
     // Quick crossfade for hazard zone (simultaneous fade out/in)
     const quickCrossfadeToHazard = () => {
@@ -198,39 +159,8 @@ export const Game: React.FC<GameProps> = ({
       fadeIn(hazardMusic, 0.128, HAZARD_CROSSFADE);
     };
     
-    if (gameData.state === 'bunker') {
-      sequentialToTrack(bunkerMusic);
-    } else if (gameData.state === 'rover') {
-      sequentialToTrack(roverMusic);
-    } else if (gameData.state === 'underwater') {
-      sequentialToTrack(underwaterMusic);
-    } else if (gameData.state === 'arena') {
-      sequentialToTrack(arenaMusic);
-    } else if (gameData.state === 'pilotRunner') {
-      sequentialToTrack(pilotRunnerMusic);
-    } else if (gameData.state === 'paratrooper') {
-      sequentialToTrack(paratrooperMusic);
-    } else if (gameData.state === 'forwardFlight') {
-      sequentialToTrack(forwardFlightMusic);
-    } else if (gameData.state === 'survival') {
-      // Sequential fade: fade out ALL playing music, then fade in survival music
-      (async () => {
-        // Fade out start music if playing
-        if (startMusicRef?.current && !startMusicRef.current.paused) {
-          await fadeOut(startMusicRef.current, FADE_DURATION, true);
-        }
-        // Fade out any other music that might still be playing
-        const otherTracks = allMusic.filter(m => m !== survivalMusic && !m.paused);
-        if (otherTracks.length > 0) {
-          await Promise.all(otherTracks.map(track => fadeOut(track, FADE_DURATION, true)));
-        }
-        // Then fade in survival music
-        await fadeIn(survivalMusic, 0.128, FADE_DURATION);
-      })();
-    } else if (gameData.state === 'vectorManiac') {
+    if (gameData.state === 'vectorManiac') {
       // Vector Maniac - crossfade to Vector Maniac music
-      const vectorManiacMusic = vectorManiacMusicRef.current;
-      if (!vectorManiacMusic) return;
       (async () => {
         // Fade out start music if playing
         if (startMusicRef?.current && !startMusicRef.current.paused) {
@@ -248,13 +178,13 @@ export const Game: React.FC<GameProps> = ({
       // Hazard Zone - quick crossfade (300ms)
       quickCrossfadeToHazard();
     } else if (gameData.state === 'playing') {
-      // Sequential fade: fade out ALL playing music (bonus maps + start music), then fade in main music
+      // Sequential fade: fade out ALL playing music, then fade in main music
       (async () => {
         // Fade out start music if playing
         if (startMusicRef?.current && !startMusicRef.current.paused) {
           await fadeOut(startMusicRef.current, FADE_DURATION, true);
         }
-        // Fade out any other music that might still be playing (bonus maps, hazard, etc.)
+        // Fade out any other music that might still be playing
         const otherTracks = allMusic.filter(m => m !== mainMusic && !m.paused);
         if (otherTracks.length > 0) {
           await Promise.all(otherTracks.map(track => fadeOut(track, FADE_DURATION, true)));
@@ -419,7 +349,7 @@ export const Game: React.FC<GameProps> = ({
         />
 
         {/* HUD overlay */}
-        {(gameData.state === 'playing' || gameData.state === 'bunker' || gameData.state === 'rover' || gameData.state === 'underwater' || gameData.state === 'arena' || gameData.state === 'pilotRunner' || gameData.state === 'paratrooper' || gameData.state === 'forwardFlight' || gameData.state === 'vectorManiac') && (
+        {(gameData.state === 'playing' || gameData.state === 'vectorManiac') && (
           <GameUI 
             gameData={gameData} 
             activeRewards={externalActiveRewardsList || getActiveRewardsList()}
@@ -455,7 +385,7 @@ export const Game: React.FC<GameProps> = ({
           />
         )}
 
-        {gameData.state === 'gameover' && !gameData.survivalState && (
+        {gameData.state === 'gameover' && (
           <GameOverScreen
             score={gameData.score}
             highScore={gameData.highScore}
@@ -465,19 +395,6 @@ export const Game: React.FC<GameProps> = ({
             onQuit={handleQuit}
             onContinue={handleContinueWithAd}
             canContinueWithAd={!hasUsedAdContinue}
-          />
-        )}
-
-        {/* Survival mode game over - with survival restart */}
-        {gameData.state === 'gameover' && gameData.survivalState && (
-          <GameOverScreen
-            score={gameData.score}
-            highScore={gameData.highScore}
-            rescuedCount={0}
-            isNewHighScore={isNewHighScore}
-            onRestart={() => setGameData(prev => startSurvivalGame(prev))}
-            onQuit={handleQuit}
-            isSurvivalMode={true}
           />
         )}
 

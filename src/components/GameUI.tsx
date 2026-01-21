@@ -56,17 +56,6 @@ export const GameUI: React.FC<GameUIProps> = ({
     }
   }, [gameData.currentMapId, lastMapId, state]);
   
-  // Check if in mini-game mode
-  const isMiniGame = state === 'bunker' || state === 'rover' || state === 'underwater';
-  
-  // Get mini-game name for display
-  const getMiniGameName = () => {
-    if (state === 'bunker') return 'BUNKER DEFENSE';
-    if (state === 'rover') return 'MOON ROVER';
-    if (state === 'underwater') return 'SUBMARINE';
-    return null;
-  };
-
   // Handle activation with visual effect
   const handleActivate = useCallback((pending: PendingReward, event: React.MouseEvent) => {
     if (!onActivatePendingReward) return;
@@ -105,18 +94,12 @@ export const GameUI: React.FC<GameUIProps> = ({
           <div className="text-muted-foreground text-[8px]">
             HI-SCORE: {highScore.toString().padStart(8, '0')}
           </div>
-          {/* Mini-game indicator */}
-          {isMiniGame && (
-            <div className="text-yellow-400 text-[9px] mt-1" style={{ textShadow: '0 0 8px rgba(255, 255, 0, 0.5)' }}>
-              {getMiniGameName()}
-            </div>
-          )}
         </div>
         
         {/* Center - Damage bar and Map Name */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
           {/* Damage bar */}
-          {!isMiniGame && (
+          {(
             <div className="space-y-0.5 w-32">
               <div className="text-destructive text-[8px] text-center">DAMAGE</div>
               <div className="hud-bar">
@@ -137,7 +120,7 @@ export const GameUI: React.FC<GameUIProps> = ({
               mapNameVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
             }`}
             style={{
-              marginTop: isMiniGame ? '0' : '4px',
+              marginTop: '4px',
               color: mapNameColor,
               textShadow: `0 0 5px ${mapNameColor}, 0 0 10px ${mapNameColor}, 0 0 20px ${mapNameColor}, 0 0 40px ${mapNameColor}80`,
             }}
@@ -189,7 +172,7 @@ export const GameUI: React.FC<GameUIProps> = ({
       </div>
 
       {/* Pending Rewards - Activation Buttons (left side, below score) */}
-      {pendingRewards.length > 0 && !isMiniGame && onActivatePendingReward && (
+      {pendingRewards.length > 0 && onActivatePendingReward && (
         <div className="absolute left-4 top-24 flex flex-col gap-1.5 pointer-events-auto">
           {pendingRewards.map((pending) => (
             <button
@@ -247,7 +230,7 @@ export const GameUI: React.FC<GameUIProps> = ({
       ))}
 
       {/* Collision Warning for hazard zones */}
-      {gameData.inHazardZone && !isMiniGame && (
+      {gameData.inHazardZone && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
           <div 
             className="text-red-500 text-[12px] font-bold animate-pulse"
@@ -262,7 +245,7 @@ export const GameUI: React.FC<GameUIProps> = ({
       )}
 
       {/* Bottom HUD - Level/Map info centered */}
-      {!isMiniGame && (
+      {(
         <div className="absolute bottom-4 left-0 right-0 flex justify-center">
           <div className="text-center space-y-0.5">
             <div 

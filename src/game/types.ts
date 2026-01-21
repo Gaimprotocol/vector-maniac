@@ -112,7 +112,7 @@ export interface FallingDebris extends Entity {
   debrisType?: 'rock' | 'ice' | 'lava' | 'metal';
 }
 
-export type GameState = 'menu' | 'playing' | 'paused' | 'gameover' | 'bunker' | 'rover' | 'underwater' | 'arena' | 'survival' | 'pilotRunner' | 'paratrooper' | 'forwardFlight' | 'vectorManiac';
+export type GameState = 'menu' | 'playing' | 'paused' | 'gameover' | 'vectorManiac';
 
 export interface GameData {
   state: GameState;
@@ -145,14 +145,6 @@ export interface GameData {
   levelGlowTimer: number; // Timer for level text glow effect
   warpTimer: number;
   escorts: any[];
-  bunkerState: any | null;
-  roverState: any | null;
-  underwaterState: any | null;
-  arenaState: any | null;
-  survivalState: any | null;
-  pilotRunnerState: any | null;
-  paratrooperState: any | null;
-  forwardFlightState: any | null;
   vectorManiacState: any | null;
   // Hyperspace
   isHyperspace: boolean;
