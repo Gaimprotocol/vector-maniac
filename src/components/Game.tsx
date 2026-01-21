@@ -15,7 +15,7 @@ import { useEquipment } from '@/hooks/useEquipment';
 import { useRewardedAds } from '@/hooks/useRewardedAds';
 import { usePurchases } from '@/hooks/usePurchases';
 import { getStoredSoundtrackFile } from '@/hooks/useSoundtrack';
-import { createInitialGameData, startGame, startSurvivalGame, startVectorManiac, pauseGame } from '@/game/gameLogic';
+import { createInitialGameData, startGame, startVectorManiac, pauseGame } from '@/game/gameLogic';
 import { selectUpgrade } from '@/game/vectorManiac/gameLogic';
 import { GameData } from '@/game/types';
 import { primeAudioContext, setSfxMuted as setGlobalSfxMuted } from '@/game/utils';
