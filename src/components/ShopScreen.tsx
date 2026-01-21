@@ -3,10 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePurchases, getVisibleProducts, ShopProduct } from '@/hooks/usePurchases';
 import { useScrapCurrency } from '@/hooks/useScrapCurrency';
 import { useShipUpgrades, SHIP_UPGRADES } from '@/hooks/useShipUpgrades';
-import { useRewardedAds } from '@/hooks/useRewardedAds';
 import { PurchasePopup } from './PurchasePopup';
-import { RewardedAdOverlay } from './RewardedAdOverlay';
-import { AdRewardPopup } from './AdRewardPopup';
 import { useMusicContext } from '@/contexts/MusicContext';
 import { ShopIcon } from './ShopIcons';
 import { ShipPreview } from './ShipPreview';
@@ -44,18 +41,6 @@ export const ShopScreen: React.FC = () => {
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
   const { getUpgradeLevel, getUpgradeCost, isUpgradeMaxed, purchaseUpgrade, allUpgrades, upgrades } = useShipUpgrades();
   
-  const { 
-    isShowingAd, 
-    adProgress, 
-    pendingReward, 
-    showRewardPopup, 
-    showRewardedAd, 
-    closeRewardPopup,
-    isAdLoading,
-    adError,
-    isAdButtonDisabled,
-    isNative,
-  } = useRewardedAds();
   const { hasEnteredGalaxy, enterGalaxy, primeAudio } = useMusicContext();
 
   // If user navigates directly to shop without entering galaxy, redirect or auto-enter
@@ -146,12 +131,6 @@ export const ShopScreen: React.FC = () => {
     }
   };
 
-  const handleWatchAd = () => {
-    primeAudio();
-    showRewardedAd();
-  };
-
-  const adButtonDisabled = isShowingAd || isAdLoading || isAdButtonDisabled();
 
   return (
     <div 
@@ -425,37 +404,6 @@ export const ShopScreen: React.FC = () => {
               );
             })}
 
-            {/* Watch Ad for Reward Button */}
-            {shouldShowAds() && (
-              <div className="flex flex-col items-center mt-4">
-                <button
-                  onClick={handleWatchAd}
-                  disabled={adButtonDisabled}
-                  className={`font-pixel text-[10px] border-2 rounded-full px-5 py-2.5 transition-all duration-300 
-                             animate-pop-in disabled:opacity-50 disabled:cursor-not-allowed
-                             ${isAdLoading 
-                               ? 'text-yellow-400 border-yellow-400/50 hover:border-yellow-400 hover:bg-yellow-400/10' 
-                               : 'text-green-400 border-green-400/50 hover:border-green-400 hover:bg-green-400/10'
-                             }`}
-                  style={{ 
-                    boxShadow: isAdLoading 
-                      ? '0 0 20px rgba(255, 200, 0, 0.2)'
-                      : '0 0 20px rgba(0, 255, 100, 0.2)',
-                  }}
-                >
-                  {isAdLoading 
-                    ? '⏳ LOADING AD...' 
-                    : '🎬 WATCH AD → FREE SCRAPS'
-                  }
-                </button>
-                
-                {adError && (
-                  <p className="font-pixel text-[7px] text-yellow-400/80 mt-2 text-center animate-pulse">
-                    {adError}
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -467,14 +415,6 @@ export const ShopScreen: React.FC = () => {
           productName={popup.type === 'not_enough' ? 'Not enough scraps!' : popup.productName}
           onClose={() => setPopup(null)}
         />
-      )}
-
-      {/* Rewarded Ad Overlay - only show on web, native SDK handles its own UI */}
-      {isShowingAd && !isNative && <RewardedAdOverlay progress={adProgress} />}
-
-      {/* Ad Reward Popup */}
-      {showRewardPopup && pendingReward && (
-        <AdRewardPopup reward={pendingReward} onClose={closeRewardPopup} />
       )}
 
       <style>{`

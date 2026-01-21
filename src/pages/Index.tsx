@@ -3,9 +3,6 @@ import { Helmet } from 'react-helmet';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePurchases } from '@/hooks/usePurchases';
-import { useRewardedAds } from '@/hooks/useRewardedAds';
-import { RewardedAdOverlay } from '@/components/RewardedAdOverlay';
-import { AdRewardPopup } from '@/components/AdRewardPopup';
 import { useMusicContext } from '@/contexts/MusicContext';
 import { playPopSoundsWithDelays } from '@/utils/popSound';
 
@@ -20,20 +17,6 @@ const Index = () => {
   });
   const navigate = useNavigate();
   const { shouldShowAds, hasSurvivalMode, hasGoldenSkin } = usePurchases();
-  const { 
-    isShowingAd, 
-    adProgress, 
-    pendingReward, 
-    showRewardPopup, 
-    showRewardedAd, 
-    closeRewardPopup,
-    canWatchAd,
-    remainingAdWatches,
-    getActiveRewardsList,
-    getPendingRewardsList,
-    activatePendingReward,
-    isNative,
-  } = useRewardedAds();
   
   // Use global music context
   const { 
@@ -148,12 +131,6 @@ const Index = () => {
     setGameStarted(true);
   }, [primeAudio]);
 
-
-  const handleWatchAd = useCallback(() => {
-    if (!canWatchAd()) return;
-    primeAudio();
-    showRewardedAd();
-  }, [showRewardedAd, primeAudio, canWatchAd]);
 
   const highScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
 
@@ -436,23 +413,6 @@ const Index = () => {
                   {!hasGoldenSkin() ? '🔒 Bonus Maps' : bonusMapsEnabled ? '✓ Bonus' : '✗ Bonus'}
                 </button>
                 
-                {canWatchAd() && (
-                  <button
-                    onClick={handleWatchAd}
-                    disabled={isShowingAd}
-                    className={`font-tech font-medium text-xs text-green-400 border border-green-400/50 px-4 py-2 uppercase
-                               transition-all duration-300 hover:border-green-400 hover:bg-green-400/10 disabled:opacity-50
-                               ${showMenuContent ? 'animate-pop-in' : 'opacity-0 scale-0'}`}
-                    style={{ 
-                      boxShadow: '0 0 15px rgba(0, 255, 100, 0.15)',
-                      clipPath: 'polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px)',
-                      animationDelay: '600ms',
-                      animationFillMode: 'backwards',
-                    }}
-                  >
-                    Reward ({remainingAdWatches()})
-                  </button>
-                )}
               </div>
             </div>
 
@@ -526,19 +486,8 @@ const Index = () => {
             survivalMode={survivalModeStarted}
             vectorManiacMode={vectorManiacStarted}
             startMusicRef={startMusicRef}
-            externalPendingRewards={getPendingRewardsList()}
-            externalActiveRewardsList={getActiveRewardsList()}
-            onActivatePendingReward={activatePendingReward}
           />
         </main>
-      )}
-
-      {/* Rewarded Ad Overlay - only show on web, native SDK handles its own UI */}
-      {isShowingAd && !isNative && <RewardedAdOverlay progress={adProgress} />}
-
-      {/* Ad Reward Popup */}
-      {showRewardPopup && pendingReward && (
-        <AdRewardPopup reward={pendingReward} onClose={closeRewardPopup} />
       )}
     </>
   );
