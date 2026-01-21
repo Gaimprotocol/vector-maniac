@@ -138,13 +138,9 @@ export interface GameData {
   // Map system
   currentMapId: number;
   waveNumber: number; // How many times player has completed all 50 maps (starts at 1)
-  totalLevelsPlayed: number; // Total levels including bonus (for bonus timing)
+  totalLevelsPlayed: number; // Total levels played
   mapScrollOffset: number;
-  isWarping: boolean;
-  isBonusWarp: boolean; // True if warping to a bonus level (use full effect)
   levelGlowTimer: number; // Timer for level text glow effect
-  warpTimer: number;
-  escorts: any[];
   vectorManiacState: any | null;
   // Hyperspace
   isHyperspace: boolean;
@@ -170,8 +166,6 @@ export interface GameData {
   isStealthActive: boolean;
   // Crimson Hawk multi-shot timer (once per second)
   multiShotTimer: number;
-  // Bonus maps toggle
-  bonusMapsEnabled: boolean;
   // Ultimate Edition flag (for map locking)
   hasUltimateEdition: boolean;
 }

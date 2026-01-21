@@ -86,13 +86,11 @@ export const Game: React.FC<GameProps> = ({
       hasAutoStarted.current = true;
       if (vectorManiacMode) {
         setGameData(prev => startVectorManiac(prev));
-      } else if (survivalMode) {
-        setGameData(prev => startSurvivalGame(prev));
       } else {
         setGameData(prev => startGame(prev));
       }
     }
-  }, [autoStart, survivalMode, vectorManiacMode, gameData.state]);
+  }, [autoStart, vectorManiacMode, gameData.state]);
 
   // Get the current soundtrack file
   const currentSoundtrackFile = getStoredSoundtrackFile();
