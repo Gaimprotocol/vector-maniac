@@ -132,14 +132,7 @@ export const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(
         renderer.renderCollisionFlash(gameData.collisionFlash, gameData.scrollOffset);
       }
       
-      // Render warp effect during transitions
-      if (gameData.isWarping) {
-        if (gameData.isBonusWarp) {
-          renderWarpEffect(ctx, gameData.warpTimer);
-        } else {
-          renderQuickWarpEffect(ctx, gameData.warpTimer);
-        }
-      }
+      // Warp effect removed (bonus maps disabled)
       
       // Render hyperspace exit effect
       if (gameData.hyperspaceExitTimer > 0) {
