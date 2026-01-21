@@ -46,13 +46,19 @@ export const VM_CONFIG = {
   wavesPerMapMin: 1,
   wavesPerMapMax: 3,
   
-  // Enemies per wave (base, scales gradually with wave number)
-  baseEnemiesPerWave: 2,
-  enemiesPerWaveIncrease: 1,
+  // Enemies per wave (base, scales with progression)
+  baseEnemiesPerWave: 3,        // Start with more enemies
+  enemiesPerWaveIncrease: 0.5,  // Slower linear growth, but...
+  enemiesPerMapMultiplier: 0.04, // +4% enemies per map completed (compounding)
+  
+  // Enemy stat scaling per map (makes enemies tougher over time)
+  enemyHealthPerMap: 0.025,     // +2.5% health per map
+  enemySpeedPerMap: 0.008,      // +0.8% speed per map
+  enemyDamagePerMap: 0.015,     // +1.5% damage per map
   
   // Spawn timing
-  spawnInterval: 60,
-  waveTransitionTime: 156, // ~2.6 seconds for wave complete text
+  spawnInterval: 55,            // Slightly faster spawning
+  waveTransitionTime: 156,      // ~2.6 seconds for wave complete text
   mapTransitionTime: 15,
   
   // Salvage
@@ -72,8 +78,12 @@ export const VM_CONFIG = {
   },
   salvageDriftSpeed: 0.3,
   
-  // Difficulty scaling per level
-  levelDifficultyMultiplier: 1.25,
+  // Difficulty scaling per level (after completing all 50 maps)
+  levelDifficultyMultiplier: 1.5, // +50% per full loop (was 25%)
+  
+  // Formation system - enemies spawn in coordinated groups
+  formationChanceBase: 0.1,     // 10% base chance for formation spawn
+  formationChancePerMap: 0.015, // +1.5% per map
   
   // Power-ups
   powerUpSize: 18,

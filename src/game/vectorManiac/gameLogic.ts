@@ -332,7 +332,7 @@ function updateWaveCompletePhase(state: VectorState, input: VectorInput): Vector
     newState.currentWave++;
     newState.enemiesSpawned = 0;
     newState.enemiesDefeated = 0;
-    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted, newState.currentLevel);
+    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted, newState.currentLevel, newState.currentMap);
     newState.spawnTimer = 30;
     newState.bossActive = false;
     newState.bossDefeated = false;
@@ -353,13 +353,20 @@ function spawnEnemy(state: VectorState): VectorState {
   // Never spawn regular enemies while a boss is active
   if (state.bossActive) return newState;
 
-  // Determine enemy type based on map progression
+  // Calculate dynamic scaling based on map progression
+  const mapScaling = {
+    health: 1 + (state.currentMap - 1) * VM_CONFIG.enemyHealthPerMap,
+    speed: 1 + (state.currentMap - 1) * VM_CONFIG.enemySpeedPerMap,
+    damage: 1 + (state.currentMap - 1) * VM_CONFIG.enemyDamagePerMap,
+  };
+
+  // Determine enemy type based on map progression - more variety and elites as game progresses
   const roll = Math.random();
   let enemy: VectorEnemy;
 
-  // More variety as maps progress
-  const eliteChance = Math.min(0.25, 0.05 + state.currentMap * 0.004);
-  const shooterChance = Math.min(0.5, 0.3 + state.currentMap * 0.004);
+  // Elite chance increases faster, shooters become more common
+  const eliteChance = Math.min(0.35, 0.08 + state.currentMap * 0.006);
+  const shooterChance = Math.min(0.65, 0.35 + state.currentMap * 0.006);
 
   if (roll < eliteChance) {
     enemy = createElite(state.playerX, state.playerY);
@@ -369,19 +376,48 @@ function spawnEnemy(state: VectorState): VectorState {
     enemy = createDrone(state.playerX, state.playerY);
   }
 
-  // Apply difficulty scaling (increases with level)
+  // Apply level scaling (per 50-map loop)
   const levelScaling = 1 + (state.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
-  enemy.health *= state.difficultyMultiplier * levelScaling;
+  
+  // Apply map-based scaling
+  enemy.health *= state.difficultyMultiplier * levelScaling * mapScaling.health;
   enemy.maxHealth = enemy.health;
 
   newState.enemies = [...newState.enemies, enemy];
   newState.enemiesSpawned++;
+  
+  // Formation spawning: chance to spawn additional coordinated enemies
+  const formationChance = VM_CONFIG.formationChanceBase + state.currentMap * VM_CONFIG.formationChancePerMap;
+  if (Math.random() < formationChance && newState.enemiesSpawned < newState.enemiesInWave) {
+    // Spawn 1-2 additional enemies in formation
+    const formationSize = Math.random() < 0.3 ? 2 : 1;
+    for (let i = 0; i < formationSize && newState.enemiesSpawned < newState.enemiesInWave; i++) {
+      // Formation enemies are usually the same type
+      let formationEnemy: VectorEnemy;
+      if (enemy.type === 'elite') {
+        formationEnemy = createElite(state.playerX, state.playerY);
+      } else if (enemy.type === 'shooter') {
+        formationEnemy = createShooter(state.playerX, state.playerY);
+      } else {
+        formationEnemy = createDrone(state.playerX, state.playerY);
+      }
+      
+      formationEnemy.health *= state.difficultyMultiplier * levelScaling * mapScaling.health;
+      formationEnemy.maxHealth = formationEnemy.health;
+      newState.enemies = [...newState.enemies, formationEnemy];
+      newState.enemiesSpawned++;
+    }
+  }
+  
   return newState;
 }
 
 function updateEnemies(state: VectorState): VectorState {
   let newState = { ...state };
   const updatedEnemies: VectorEnemy[] = [];
+  
+  // Calculate speed scaling based on map progression
+  const speedScaling = 1 + (state.currentMap - 1) * VM_CONFIG.enemySpeedPerMap;
   
   for (const enemy of newState.enemies) {
     let e = { ...enemy };
@@ -393,53 +429,58 @@ function updateEnemies(state: VectorState): VectorState {
     
     switch (e.type) {
       case 'drone':
-        // Drones rush directly at player
+        // Drones rush directly at player - speed scales with map
         if (dist > 20) {
           const dir = normalize(dx, dy);
-          e.vx = lerp(e.vx, dir.x * VM_CONFIG.droneSpeed, 0.05);
-          e.vy = lerp(e.vy, dir.y * VM_CONFIG.droneSpeed, 0.05);
+          const droneSpeed = VM_CONFIG.droneSpeed * speedScaling;
+          e.vx = lerp(e.vx, dir.x * droneSpeed, 0.05);
+          e.vy = lerp(e.vy, dir.y * droneSpeed, 0.05);
         }
         break;
         
       case 'shooter':
         // Shooters try to keep distance and shoot
         const preferredDist = 150;
+        const shooterSpeed = VM_CONFIG.shooterSpeed * speedScaling;
         if (dist < preferredDist - 30) {
           // Too close, back off
           const dir = normalize(-dx, -dy);
-          e.vx = lerp(e.vx, dir.x * VM_CONFIG.shooterSpeed, 0.03);
-          e.vy = lerp(e.vy, dir.y * VM_CONFIG.shooterSpeed, 0.03);
+          e.vx = lerp(e.vx, dir.x * shooterSpeed, 0.03);
+          e.vy = lerp(e.vy, dir.y * shooterSpeed, 0.03);
         } else if (dist > preferredDist + 30) {
           // Too far, approach
           const dir = normalize(dx, dy);
-          e.vx = lerp(e.vx, dir.x * VM_CONFIG.shooterSpeed, 0.03);
-          e.vy = lerp(e.vy, dir.y * VM_CONFIG.shooterSpeed, 0.03);
+          e.vx = lerp(e.vx, dir.x * shooterSpeed, 0.03);
+          e.vy = lerp(e.vy, dir.y * shooterSpeed, 0.03);
         } else {
           // Good distance, slow down
           e.vx *= 0.95;
           e.vy *= 0.95;
         }
         
-        // Fire at player
+        // Fire at player - fire rate DECREASES as game progresses (fewer shots)
         e.fireTimer--;
         if (e.fireTimer <= 0) {
           const proj = createEnemyProjectile(e.x, e.y, newState.playerX, newState.playerY);
           newState.projectiles = [...newState.projectiles, proj];
-          e.fireTimer = VM_CONFIG.shooterFireRate;
+          // REDUCED fire rate - enemies shoot less often at higher maps
+          const fireRateMultiplier = 1 + (state.currentMap - 1) * 0.01; // +1% slower per map
+          e.fireTimer = Math.floor(VM_CONFIG.shooterFireRate * fireRateMultiplier);
         }
         break;
         
       case 'elite':
-        // Elites are aggressive shooters
+        // Elites are aggressive shooters - speed scales with map
+        const eliteSpeed = VM_CONFIG.eliteSpeed * speedScaling;
         const dir = normalize(dx, dy);
-        e.vx = lerp(e.vx, dir.x * VM_CONFIG.eliteSpeed, 0.04);
-        e.vy = lerp(e.vy, dir.y * VM_CONFIG.eliteSpeed, 0.04);
+        e.vx = lerp(e.vx, dir.x * eliteSpeed, 0.04);
+        e.vy = lerp(e.vy, dir.y * eliteSpeed, 0.04);
         
         e.fireTimer--;
         if (e.fireTimer <= 0) {
-          // Fire in a spread
-          for (let i = -1; i <= 1; i++) {
-            const angle = Math.atan2(dy, dx) + i * 0.3;
+          // Fire in a spread - REDUCED from 3 shots to 2
+          for (let i = -1; i <= 1; i += 2) {
+            const angle = Math.atan2(dy, dx) + i * 0.25;
             const proj = createEnemyProjectile(
               e.x + Math.cos(angle) * 10,
               e.y + Math.sin(angle) * 10,
@@ -448,7 +489,9 @@ function updateEnemies(state: VectorState): VectorState {
             );
             newState.projectiles = [...newState.projectiles, proj];
           }
-          e.fireTimer = 80;
+          // Slower fire rate for elites
+          const eliteFireMultiplier = 1 + (state.currentMap - 1) * 0.008;
+          e.fireTimer = Math.floor(100 * eliteFireMultiplier); // Was 80
         }
         break;
         
@@ -1192,7 +1235,7 @@ function completeWave(state: VectorState): VectorState {
     newState.wavesInMap = getRandomWavesForMap();
     newState.enemiesSpawned = 0;
     newState.enemiesDefeated = 0;
-    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted, newState.currentLevel);
+    newState.enemiesInWave = getEnemiesForWave(newState.totalWavesCompleted, newState.currentLevel, newState.currentMap);
     newState.spawnTimer = 60;
     newState.bossActive = false;
     newState.bossDefeated = false;

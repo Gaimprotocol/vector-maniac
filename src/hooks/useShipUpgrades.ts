@@ -15,6 +15,7 @@ export interface ShipUpgrade {
   };
 }
 
+// REBALANCED: Reduced bonuses for better long-term difficulty curve
 export const SHIP_UPGRADES: ShipUpgrade[] = [
   {
     id: 'cannon_power',
@@ -22,9 +23,9 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     description: 'Increases weapon damage',
     icon: '💥',
     maxLevel: 10,
-    baseCost: 50,
-    costMultiplier: 1.5,
-    effect: { stat: 'damage', valuePerLevel: 0.15 }, // +15% per level
+    baseCost: 75,        // Was 50
+    costMultiplier: 1.6, // Was 1.5
+    effect: { stat: 'damage', valuePerLevel: 0.08 }, // Was 15%, now 8%
   },
   {
     id: 'rapid_fire',
@@ -32,9 +33,9 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     description: 'Increases fire rate',
     icon: '🔥',
     maxLevel: 10,
-    baseCost: 60,
-    costMultiplier: 1.5,
-    effect: { stat: 'fireRate', valuePerLevel: 0.10 }, // +10% per level
+    baseCost: 80,        // Was 60
+    costMultiplier: 1.6,
+    effect: { stat: 'fireRate', valuePerLevel: 0.06 }, // Was 10%, now 6%
   },
   {
     id: 'hull_armor',
@@ -42,59 +43,59 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     description: 'Increases max health',
     icon: '🛡️',
     maxLevel: 10,
-    baseCost: 75,
-    costMultiplier: 1.5,
-    effect: { stat: 'health', valuePerLevel: 0.12 }, // +12% per level
+    baseCost: 100,       // Was 75
+    costMultiplier: 1.6,
+    effect: { stat: 'health', valuePerLevel: 0.08 }, // Was 12%, now 8%
   },
   {
     id: 'thrusters',
     name: 'THRUSTERS',
     description: 'Increases movement speed',
     icon: '🚀',
-    maxLevel: 8,
-    baseCost: 40,
-    costMultiplier: 1.4,
-    effect: { stat: 'speed', valuePerLevel: 0.08 }, // +8% per level
+    maxLevel: 6,         // Was 8
+    baseCost: 60,        // Was 40
+    costMultiplier: 1.5,
+    effect: { stat: 'speed', valuePerLevel: 0.05 }, // Was 8%, now 5%
   },
   {
     id: 'magnet_range',
     name: 'SALVAGE MAGNET',
     description: 'Increases scrap pickup range',
     icon: '🧲',
-    maxLevel: 8,
-    baseCost: 35,
-    costMultiplier: 1.3,
-    effect: { stat: 'magnetRange', valuePerLevel: 0.15 }, // +15% per level
+    maxLevel: 6,         // Was 8
+    baseCost: 50,        // Was 35
+    costMultiplier: 1.4,
+    effect: { stat: 'magnetRange', valuePerLevel: 0.10 }, // Was 15%, now 10%
   },
   {
     id: 'energy_shields',
     name: 'ENERGY SHIELDS',
     description: 'Adds protective shields',
     icon: '⚡',
-    maxLevel: 5,
-    baseCost: 200,
-    costMultiplier: 2.0,
-    effect: { stat: 'shields', valuePerLevel: 1 }, // +1 shield per level
+    maxLevel: 3,         // Was 5
+    baseCost: 300,       // Was 200
+    costMultiplier: 2.5, // Was 2.0
+    effect: { stat: 'shields', valuePerLevel: 1 },
   },
   {
     id: 'piercing_rounds',
     name: 'PIERCING ROUNDS',
     description: 'Bullets penetrate enemies',
     icon: '🎯',
-    maxLevel: 3,
-    baseCost: 150,
-    costMultiplier: 2.5,
-    effect: { stat: 'pierce', valuePerLevel: 1 }, // +1 pierce per level
+    maxLevel: 2,         // Was 3
+    baseCost: 250,       // Was 150
+    costMultiplier: 3.0, // Was 2.5
+    effect: { stat: 'pierce', valuePerLevel: 1 },
   },
   {
     id: 'extra_cannons',
     name: 'EXTRA CANNONS',
     description: 'Adds side-mounted guns',
     icon: '🔫',
-    maxLevel: 4,
-    baseCost: 300,
-    costMultiplier: 2.0,
-    effect: { stat: 'extraCannons', valuePerLevel: 1 }, // +1 cannon per level
+    maxLevel: 2,         // Was 4
+    baseCost: 500,       // Was 300
+    costMultiplier: 2.5, // Was 2.0
+    effect: { stat: 'extraCannons', valuePerLevel: 1 },
   },
 ];
 

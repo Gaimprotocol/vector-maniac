@@ -90,7 +90,7 @@ export function createVectorManiacState(): VectorState {
     
     enemiesSpawned: 0,
     enemiesDefeated: 0,
-    enemiesInWave: getEnemiesForWave(1, 1),
+    enemiesInWave: getEnemiesForWave(0, 1, 1), // totalWaves=0, level=1, map=1
     spawnTimer: 60,
     
     score: 0,
@@ -107,10 +107,17 @@ export function createVectorManiacState(): VectorState {
   };
 }
 
-export function getEnemiesForWave(totalWaves: number, level: number): number {
-  // Scale enemies based on total waves completed and level
+export function getEnemiesForWave(totalWaves: number, level: number, currentMap: number = 1): number {
+  // Base enemies + linear wave growth
   const base = VM_CONFIG.baseEnemiesPerWave + totalWaves * VM_CONFIG.enemiesPerWaveIncrease;
-  return Math.floor(base * (1 + (level - 1) * 0.1));
+  
+  // Compound map scaling: +4% per map completed (e.g., map 25 = +100% enemies)
+  const mapMultiplier = 1 + (currentMap - 1) * VM_CONFIG.enemiesPerMapMultiplier;
+  
+  // Level multiplier (after completing 50 maps)
+  const levelMultiplier = 1 + (level - 1) * 0.2;
+  
+  return Math.floor(base * mapMultiplier * levelMultiplier);
 }
 
 export function isLastWaveInMap(state: VectorState): boolean {
