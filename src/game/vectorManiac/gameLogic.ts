@@ -257,21 +257,40 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
     } else {
       const lastWave = isLastWaveInMap(newState);
 
-      // On the last wave of a map: spawn normal enemies first, then spawn the boss as the финал.
+      // On the last wave of a map: spawn normal enemies first, then trigger boss warning, then spawn boss
+      const shouldTriggerBossWarning =
+        lastWave &&
+        newState.enemiesSpawned >= newState.enemiesInWave &&
+        !newState.bossActive &&
+        !newState.bossDefeated &&
+        !newState.bossWarning &&
+        newState.bossWarningTimer <= 0;
+
       const shouldSpawnBossNow =
         lastWave &&
         newState.enemiesSpawned >= newState.enemiesInWave &&
         !newState.bossActive &&
-        !newState.bossDefeated;
+        !newState.bossDefeated &&
+        newState.bossWarning &&
+        newState.bossWarningTimer <= 0;
 
-      if (shouldSpawnBossNow) {
+      if (shouldTriggerBossWarning) {
+        // Start boss warning phase - 120 frames (~2 seconds)
+        newState.bossWarning = true;
+        newState.bossWarningTimer = 120;
+        newState.soundQueue = [...newState.soundQueue, 'bossWarning'];
+      } else if (newState.bossWarning && newState.bossWarningTimer > 0) {
+        // Warning countdown in progress
+        newState.bossWarningTimer--;
+      } else if (shouldSpawnBossNow) {
         const boss = createBoss(newState.currentMap, newState.currentLevel);
         boss.health *= newState.difficultyMultiplier;
         boss.maxHealth = boss.health;
         newState.enemies = [...newState.enemies, boss];
         newState.bossActive = true;
+        newState.bossWarning = false; // Clear warning flag
         newState.spawnTimer = 30; // small breather before boss starts firing/moving fully
-      } else if (!newState.bossActive && newState.enemiesSpawned < newState.enemiesInWave) {
+      } else if (!newState.bossActive && !newState.bossWarning && newState.enemiesSpawned < newState.enemiesInWave) {
         newState = spawnEnemy(newState);
         newState.spawnTimer = VM_CONFIG.spawnInterval;
       }
@@ -336,6 +355,8 @@ function updateWaveCompletePhase(state: VectorState, input: VectorInput): Vector
     newState.spawnTimer = 30;
     newState.bossActive = false;
     newState.bossDefeated = false;
+    newState.bossWarning = false;
+    newState.bossWarningTimer = 0;
     // Keep showMapName controlled by mapNameTimer so map info can remain on-screen
     newState.phase = 'playing';
   }
