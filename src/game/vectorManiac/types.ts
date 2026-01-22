@@ -24,6 +24,8 @@ export interface VectorEnemy {
   targetAngle: number;
 }
 
+export type BossProjectileType = 'normal' | 'laser' | 'plasma' | 'energy' | 'fire' | 'ice' | 'void' | 'electric' | 'toxic' | 'pulse';
+
 export interface VectorProjectile {
   id: string;
   x: number;
@@ -34,6 +36,8 @@ export interface VectorProjectile {
   isPlayer: boolean;
   size: number;
   pierce: number; // How many enemies it can hit
+  bossType?: BossProjectileType; // For boss projectile visual variation
+  bossColor?: string; // For boss-specific projectile colors
 }
 
 export interface VectorParticle {

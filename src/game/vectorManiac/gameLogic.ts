@@ -637,146 +637,174 @@ function updateEnemies(state: VectorState): VectorState {
             break;
         }
         
-        // Fire patterns based on map
+        // Fire patterns based on map - with unique projectile types and speeds
         e.fireTimer--;
         if (e.fireTimer <= 0) {
           const firePattern = mapId % 10;
           const playerAngle = Math.atan2(dy, dx);
           
+          // Get boss-specific projectile type and color
+          const bossProjectileType = VM_CONFIG.bossProjectileTypes[mapId % 10];
+          const bossColor = VM_CONFIG.bossColors[mapId % 10];
+          
           switch (firePattern) {
-            case 0: // Ring of bullets - expanding circle
-              for (let i = 0; i < 12; i++) {
-                const angle = (i / 12) * Math.PI * 2;
+            case 0: // Ring of bullets - fewer but faster
+              for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
                 const proj = createEnemyProjectile(
                   e.x + Math.cos(angle) * 25,
                   e.y + Math.sin(angle) * 25,
                   e.x + Math.cos(angle) * 300,
-                  e.y + Math.sin(angle) * 300
+                  e.y + Math.sin(angle) * 300,
+                  bossProjectileType,
+                  bossColor,
+                  1.3 // Faster
                 );
                 newState.projectiles = [...newState.projectiles, proj];
               }
+              e.fireTimer = VM_CONFIG.bossFireRate * 1.2; // Slower fire rate
               break;
               
-            case 1: // Aimed spread shot - 5 bullets in a fan
-              for (let i = -2; i <= 2; i++) {
-                const angle = playerAngle + i * 0.15;
-                const proj = createEnemyProjectile(
-                  e.x, e.y,
-                  e.x + Math.cos(angle) * 200,
-                  e.y + Math.sin(angle) * 200
-                );
-                newState.projectiles = [...newState.projectiles, proj];
-              }
-              break;
-              
-            case 2: // Spiral burst - rotating pattern
-              const spiralAngle = bossTime * 0.12;
-              for (let i = 0; i < 4; i++) {
-                const angle = spiralAngle + (i / 4) * Math.PI * 2;
-                const proj = createEnemyProjectile(
-                  e.x + Math.cos(angle) * 20,
-                  e.y + Math.sin(angle) * 20,
-                  e.x + Math.cos(angle) * 250,
-                  e.y + Math.sin(angle) * 250
-                );
-                newState.projectiles = [...newState.projectiles, proj];
-              }
-              break;
-              
-            case 3: // Cross pattern - 4 cardinal directions
-              for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2;
-                const proj = createEnemyProjectile(
-                  e.x + Math.cos(angle) * 20,
-                  e.y + Math.sin(angle) * 20,
-                  e.x + Math.cos(angle) * 250,
-                  e.y + Math.sin(angle) * 250
-                );
-                newState.projectiles = [...newState.projectiles, proj];
-              }
-              break;
-              
-            case 4: // Shotgun blast - tight cluster aimed at player
-              for (let i = 0; i < 7; i++) {
-                const spreadAngle = playerAngle + (Math.random() - 0.5) * 0.4;
-                const spreadDist = 150 + Math.random() * 100;
-                const proj = createEnemyProjectile(
-                  e.x, e.y,
-                  e.x + Math.cos(spreadAngle) * spreadDist,
-                  e.y + Math.sin(spreadAngle) * spreadDist
-                );
-                newState.projectiles = [...newState.projectiles, proj];
-              }
-              break;
-              
-            case 5: // Double helix - two intertwined spirals
-              const helixAngle1 = bossTime * 0.08;
-              const helixAngle2 = bossTime * 0.08 + Math.PI;
-              for (const baseAngle of [helixAngle1, helixAngle2]) {
-                const proj = createEnemyProjectile(
-                  e.x + Math.cos(baseAngle) * 30,
-                  e.y + Math.sin(baseAngle) * 30,
-                  e.x + Math.cos(baseAngle) * 200,
-                  e.y + Math.sin(baseAngle) * 200
-                );
-                newState.projectiles = [...newState.projectiles, proj];
-              }
-              break;
-              
-            case 6: // Wave attack - horizontal sweeping bullets
-              const waveOffset = Math.sin(bossTime * 0.1) * 0.8;
+            case 1: // Toxic spray - 3 aimed shots, very fast
               for (let i = -1; i <= 1; i++) {
-                const angle = playerAngle + waveOffset + i * 0.3;
+                const angle = playerAngle + i * 0.12;
                 const proj = createEnemyProjectile(
                   e.x, e.y,
                   e.x + Math.cos(angle) * 200,
-                  e.y + Math.sin(angle) * 200
+                  e.y + Math.sin(angle) * 200,
+                  bossProjectileType,
+                  bossColor,
+                  1.8 // Very fast
                 );
                 newState.projectiles = [...newState.projectiles, proj];
               }
+              e.fireTimer = VM_CONFIG.bossFireRate * 0.6; // Fast fire rate
               break;
               
-            case 7: // Gatling gun - rapid single shots aimed at player
-              const gatlingSpread = (Math.random() - 0.5) * 0.15;
-              const gatlingProj = createEnemyProjectile(
-                e.x, e.y,
-                e.x + Math.cos(playerAngle + gatlingSpread) * 250,
-                e.y + Math.sin(playerAngle + gatlingSpread) * 250
-              );
-              newState.projectiles = [...newState.projectiles, gatlingProj];
-              // Faster fire rate for gatling
-              e.fireTimer = Math.floor(VM_CONFIG.bossFireRate * 0.3);
-              break;
-              
-            case 8: // Meteor shower - random positions falling down
+            case 2: // Void vortex - slow rotating pattern, mesmerizing
+              const voidAngle = bossTime * 0.06;
               for (let i = 0; i < 3; i++) {
-                const startX = e.x + (Math.random() - 0.5) * 200;
+                const angle = voidAngle + (i / 3) * Math.PI * 2;
                 const proj = createEnemyProjectile(
-                  startX, e.y - 50,
-                  startX + (Math.random() - 0.5) * 50,
-                  e.y + 300
+                  e.x + Math.cos(angle) * 20,
+                  e.y + Math.sin(angle) * 20,
+                  e.x + Math.cos(angle) * 250,
+                  e.y + Math.sin(angle) * 250,
+                  bossProjectileType,
+                  bossColor,
+                  0.7 // Slower but constant
                 );
                 newState.projectiles = [...newState.projectiles, proj];
               }
+              e.fireTimer = VM_CONFIG.bossFireRate * 0.4; // Very frequent
               break;
               
-            case 9: // Star burst - 8-pointed star pattern
-              for (let i = 0; i < 8; i++) {
-                const angle = (i / 8) * Math.PI * 2 + bossTime * 0.02;
+            case 3: // Lightning bolts - single ultra-fast shots
+              const lightningProj = createEnemyProjectile(
+                e.x, e.y,
+                e.x + Math.cos(playerAngle) * 300,
+                e.y + Math.sin(playerAngle) * 300,
+                bossProjectileType,
+                bossColor,
+                2.5 // Ultra fast laser
+              );
+              newState.projectiles = [...newState.projectiles, lightningProj];
+              e.fireTimer = VM_CONFIG.bossFireRate * 0.35; // Rapid single shots
+              break;
+              
+            case 4: // Fireballs - slow but big spread
+              for (let i = 0; i < 5; i++) {
+                const spreadAngle = playerAngle + (Math.random() - 0.5) * 0.6;
+                const proj = createEnemyProjectile(
+                  e.x, e.y,
+                  e.x + Math.cos(spreadAngle) * 200,
+                  e.y + Math.sin(spreadAngle) * 200,
+                  bossProjectileType,
+                  bossColor,
+                  0.8 // Slower fireballs
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              e.fireTimer = VM_CONFIG.bossFireRate * 1.4; // Slower but dangerous
+              break;
+              
+            case 5: // Ice shards - fast diagonal bursts
+              for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+                const proj = createEnemyProjectile(
+                  e.x + Math.cos(angle) * 20,
+                  e.y + Math.sin(angle) * 20,
+                  e.x + Math.cos(angle) * 250,
+                  e.y + Math.sin(angle) * 250,
+                  bossProjectileType,
+                  bossColor,
+                  1.5
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              e.fireTimer = VM_CONFIG.bossFireRate;
+              break;
+              
+            case 6: // Plasma orbs - slow homing-like curve
+              const plasmaOffset = Math.sin(bossTime * 0.08) * 0.5;
+              for (let i = -1; i <= 1; i += 2) {
+                const angle = playerAngle + plasmaOffset + i * 0.2;
+                const proj = createEnemyProjectile(
+                  e.x, e.y,
+                  e.x + Math.cos(angle) * 200,
+                  e.y + Math.sin(angle) * 200,
+                  bossProjectileType,
+                  bossColor,
+                  0.9
+                );
+                newState.projectiles = [...newState.projectiles, proj];
+              }
+              e.fireTimer = VM_CONFIG.bossFireRate * 0.7;
+              break;
+              
+            case 7: // Energy beams - rapid single shots
+              const energySpread = (Math.random() - 0.5) * 0.1;
+              const energyProj = createEnemyProjectile(
+                e.x, e.y,
+                e.x + Math.cos(playerAngle + energySpread) * 250,
+                e.y + Math.sin(playerAngle + energySpread) * 250,
+                bossProjectileType,
+                bossColor,
+                2.0
+              );
+              newState.projectiles = [...newState.projectiles, energyProj];
+              e.fireTimer = VM_CONFIG.bossFireRate * 0.25; // Very rapid
+              break;
+              
+            case 8: // Pulse waves - expanding slow rings
+              for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2 + bossTime * 0.01;
                 const proj = createEnemyProjectile(
                   e.x + Math.cos(angle) * 25,
                   e.y + Math.sin(angle) * 25,
                   e.x + Math.cos(angle) * 280,
-                  e.y + Math.sin(angle) * 280
+                  e.y + Math.sin(angle) * 280,
+                  bossProjectileType,
+                  bossColor,
+                  0.6 // Very slow pulse
                 );
                 newState.projectiles = [...newState.projectiles, proj];
               }
+              e.fireTimer = VM_CONFIG.bossFireRate * 1.5; // Slow but dense
               break;
-          }
-          
-          // Only reset timer if not already set (gatling gun sets its own)
-          if (firePattern !== 7) {
-            e.fireTimer = VM_CONFIG.bossFireRate;
+              
+            case 9: // Concentrated laser - single devastating beam
+              const laserProj = createEnemyProjectile(
+                e.x, e.y,
+                e.x + Math.cos(playerAngle) * 400,
+                e.y + Math.sin(playerAngle) * 400,
+                bossProjectileType,
+                bossColor,
+                3.0 // Extremely fast
+              );
+              newState.projectiles = [...newState.projectiles, laserProj];
+              e.fireTimer = VM_CONFIG.bossFireRate * 0.3; // Rapid fire
+              break;
           }
         }
         break;

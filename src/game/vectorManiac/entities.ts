@@ -1,6 +1,6 @@
 // Vector Maniac Entity Creation
 
-import { VectorEnemy, VectorProjectile, VectorParticle, VectorSalvage, VectorPowerUp, PowerUpType } from './types';
+import { VectorEnemy, VectorProjectile, VectorParticle, VectorSalvage, VectorPowerUp, PowerUpType, BossProjectileType } from './types';
 import { VM_CONFIG } from './constants';
 import { generateId, randomFromEdge, normalize } from './utils';
 
@@ -148,20 +148,33 @@ export function createEnemyProjectile(
   x: number, 
   y: number, 
   targetX: number,
-  targetY: number
+  targetY: number,
+  bossType?: BossProjectileType,
+  bossColor?: string,
+  speedMultiplier: number = 1
 ): VectorProjectile {
   const dir = normalize(targetX - x, targetY - y);
+  
+  // Different sizes based on projectile type
+  let size = 5;
+  if (bossType === 'laser') size = 3;
+  else if (bossType === 'plasma') size = 8;
+  else if (bossType === 'fire') size = 7;
+  else if (bossType === 'ice') size = 6;
+  else if (bossType === 'pulse') size = 10;
   
   return {
     id: generateId(),
     x,
     y,
-    vx: dir.x * VM_CONFIG.shooterBulletSpeed,
-    vy: dir.y * VM_CONFIG.shooterBulletSpeed,
+    vx: dir.x * VM_CONFIG.shooterBulletSpeed * speedMultiplier,
+    vy: dir.y * VM_CONFIG.shooterBulletSpeed * speedMultiplier,
     damage: 15,
     isPlayer: false,
-    size: 5,
+    size,
     pierce: 1,
+    bossType,
+    bossColor,
   };
 }
 
