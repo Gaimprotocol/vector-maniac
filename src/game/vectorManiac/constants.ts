@@ -108,8 +108,36 @@ export const VM_CONFIG = {
     shooter: '#ff0066',
     elite: '#aa00ff',
     bounty: '#ffff00',
-    boss: '#ff0000',
+    boss: '#ff0000', // Default, overridden per map
   },
+  
+  // 10 unique boss color themes - each map gets a different boss appearance
+  bossColors: [
+    '#ff0000', // 0: Classic Red - Crimson Destroyer
+    '#00ff88', // 1: Toxic Green - Venom Lord  
+    '#ff00ff', // 2: Magenta - Void Empress
+    '#00aaff', // 3: Electric Blue - Storm Titan
+    '#ffaa00', // 4: Orange Fire - Inferno King
+    '#00ffff', // 5: Cyan Ice - Frost Warden
+    '#ff0088', // 6: Hot Pink - Chaos Queen
+    '#8800ff', // 7: Deep Purple - Shadow Archon
+    '#ffff00', // 8: Golden - Solar Emperor
+    '#ffffff', // 9: White - Cosmic Overlord
+  ] as const,
+  
+  // Boss projectile types per map - determines visual style
+  bossProjectileTypes: [
+    'normal',   // 0: Standard red bullets
+    'toxic',    // 1: Green poison shots
+    'void',     // 2: Purple vortex blasts
+    'electric', // 3: Blue lightning bolts
+    'fire',     // 4: Orange fireballs
+    'ice',      // 5: Cyan frost shards
+    'plasma',   // 6: Pink plasma orbs
+    'energy',   // 7: Purple energy beams
+    'pulse',    // 8: Yellow pulse waves
+    'laser',    // 9: White concentrated lasers
+  ] as const,
 };
 
 // Generate 50 unique map themes with varied backgrounds

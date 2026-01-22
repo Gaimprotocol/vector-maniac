@@ -359,16 +359,181 @@ function renderProjectiles(ctx: CanvasRenderingContext2D, state: VectorState): v
       ctx.shadowColor = '#00ffff';
       ctx.shadowBlur = 8;
       ctx.fillStyle = '#00ffff';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (proj.bossType && proj.bossColor) {
+      // Boss projectiles - varied styles based on type
+      ctx.shadowColor = proj.bossColor;
+      ctx.shadowBlur = 12;
+      
+      switch (proj.bossType) {
+        case 'laser':
+          // Thin concentrated beam
+          ctx.strokeStyle = proj.bossColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          const laserAngle = Math.atan2(proj.vy, proj.vx);
+          ctx.moveTo(proj.x - Math.cos(laserAngle) * 15, proj.y - Math.sin(laserAngle) * 15);
+          ctx.lineTo(proj.x + Math.cos(laserAngle) * 15, proj.y + Math.sin(laserAngle) * 15);
+          ctx.stroke();
+          // Core glow
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'plasma':
+          // Large pulsing orb with rings
+          const plasmaSize = proj.size + Math.sin(state.gameTime * 0.2) * 2;
+          ctx.fillStyle = proj.bossColor;
+          ctx.globalAlpha = 0.6;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, plasmaSize * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, plasmaSize, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'energy':
+          // Diamond shape spinning
+          ctx.fillStyle = proj.bossColor;
+          ctx.save();
+          ctx.translate(proj.x, proj.y);
+          ctx.rotate(state.gameTime * 0.15);
+          ctx.beginPath();
+          ctx.moveTo(0, -proj.size);
+          ctx.lineTo(proj.size * 0.6, 0);
+          ctx.lineTo(0, proj.size);
+          ctx.lineTo(-proj.size * 0.6, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          break;
+          
+        case 'fire':
+          // Flickering flame shape
+          const fireFlicker = Math.random() * 3;
+          ctx.fillStyle = proj.bossColor;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size + fireFlicker, 0, Math.PI * 2);
+          ctx.fill();
+          // Inner core
+          ctx.fillStyle = '#ffff00';
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size * 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'ice':
+          // Crystal shard shape
+          ctx.fillStyle = proj.bossColor;
+          ctx.save();
+          ctx.translate(proj.x, proj.y);
+          const iceAngle = Math.atan2(proj.vy, proj.vx);
+          ctx.rotate(iceAngle);
+          ctx.beginPath();
+          ctx.moveTo(proj.size * 1.5, 0);
+          ctx.lineTo(-proj.size * 0.5, proj.size * 0.5);
+          ctx.lineTo(-proj.size * 0.5, -proj.size * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          break;
+          
+        case 'void':
+          // Dark vortex with swirl
+          ctx.fillStyle = proj.bossColor;
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size * 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = proj.bossColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 3; i++) {
+            const angle = state.gameTime * 0.1 + (i / 3) * Math.PI * 2;
+            ctx.moveTo(proj.x, proj.y);
+            ctx.lineTo(
+              proj.x + Math.cos(angle) * proj.size * 1.5,
+              proj.y + Math.sin(angle) * proj.size * 1.5
+            );
+          }
+          ctx.stroke();
+          break;
+          
+        case 'electric':
+          // Lightning bolt effect
+          ctx.strokeStyle = proj.bossColor;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          const boltAngle = Math.atan2(proj.vy, proj.vx);
+          let bx = proj.x - Math.cos(boltAngle) * 12;
+          let by = proj.y - Math.sin(boltAngle) * 12;
+          ctx.moveTo(bx, by);
+          for (let i = 0; i < 4; i++) {
+            bx += Math.cos(boltAngle) * 6 + (Math.random() - 0.5) * 6;
+            by += Math.sin(boltAngle) * 6 + (Math.random() - 0.5) * 6;
+            ctx.lineTo(bx, by);
+          }
+          ctx.stroke();
+          // Glow center
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'toxic':
+          // Bubbling poison
+          ctx.fillStyle = proj.bossColor;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+          ctx.fill();
+          // Small bubbles
+          ctx.globalAlpha = 0.6;
+          ctx.beginPath();
+          ctx.arc(proj.x + 4, proj.y - 3, 2, 0, Math.PI * 2);
+          ctx.arc(proj.x - 3, proj.y + 2, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'pulse':
+          // Expanding ring
+          const pulsePhase = (state.gameTime % 30) / 30;
+          ctx.strokeStyle = proj.bossColor;
+          ctx.lineWidth = 3 - pulsePhase * 2;
+          ctx.globalAlpha = 1 - pulsePhase * 0.5;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size + pulsePhase * 5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = proj.bossColor;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        default:
+          // Normal boss bullet
+          ctx.fillStyle = proj.bossColor;
+          ctx.beginPath();
+          ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+          ctx.fill();
+      }
     } else {
-      // Enemy bullets - red
+      // Regular enemy bullets - red
       ctx.shadowColor = '#ff4444';
       ctx.shadowBlur = 8;
       ctx.fillStyle = '#ff4444';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+      ctx.fill();
     }
-    
-    ctx.beginPath();
-    ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
-    ctx.fill();
     
     ctx.restore();
   }
@@ -376,7 +541,10 @@ function renderProjectiles(ctx: CanvasRenderingContext2D, state: VectorState): v
 
 function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void {
   for (const enemy of state.enemies) {
-    const color = VM_CONFIG.enemyColors[enemy.type];
+    // Use map-specific boss color instead of default
+    const color = enemy.type === 'boss' 
+      ? VM_CONFIG.bossColors[(Math.floor((enemy.behaviorTimer ?? 0) / 1000) || 1) % 10]
+      : VM_CONFIG.enemyColors[enemy.type];
     const healthPercent = enemy.health / enemy.maxHealth;
     
     ctx.save();
