@@ -91,6 +91,31 @@ export function createBounty(): VectorEnemy {
   };
 }
 
+// Create a mini-boss - smaller than full boss, but tougher than elites
+export function createMiniBoss(targetX: number, targetY: number, mapId: number): VectorEnemy {
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  
+  const dir = normalize(targetX - spawn.x, targetY - spawn.y);
+  
+  // Mini-boss uses same color theming as bosses
+  const colorIndex = mapId % 10;
+  
+  return {
+    id: generateId(),
+    x: spawn.x,
+    y: spawn.y,
+    vx: dir.x * VM_CONFIG.minibossSpeed,
+    vy: dir.y * VM_CONFIG.minibossSpeed,
+    size: VM_CONFIG.minibossSize,
+    health: VM_CONFIG.minibossHealth,
+    maxHealth: VM_CONFIG.minibossHealth,
+    type: 'miniboss',
+    fireTimer: VM_CONFIG.minibossFireRate,
+    behaviorTimer: colorIndex, // Store color index for rendering
+    targetAngle: spawn.angle,
+  };
+}
+
 // Create a boss for each map - unique behavior based on map number
 export function createBoss(mapId: number, level: number): VectorEnemy {
   const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);

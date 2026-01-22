@@ -8,6 +8,7 @@ import {
   createElite, 
   createBounty,
   createBoss,
+  createMiniBoss,
   createPlayerProjectile, 
   createEnemyProjectile,
   createParticle,
@@ -273,6 +274,14 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
         !newState.bossDefeated &&
         newState.bossWarning &&
         newState.bossWarningTimer <= 0;
+      
+      // Mini-boss spawns in mid-wave (wave 2 of 3-wave maps)
+      const isMiddleWave = newState.wavesInMap >= 3 && newState.currentWave === 2;
+      const minibossExists = newState.enemies.some(e => e.type === 'miniboss');
+      const shouldSpawnMiniBoss = isMiddleWave && 
+        newState.enemiesSpawned >= Math.floor(newState.enemiesInWave / 2) && 
+        !minibossExists &&
+        newState.enemiesDefeated >= Math.floor(newState.enemiesInWave / 3);
 
       if (shouldTriggerBossWarning) {
         // Start boss warning phase - 120 frames (~2 seconds)
@@ -290,6 +299,17 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
         newState.bossActive = true;
         newState.bossWarning = false; // Clear warning flag
         newState.spawnTimer = 30; // small breather before boss starts firing/moving fully
+      } else if (shouldSpawnMiniBoss) {
+        // Spawn mini-boss in middle of longer maps
+        const miniboss = createMiniBoss(newState.playerX, newState.playerY, newState.currentMap);
+        // Scale with difficulty
+        const levelScaling = 1 + (newState.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
+        const mapScaling = 1 + (newState.currentMap - 1) * VM_CONFIG.enemyHealthPerMap;
+        miniboss.health *= newState.difficultyMultiplier * levelScaling * mapScaling;
+        miniboss.maxHealth = miniboss.health;
+        newState.enemies = [...newState.enemies, miniboss];
+        newState.soundQueue = [...newState.soundQueue, 'elite']; // Use elite sound as warning
+        newState.spawnTimer = VM_CONFIG.spawnInterval * 2; // Extra delay after mini-boss spawn
       } else if (!newState.bossActive && !newState.bossWarning && newState.enemiesSpawned < newState.enemiesInWave) {
         newState = spawnEnemy(newState);
         newState.spawnTimer = VM_CONFIG.spawnInterval;
@@ -515,6 +535,54 @@ function updateEnemies(state: VectorState): VectorState {
           e.fireTimer = Math.floor(100 * eliteFireMultiplier); // Was 80
         }
         break;
+      
+      case 'miniboss': {
+        // Mini-boss - hybrid between elite and boss
+        // Chases player but keeps distance, fires aimed bursts
+        const preferredDistMini = 120;
+        const minibossSpeed = VM_CONFIG.minibossSpeed * speedScaling;
+        
+        if (dist < preferredDistMini - 20) {
+          // Too close, back off
+          const dir = normalize(-dx, -dy);
+          e.vx = lerp(e.vx, dir.x * minibossSpeed * 1.2, 0.05);
+          e.vy = lerp(e.vy, dir.y * minibossSpeed * 1.2, 0.05);
+        } else if (dist > preferredDistMini + 40) {
+          // Too far, approach
+          const dir = normalize(dx, dy);
+          e.vx = lerp(e.vx, dir.x * minibossSpeed, 0.04);
+          e.vy = lerp(e.vy, dir.y * minibossSpeed, 0.04);
+        } else {
+          // Strafe around player
+          const strafeAngle = Math.atan2(dy, dx) + Math.PI / 2;
+          const strafeOscillation = Math.sin(state.gameTime * 0.03);
+          e.vx = lerp(e.vx, Math.cos(strafeAngle) * minibossSpeed * strafeOscillation, 0.04);
+          e.vy = lerp(e.vy, Math.sin(strafeAngle) * minibossSpeed * strafeOscillation, 0.04);
+        }
+        
+        // Fire burst of 3 aimed shots
+        e.fireTimer--;
+        if (e.fireTimer <= 0) {
+          const colorIndex = e.behaviorTimer % 10; // stored mapId color
+          const minibossColor = VM_CONFIG.bossColors[colorIndex];
+          
+          for (let i = -1; i <= 1; i++) {
+            const spread = i * 0.12;
+            const angle = Math.atan2(dy, dx) + spread;
+            const proj = createEnemyProjectile(
+              e.x, e.y,
+              e.x + Math.cos(angle) * 200,
+              e.y + Math.sin(angle) * 200,
+              'energy',
+              minibossColor,
+              1.2
+            );
+            newState.projectiles = [...newState.projectiles, proj];
+          }
+          e.fireTimer = VM_CONFIG.minibossFireRate;
+        }
+        break;
+      }
         
       case 'bounty':
         // Bounty boss circles and fires patterns
@@ -1046,12 +1114,15 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
     case 'nuke':
       // Destroy all enemies on screen
       for (const enemy of newState.enemies) {
-        // Create explosion particles
+        // Create explosion particles - get color for miniboss
+        const enemyColor = enemy.type === 'miniboss' 
+          ? VM_CONFIG.bossColors[enemy.behaviorTimer % 10]
+          : VM_CONFIG.enemyColors[enemy.type] || VM_CONFIG.enemyColors.elite;
         const particles = createParticle(
           enemy.x, 
           enemy.y, 
-          VM_CONFIG.enemyColors[enemy.type], 
-          enemy.type === 'bounty' || enemy.type === 'boss' ? 20 : 8
+          enemyColor, 
+          enemy.type === 'bounty' || enemy.type === 'boss' || enemy.type === 'miniboss' ? 20 : 8
         );
         newState.particles = [...newState.particles, ...particles];
         
@@ -1077,6 +1148,7 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
         
         // Give score (reduced since it's easy)
         const baseScore = enemy.type === 'boss' ? 1000 :
+                          enemy.type === 'miniboss' ? 250 :
                           enemy.type === 'bounty' ? 500 : 
                           enemy.type === 'elite' ? 100 :
                           enemy.type === 'shooter' ? 50 : 25;
@@ -1133,8 +1205,11 @@ function checkCollisions(state: VectorState): VectorState {
         pierce--;
         newState.soundQueue = [...newState.soundQueue, 'hit'];
         
-        // Create hit particles
-        const particles = createParticle(proj.x, proj.y, VM_CONFIG.enemyColors[enemy.type], 3);
+        // Create hit particles - use proper color for miniboss
+        const hitColor = enemy.type === 'miniboss'
+          ? VM_CONFIG.bossColors[enemy.behaviorTimer % 10]
+          : VM_CONFIG.enemyColors[enemy.type] || VM_CONFIG.enemyColors.elite;
+        const particles = createParticle(proj.x, proj.y, hitColor, 3);
         newState.particles = [...newState.particles, ...particles];
         
         if (pierce <= 0) break;
@@ -1178,8 +1253,25 @@ function checkCollisions(state: VectorState): VectorState {
         }
       }
       
+      // Mini-boss gives extra salvage reward
+      if (enemy.type === 'miniboss') {
+        const minibossRewardCount = 3 + Math.floor(Math.random() * 3); // 3-5 salvage
+        for (let i = 0; i < minibossRewardCount; i++) {
+          const angle = (i / minibossRewardCount) * Math.PI * 2;
+          const distance = 20 + Math.random() * 15;
+          const salvage = createSalvage(
+            enemy.x + Math.cos(angle) * distance,
+            enemy.y + Math.sin(angle) * distance,
+            VM_CONFIG.salvageValue.miniboss,
+            Math.random() < 0.15 // 15% chance for rare
+          );
+          newState.salvage = [...newState.salvage, salvage];
+        }
+      }
+      
       // Score with combo bonus (doubled if power-up active)
       const baseScore = enemy.type === 'boss' ? 2000 :
+                        enemy.type === 'miniboss' ? 500 :
                         enemy.type === 'bounty' ? 1000 : 
                         enemy.type === 'elite' ? 200 :
                         enemy.type === 'shooter' ? 100 : 50;

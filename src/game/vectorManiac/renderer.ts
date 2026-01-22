@@ -857,21 +857,106 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         }
         break;
       }
+      
+      case 'miniboss': {
+        // Mini-boss - octagon with glowing core
+        const minibossColorIndex = enemy.behaviorTimer % 10;
+        const minibossColor = VM_CONFIG.bossColors[minibossColorIndex];
+        const pulse = Math.sin(state.gameTime * 0.1) * 0.2 + 0.8;
+        
+        // Outer glow
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.shadowColor = minibossColor;
+        ctx.shadowBlur = 25;
+        ctx.fillStyle = minibossColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, enemy.size * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        
+        // Rotating octagon shell
+        ctx.save();
+        ctx.rotate(state.gameTime * 0.03);
+        ctx.strokeStyle = minibossColor;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = minibossColor;
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const r = enemy.size * pulse;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+        
+        // Inner counter-rotating pentagon
+        ctx.save();
+        ctx.rotate(-state.gameTime * 0.05);
+        ctx.strokeStyle = minibossColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI * 2;
+          const r = enemy.size * 0.55;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+        
+        // Core
+        const corePulse = 6 + Math.sin(state.gameTime * 0.15) * 2;
+        ctx.fillStyle = minibossColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, corePulse, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Orbiting particles
+        for (let i = 0; i < 4; i++) {
+          const orbitAngle = (i / 4) * Math.PI * 2 + state.gameTime * 0.06;
+          const orbitDist = enemy.size * 0.75;
+          const px = Math.cos(orbitAngle) * orbitDist;
+          const py = Math.sin(orbitAngle) * orbitDist;
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath();
+          ctx.arc(px, py, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        break;
+      }
     }
     
     ctx.restore();
     
-    // Health bar (for elites, bounty, and boss)
-    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss') && healthPercent < 1) {
-      const barWidth = enemy.type === 'boss' ? enemy.size * 3 : enemy.size * 2;
-      const barHeight = enemy.type === 'boss' ? 6 : 3;
+    // Health bar (for elites, bounty, miniboss, and boss)
+    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss' || enemy.type === 'miniboss') && healthPercent < 1) {
+      const barWidth = enemy.type === 'boss' ? enemy.size * 3 : 
+                       enemy.type === 'miniboss' ? enemy.size * 2.5 : enemy.size * 2;
+      const barHeight = enemy.type === 'boss' ? 6 : 
+                        enemy.type === 'miniboss' ? 5 : 3;
       const barX = enemy.x - barWidth / 2;
       const barY = enemy.y - enemy.size - 12;
+      
+      // Get proper color for miniboss
+      const barColor = enemy.type === 'miniboss' 
+        ? VM_CONFIG.bossColors[enemy.behaviorTimer % 10]
+        : color;
       
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(barX, barY, barWidth, barHeight);
       
-      ctx.fillStyle = color;
+      ctx.fillStyle = barColor;
       ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
       
       // Boss name label - unique per map
@@ -886,6 +971,17 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         ctx.shadowColor = color;
         ctx.shadowBlur = 10;
         ctx.fillText(bossName, enemy.x, barY - 8);
+        ctx.shadowBlur = 0;
+      }
+      
+      // Mini-boss label
+      if (enemy.type === 'miniboss') {
+        ctx.fillStyle = barColor;
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = barColor;
+        ctx.shadowBlur = 8;
+        ctx.fillText('MINI-BOSS', enemy.x, barY - 6);
         ctx.shadowBlur = 0;
       }
     }

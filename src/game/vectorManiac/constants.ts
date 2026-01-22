@@ -36,6 +36,12 @@ export const VM_CONFIG = {
   bountySize: 48,
   bountySpeed: 0.6,
   
+  // Mini-boss config (spawns mid-map on longer maps)
+  minibossHealth: 120,
+  minibossSize: 36,
+  minibossSpeed: 1.2,
+  minibossFireRate: 80,
+  
   // Boss config
   bossHealth: 400,
   bossSize: 60,
@@ -68,6 +74,7 @@ export const VM_CONFIG = {
     elite: 0.40,                // Reduced from 0.50
     bounty: 1.0,
     boss: 1.0,
+    miniboss: 1.0,              // Always drops salvage
   },
   salvageValue: {
     drone: 8,                   // Reduced from 10
@@ -75,6 +82,7 @@ export const VM_CONFIG = {
     elite: 25,                  // Reduced from 30
     bounty: 80,                 // Reduced from 100
     boss: 150,                  // Reduced from 200
+    miniboss: 50,               // Decent mid-map reward
   },
   salvageDriftSpeed: 0.3,
   
