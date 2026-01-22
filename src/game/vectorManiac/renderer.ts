@@ -62,6 +62,11 @@ function renderBossWarningOverlay(ctx: CanvasRenderingContext2D, state: VectorSt
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   const timer = state.bossWarningTimer;
   
+  // Get boss name and color for current map
+  const bossIndex = state.currentMap % 10;
+  const bossName = VM_CONFIG.bossNames[bossIndex];
+  const bossColor = VM_CONFIG.bossColors[bossIndex];
+  
   // Flashing red vignette effect
   const flashIntensity = Math.sin(state.gameTime * 0.3) * 0.5 + 0.5;
   const vignetteAlpha = 0.15 + flashIntensity * 0.15;
@@ -91,7 +96,7 @@ function renderBossWarningOverlay(ctx: CanvasRenderingContext2D, state: VectorSt
   
   // Main warning text
   const textFlash = Math.floor(state.gameTime / 6) % 2 === 0;
-  const textY = arenaHeight / 2 - 40;
+  const textY = arenaHeight / 2 - 60;
   
   ctx.save();
   ctx.textAlign = 'center';
@@ -100,30 +105,46 @@ function renderBossWarningOverlay(ctx: CanvasRenderingContext2D, state: VectorSt
   if (textFlash) {
     // "WARNING" text
     ctx.fillStyle = '#ff0000';
-    ctx.font = 'bold 48px monospace';
+    ctx.font = 'bold 42px monospace';
     ctx.shadowColor = '#ff0000';
     ctx.shadowBlur = 20;
     ctx.fillText('⚠ WARNING ⚠', arenaWidth / 2, textY);
     
-    // "BOSS INCOMING" text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px monospace';
-    ctx.shadowColor = '#ffffff';
+    // Boss name in its unique color
+    ctx.fillStyle = bossColor;
+    ctx.font = 'bold 28px monospace';
+    ctx.shadowColor = bossColor;
     ctx.shadowBlur = 15;
-    ctx.fillText('BOSS INCOMING', arenaWidth / 2, textY + 55);
+    ctx.fillText(bossName, arenaWidth / 2, textY + 50);
+    
+    // "INCOMING" text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px monospace';
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 12;
+    ctx.fillText('INCOMING', arenaWidth / 2, textY + 85);
   } else {
     // Dimmer version for flash effect
     ctx.fillStyle = '#aa0000';
-    ctx.font = 'bold 48px monospace';
+    ctx.font = 'bold 42px monospace';
     ctx.shadowColor = '#aa0000';
     ctx.shadowBlur = 10;
     ctx.fillText('⚠ WARNING ⚠', arenaWidth / 2, textY);
     
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = 'bold 32px monospace';
-    ctx.shadowColor = '#aaaaaa';
+    // Dimmer boss name
+    ctx.fillStyle = bossColor;
+    ctx.globalAlpha = 0.6;
+    ctx.font = 'bold 28px monospace';
+    ctx.shadowColor = bossColor;
     ctx.shadowBlur = 8;
-    ctx.fillText('BOSS INCOMING', arenaWidth / 2, textY + 55);
+    ctx.fillText(bossName, arenaWidth / 2, textY + 50);
+    ctx.globalAlpha = 1;
+    
+    ctx.fillStyle = '#888888';
+    ctx.font = 'bold 24px monospace';
+    ctx.shadowColor = '#888888';
+    ctx.shadowBlur = 6;
+    ctx.fillText('INCOMING', arenaWidth / 2, textY + 85);
   }
   
   // Timer countdown
