@@ -805,12 +805,19 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
       ctx.fillStyle = color;
       ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
       
-      // Boss name label
+      // Boss name label - unique per map
       if (enemy.type === 'boss') {
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px monospace';
+        const bossMapId = Math.floor((enemy.behaviorTimer ?? 0) / 10000);
+        const bossNameIndex = (bossMapId > 0 ? bossMapId : state.currentMap) % 10;
+        const bossName = VM_CONFIG.bossNames[bossNameIndex];
+        
+        ctx.fillStyle = color;
+        ctx.font = 'bold 14px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('BOSS', enemy.x, barY - 5);
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(bossName, enemy.x, barY - 8);
+        ctx.shadowBlur = 0;
       }
     }
   }

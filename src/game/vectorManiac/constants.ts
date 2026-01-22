@@ -138,6 +138,20 @@ export const VM_CONFIG = {
     'pulse',    // 8: Yellow pulse waves
     'laser',    // 9: White concentrated lasers
   ] as const,
+  
+  // 10 unique boss names - displayed above health bar
+  bossNames: [
+    'CRIMSON DESTROYER',   // 0: Classic Red
+    'VENOM LORD',          // 1: Toxic Green
+    'VOID EMPRESS',        // 2: Magenta
+    'STORM TITAN',         // 3: Electric Blue
+    'INFERNO KING',        // 4: Orange Fire
+    'FROST WARDEN',        // 5: Cyan Ice
+    'CHAOS QUEEN',         // 6: Hot Pink
+    'SHADOW ARCHON',       // 7: Deep Purple
+    'SOLAR EMPEROR',       // 8: Golden
+    'COSMIC OVERLORD',     // 9: White
+  ] as const,
 };
 
 // Generate 50 unique map themes with varied backgrounds
