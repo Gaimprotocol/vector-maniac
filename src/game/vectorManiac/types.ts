@@ -205,6 +205,8 @@ export interface VectorState {
   // Boss tracking
   bossActive: boolean;
   bossDefeated: boolean;
+  bossWarning: boolean;
+  bossWarningTimer: number;
   
   // Map transition display
   showMapName: boolean;

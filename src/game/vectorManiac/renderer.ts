@@ -36,6 +36,11 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
   // Draw HUD
   renderHUD(ctx, state);
   
+  // Draw boss warning overlay
+  if (state.bossWarning && state.bossWarningTimer > 0) {
+    renderBossWarningOverlay(ctx, state);
+  }
+  
   // Draw phase overlays
   switch (state.phase) {
     case 'entering':
@@ -51,6 +56,85 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
       renderVictoryOverlay(ctx, state);
       break;
   }
+}
+
+function renderBossWarningOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const timer = state.bossWarningTimer;
+  
+  // Flashing red vignette effect
+  const flashIntensity = Math.sin(state.gameTime * 0.3) * 0.5 + 0.5;
+  const vignetteAlpha = 0.15 + flashIntensity * 0.15;
+  
+  // Red vignette
+  const gradient = ctx.createRadialGradient(
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.3,
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.8
+  );
+  gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+  gradient.addColorStop(1, `rgba(255, 0, 0, ${vignetteAlpha})`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  // Flashing warning bars at top and bottom
+  const barHeight = 8;
+  const barFlash = Math.floor(state.gameTime / 8) % 2 === 0;
+  if (barFlash) {
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 50, arenaWidth, barHeight);
+    ctx.fillRect(0, arenaHeight - 50 - barHeight, arenaWidth, barHeight);
+  } else {
+    ctx.fillStyle = '#ffff00';
+    ctx.fillRect(0, 50, arenaWidth, barHeight);
+    ctx.fillRect(0, arenaHeight - 50 - barHeight, arenaWidth, barHeight);
+  }
+  
+  // Main warning text
+  const textFlash = Math.floor(state.gameTime / 6) % 2 === 0;
+  const textY = arenaHeight / 2 - 40;
+  
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  if (textFlash) {
+    // "WARNING" text
+    ctx.fillStyle = '#ff0000';
+    ctx.font = 'bold 48px monospace';
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 20;
+    ctx.fillText('⚠ WARNING ⚠', arenaWidth / 2, textY);
+    
+    // "BOSS INCOMING" text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px monospace';
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 15;
+    ctx.fillText('BOSS INCOMING', arenaWidth / 2, textY + 55);
+  } else {
+    // Dimmer version for flash effect
+    ctx.fillStyle = '#aa0000';
+    ctx.font = 'bold 48px monospace';
+    ctx.shadowColor = '#aa0000';
+    ctx.shadowBlur = 10;
+    ctx.fillText('⚠ WARNING ⚠', arenaWidth / 2, textY);
+    
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = 'bold 32px monospace';
+    ctx.shadowColor = '#aaaaaa';
+    ctx.shadowBlur = 8;
+    ctx.fillText('BOSS INCOMING', arenaWidth / 2, textY + 55);
+  }
+  
+  // Timer countdown
+  const secondsLeft = Math.ceil(timer / 60);
+  ctx.fillStyle = '#ffff00';
+  ctx.font = 'bold 24px monospace';
+  ctx.shadowColor = '#ffff00';
+  ctx.shadowBlur = 10;
+  ctx.fillText(`${secondsLeft}`, arenaWidth / 2, textY + 100);
+  
+  ctx.restore();
 }
 
 function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): void {

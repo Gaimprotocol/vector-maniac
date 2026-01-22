@@ -77,7 +77,7 @@ export function resetGameStartVoice(): void {
 loadLaserSound();
 loadGameStartSound();
 
-export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage';
+export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -426,6 +426,61 @@ export function playVectorSound(type: VectorSoundType): void {
           osc2.start(startTime);
           osc2.stop(startTime + 0.12);
         });
+        break;
+      }
+      
+      case 'bossWarning': {
+        // Alarming siren sound - oscillating warning
+        const duration = 1.5;
+        
+        // Siren sweep - low to high to low
+        for (let i = 0; i < 3; i++) {
+          const startTime = ctx.currentTime + i * 0.5;
+          
+          const siren = ctx.createOscillator();
+          const sirenGain = ctx.createGain();
+          siren.connect(sirenGain);
+          sirenGain.connect(ctx.destination);
+          
+          siren.type = 'sawtooth';
+          siren.frequency.setValueAtTime(200, startTime);
+          siren.frequency.exponentialRampToValueAtTime(800, startTime + 0.25);
+          siren.frequency.exponentialRampToValueAtTime(200, startTime + 0.5);
+          
+          sirenGain.gain.setValueAtTime(0.2, startTime);
+          sirenGain.gain.setValueAtTime(0.2, startTime + 0.45);
+          sirenGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+          
+          siren.start(startTime);
+          siren.stop(startTime + 0.5);
+        }
+        
+        // Sub bass rumble underneath
+        const bass = ctx.createOscillator();
+        const bassGain = ctx.createGain();
+        bass.connect(bassGain);
+        bassGain.connect(ctx.destination);
+        bass.type = 'sine';
+        bass.frequency.setValueAtTime(50, ctx.currentTime);
+        bassGain.gain.setValueAtTime(0.3, ctx.currentTime);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        bass.start(ctx.currentTime);
+        bass.stop(ctx.currentTime + duration);
+        
+        // High-pitched alarm beeps
+        for (let i = 0; i < 6; i++) {
+          const beepTime = ctx.currentTime + i * 0.25;
+          const beep = ctx.createOscillator();
+          const beepGain = ctx.createGain();
+          beep.connect(beepGain);
+          beepGain.connect(ctx.destination);
+          beep.type = 'square';
+          beep.frequency.setValueAtTime(1200, beepTime);
+          beepGain.gain.setValueAtTime(0.1, beepTime);
+          beepGain.gain.exponentialRampToValueAtTime(0.001, beepTime + 0.1);
+          beep.start(beepTime);
+          beep.stop(beepTime + 0.1);
+        }
         break;
       }
     }

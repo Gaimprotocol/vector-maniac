@@ -83,6 +83,8 @@ export function createVectorManiacState(): VectorState {
     // Boss tracking
     bossActive: false,
     bossDefeated: false,
+    bossWarning: false,
+    bossWarningTimer: 0,
     
     // Map transition display
     showMapName: true,
