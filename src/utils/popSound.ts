@@ -94,7 +94,7 @@ export const playPurchaseSound = (volume: number = 0.25) => {
 };
 
 // Trigger haptic feedback (vibration)
-export const triggerHapticFeedback = (pattern: 'light' | 'medium' | 'heavy' | 'success' = 'medium') => {
+export const triggerHapticFeedback = (pattern: 'light' | 'medium' | 'heavy' | 'success' | 'rage' = 'medium') => {
   try {
     if (!navigator.vibrate) return;
     
@@ -111,6 +111,10 @@ export const triggerHapticFeedback = (pattern: 'light' | 'medium' | 'heavy' | 's
       case 'success':
         // Double pulse for success feeling
         navigator.vibrate([30, 50, 50]);
+        break;
+      case 'rage':
+        // Intense rumble pattern for boss rage mode
+        navigator.vibrate([80, 40, 120, 40, 80]);
         break;
     }
   } catch (e) {

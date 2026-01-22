@@ -1,4 +1,5 @@
 // Vector Maniac Sound Effects - Arcade Style
+import { triggerHapticFeedback } from '@/utils/popSound';
 
 let audioCtx: AudioContext | null = null;
 let laserBuffer: AudioBuffer | null = null;
@@ -77,7 +78,7 @@ export function resetGameStartVoice(): void {
 loadLaserSound();
 loadGameStartSound();
 
-export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged';
+export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged' | 'screenShakeHaptic';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -542,6 +543,12 @@ export function playVectorSound(type: VectorSoundType): void {
         thumpGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
         thump.start(ctx.currentTime);
         thump.stop(ctx.currentTime + 0.3);
+        break;
+      }
+      
+      case 'screenShakeHaptic': {
+        // Trigger haptic feedback for screen shake events (boss rage, big explosions)
+        triggerHapticFeedback('rage');
         break;
       }
     }

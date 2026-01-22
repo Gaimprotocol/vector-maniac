@@ -87,6 +87,7 @@ export function createVectorManiacState(): VectorState {
     bossWarningTimer: 0,
     bossEnraged: false,
     bossEnragedTimer: 0,
+    screenShakeIntensity: 0,
     
     // Map transition display
     showMapName: true,
