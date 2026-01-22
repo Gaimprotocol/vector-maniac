@@ -552,38 +552,49 @@ function updateEnemies(state: VectorState): VectorState {
         const bossTime = e.behaviorTimer % 10000;
         e.behaviorTimer = mapId * 10000 + ((bossTime + 1) % 10000);
         
+        // RAGE MODE: When health drops below 50%
+        const healthPercent = e.health / e.maxHealth;
+        const isRaging = healthPercent < 0.5;
+        const rageSpeedMultiplier = isRaging ? 1.5 : 1.0;
+        const rageFireRateMultiplier = isRaging ? 0.6 : 1.0; // Faster fire rate when raging
+        
         // Different movement patterns based on map - 10 unique patterns
         const patternType = mapId % 10;
         
         switch (patternType) {
           case 0: // Orbiting pattern - circles around center
-            const bossOrbitAngle = bossTime * 0.015;
+            const orbitSpeed = isRaging ? 0.025 : 0.015;
+            const bossOrbitAngle = bossTime * orbitSpeed;
             const bossOrbitRadius = 120 + Math.sin(bossTime * 0.02) * 40;
             const bossTargetX = VM_CONFIG.arenaWidth / 2 + Math.cos(bossOrbitAngle) * bossOrbitRadius;
             const bossTargetY = VM_CONFIG.arenaHeight / 2 + Math.sin(bossOrbitAngle) * bossOrbitRadius;
-            e.vx = lerp(e.vx, (bossTargetX - e.x) * 0.02, 0.1);
-            e.vy = lerp(e.vy, (bossTargetY - e.y) * 0.02, 0.1);
+            e.vx = lerp(e.vx, (bossTargetX - e.x) * 0.02 * rageSpeedMultiplier, 0.1);
+            e.vy = lerp(e.vy, (bossTargetY - e.y) * 0.02 * rageSpeedMultiplier, 0.1);
             break;
             
           case 1: // Aggressive chase - hunts the player
             const chaseDir = normalize(dx, dy);
-            e.vx = lerp(e.vx, chaseDir.x * 2.0, 0.04);
-            e.vy = lerp(e.vy, chaseDir.y * 2.0, 0.04);
+            const chaseSpeed = isRaging ? 3.0 : 2.0;
+            e.vx = lerp(e.vx, chaseDir.x * chaseSpeed, 0.04 * rageSpeedMultiplier);
+            e.vy = lerp(e.vy, chaseDir.y * chaseSpeed, 0.04 * rageSpeedMultiplier);
             break;
             
           case 2: // Figure-8 pattern - graceful sweeping
-            const fig8Time = bossTime * 0.01;
+            const fig8Speed = isRaging ? 0.015 : 0.01;
+            const fig8Time = bossTime * fig8Speed;
             const fig8X = VM_CONFIG.arenaWidth / 2 + Math.sin(fig8Time * 2) * 150;
             const fig8Y = VM_CONFIG.arenaHeight / 2 + Math.sin(fig8Time) * 200;
-            e.vx = lerp(e.vx, (fig8X - e.x) * 0.03, 0.1);
-            e.vy = lerp(e.vy, (fig8Y - e.y) * 0.03, 0.1);
+            e.vx = lerp(e.vx, (fig8X - e.x) * 0.03 * rageSpeedMultiplier, 0.1);
+            e.vy = lerp(e.vy, (fig8Y - e.y) * 0.03 * rageSpeedMultiplier, 0.1);
             break;
             
           case 3: // Teleport dash - sudden lunges
-            if (bossTime % 120 < 5) {
+            const dashInterval = isRaging ? 80 : 120;
+            if (bossTime % dashInterval < 5) {
               const dashDir = normalize(dx, dy);
-              e.vx = dashDir.x * 10;
-              e.vy = dashDir.y * 10;
+              const dashSpeed = isRaging ? 14 : 10;
+              e.vx = dashDir.x * dashSpeed;
+              e.vy = dashDir.y * dashSpeed;
             } else {
               e.vx *= 0.92;
               e.vy *= 0.92;
@@ -591,26 +602,28 @@ function updateEnemies(state: VectorState): VectorState {
             break;
             
           case 4: // Zigzag pattern - erratic movement
-            const zigzagPhase = Math.floor(bossTime / 60) % 2;
+            const zigInterval = isRaging ? 40 : 60;
+            const zigzagPhase = Math.floor(bossTime / zigInterval) % 2;
             const zigDir = normalize(dx, dy);
             const perpX = -zigDir.y;
             const perpY = zigDir.x;
             const zigOffset = zigzagPhase === 0 ? 1 : -1;
-            e.vx = lerp(e.vx, (zigDir.x + perpX * zigOffset * 0.5) * 2.5, 0.06);
-            e.vy = lerp(e.vy, (zigDir.y + perpY * zigOffset * 0.5) * 2.5, 0.06);
+            const zigSpeed = isRaging ? 3.5 : 2.5;
+            e.vx = lerp(e.vx, (zigDir.x + perpX * zigOffset * 0.5) * zigSpeed, 0.06 * rageSpeedMultiplier);
+            e.vy = lerp(e.vy, (zigDir.y + perpY * zigOffset * 0.5) * zigSpeed, 0.06 * rageSpeedMultiplier);
             break;
             
           case 5: // Hover and strafe - stays at distance
             const distToPlayer = Math.sqrt(dx * dx + dy * dy);
-            const idealDist = 180;
+            const idealDist = isRaging ? 140 : 180; // Gets closer when raging
             const strafeAngle = Math.atan2(dy, dx) + Math.PI / 2;
-            const strafeSpeed = Math.sin(bossTime * 0.03) * 2;
+            const strafeSpeed = Math.sin(bossTime * (isRaging ? 0.05 : 0.03)) * (isRaging ? 3 : 2);
             if (distToPlayer < idealDist - 30) {
-              e.vx = lerp(e.vx, -normalize(dx, dy).x * 1.5, 0.05);
-              e.vy = lerp(e.vy, -normalize(dx, dy).y * 1.5, 0.05);
+              e.vx = lerp(e.vx, -normalize(dx, dy).x * 1.5 * rageSpeedMultiplier, 0.05);
+              e.vy = lerp(e.vy, -normalize(dx, dy).y * 1.5 * rageSpeedMultiplier, 0.05);
             } else if (distToPlayer > idealDist + 30) {
-              e.vx = lerp(e.vx, normalize(dx, dy).x * 1.5, 0.05);
-              e.vy = lerp(e.vy, normalize(dx, dy).y * 1.5, 0.05);
+              e.vx = lerp(e.vx, normalize(dx, dy).x * 1.5 * rageSpeedMultiplier, 0.05);
+              e.vy = lerp(e.vy, normalize(dx, dy).y * 1.5 * rageSpeedMultiplier, 0.05);
             } else {
               e.vx = lerp(e.vx, Math.cos(strafeAngle) * strafeSpeed, 0.08);
               e.vy = lerp(e.vy, Math.sin(strafeAngle) * strafeSpeed, 0.08);
@@ -619,29 +632,40 @@ function updateEnemies(state: VectorState): VectorState {
             
           case 6: // Wave motion - sinusoidal approach
             const waveApproach = normalize(dx, dy);
-            const waveAmplitude = Math.sin(bossTime * 0.05) * 3;
-            e.vx = lerp(e.vx, waveApproach.x * 1.2 + waveApproach.y * waveAmplitude, 0.04);
-            e.vy = lerp(e.vy, waveApproach.y * 1.2 - waveApproach.x * waveAmplitude, 0.04);
+            const waveFreq = isRaging ? 0.08 : 0.05;
+            const waveAmplitude = Math.sin(bossTime * waveFreq) * (isRaging ? 4.5 : 3);
+            const waveSpeed = isRaging ? 1.8 : 1.2;
+            e.vx = lerp(e.vx, waveApproach.x * waveSpeed + waveApproach.y * waveAmplitude, 0.04 * rageSpeedMultiplier);
+            e.vy = lerp(e.vy, waveApproach.y * waveSpeed - waveApproach.x * waveAmplitude, 0.04 * rageSpeedMultiplier);
             break;
             
-          case 7: // Stationary turret - minimal movement, heavy fire
+          case 7: // Stationary turret - minimal movement, heavy fire (but moves when raging!)
             const turretCenterX = VM_CONFIG.arenaWidth / 2;
             const turretCenterY = VM_CONFIG.arenaHeight / 3;
-            e.vx = lerp(e.vx, (turretCenterX - e.x) * 0.01, 0.1);
-            e.vy = lerp(e.vy, (turretCenterY - e.y) * 0.01, 0.1);
+            if (isRaging) {
+              // Turret becomes mobile in rage mode!
+              const turretChaseDir = normalize(dx, dy);
+              e.vx = lerp(e.vx, turretChaseDir.x * 1.5, 0.03);
+              e.vy = lerp(e.vy, turretChaseDir.y * 1.5, 0.03);
+            } else {
+              e.vx = lerp(e.vx, (turretCenterX - e.x) * 0.01, 0.1);
+              e.vy = lerp(e.vy, (turretCenterY - e.y) * 0.01, 0.1);
+            }
             break;
             
           case 8: // Meteor boss - swoops from above
-            const meteorPhase = Math.floor(bossTime / 180) % 3;
+            const meteorInterval = isRaging ? 120 : 180;
+            const meteorPhase = Math.floor(bossTime / meteorInterval) % 3;
             if (meteorPhase === 0) {
               // Rise up
               e.vx = lerp(e.vx, 0, 0.1);
-              e.vy = lerp(e.vy, -3, 0.05);
+              e.vy = lerp(e.vy, isRaging ? -4.5 : -3, 0.05);
             } else if (meteorPhase === 1) {
               // Dive at player
               const diveDir = normalize(dx, dy);
-              e.vx = lerp(e.vx, diveDir.x * 5, 0.08);
-              e.vy = lerp(e.vy, diveDir.y * 5, 0.08);
+              const diveSpeed = isRaging ? 7 : 5;
+              e.vx = lerp(e.vx, diveDir.x * diveSpeed, 0.08);
+              e.vy = lerp(e.vy, diveDir.y * diveSpeed, 0.08);
             } else {
               // Recover
               e.vx *= 0.95;
@@ -650,7 +674,8 @@ function updateEnemies(state: VectorState): VectorState {
             break;
             
           case 9: // Spiral outward - expands then contracts
-            const spiralPhase = (bossTime % 300) / 300;
+            const spiralSpeed = isRaging ? 400 : 300;
+            const spiralPhase = (bossTime % spiralSpeed) / spiralSpeed;
             const spiralRadius = 50 + spiralPhase * 150;
             const spiralAngleM = bossTime * 0.02;
             const spiralTargetX = VM_CONFIG.arenaWidth / 2 + Math.cos(spiralAngleM) * spiralRadius;
@@ -828,6 +853,11 @@ function updateEnemies(state: VectorState): VectorState {
               newState.projectiles = [...newState.projectiles, laserProj];
               e.fireTimer = VM_CONFIG.bossFireRate * 0.3; // Rapid fire
               break;
+          }
+          
+          // Apply rage mode fire rate boost - shoots faster when below 50% health
+          if (isRaging) {
+            e.fireTimer = Math.floor(e.fireTimer * rageFireRateMultiplier);
           }
         }
         break;
