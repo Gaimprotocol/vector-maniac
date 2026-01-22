@@ -18,7 +18,7 @@ export interface VectorEnemy {
   size: number;
   health: number;
   maxHealth: number;
-  type: 'drone' | 'shooter' | 'elite' | 'bounty' | 'boss';
+  type: 'drone' | 'shooter' | 'elite' | 'bounty' | 'boss' | 'miniboss';
   fireTimer: number;
   behaviorTimer: number;
   targetAngle: number;
