@@ -741,7 +741,7 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         
       case 'boss': {
         // Boss - map-specific geometry so each map feels like a new boss
-        const mapSeed = enemy.behaviorTimer ?? 0;
+        const mapSeed = Math.floor((enemy.behaviorTimer ?? 0) / 10000);
         const rotationSpeed = 0.014 + (mapSeed % 6) * 0.003;
         const bossRotation = state.gameTime * rotationSpeed;
 
@@ -749,6 +749,54 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         const midSides = 5 + ((mapSeed * 3) % 6); // 5-10
         const spikes = 4 + (mapSeed % 6); // 4-9
         const style = mapSeed % 4; // 0-3
+        
+        // RAGE MODE visual - red pulsing aura when below 50% health
+        const isRaging = healthPercent < 0.5;
+        if (isRaging) {
+          const ragePulse = Math.sin(state.gameTime * 0.15) * 0.3 + 0.7;
+          const rageSize = enemy.size * (1.4 + ragePulse * 0.3);
+          
+          // Outer rage glow
+          ctx.save();
+          ctx.globalAlpha = 0.2 * ragePulse;
+          ctx.fillStyle = '#ff0000';
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 40;
+          ctx.beginPath();
+          ctx.arc(0, 0, rageSize, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          
+          // Inner rage ring
+          ctx.save();
+          ctx.globalAlpha = 0.5 * ragePulse;
+          ctx.strokeStyle = '#ff0000';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 20;
+          ctx.setLineDash([8, 4]);
+          ctx.beginPath();
+          ctx.arc(0, 0, enemy.size * 1.2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+          
+          // Rage particles
+          ctx.save();
+          ctx.globalAlpha = 0.8;
+          for (let i = 0; i < 6; i++) {
+            const particleAngle = (i / 6) * Math.PI * 2 + state.gameTime * 0.08;
+            const particleRadius = enemy.size * 1.1;
+            const px = Math.cos(particleAngle) * particleRadius;
+            const py = Math.sin(particleAngle) * particleRadius;
+            ctx.fillStyle = '#ff4400';
+            ctx.shadowColor = '#ff4400';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(px, py, 3 + Math.sin(state.gameTime * 0.2 + i) * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
 
         ctx.lineWidth = 4;
 
