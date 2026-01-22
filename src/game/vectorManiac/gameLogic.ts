@@ -168,6 +168,11 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
   // Update boss enraged timer
   if (newState.bossEnragedTimer > 0) newState.bossEnragedTimer--;
   
+  // Decay screen shake
+  if (newState.screenShakeIntensity > 0) {
+    newState.screenShakeIntensity = Math.max(0, newState.screenShakeIntensity - 0.5);
+  }
+  
   // Apply speed boost
   const effectiveSpeed = newState.activePowerUps.speedBoost > 0 
     ? newState.stats.speed * 1.5 
@@ -631,11 +636,12 @@ function updateEnemies(state: VectorState): VectorState {
         const rageSpeedMultiplier = isRaging ? 1.5 : 1.0;
         const rageFireRateMultiplier = isRaging ? 0.6 : 1.0; // Faster fire rate when raging
         
-        // Trigger rage mode event (sound + message) only once
+        // Trigger rage mode event (sound + message + screen shake + haptic) only once
         if (isRaging && !newState.bossEnraged) {
           newState.bossEnraged = true;
           newState.bossEnragedTimer = 120; // 2 seconds display
-          newState.soundQueue = [...newState.soundQueue, 'bossEnraged'];
+          newState.screenShakeIntensity = 20; // Strong screen shake
+          newState.soundQueue = [...newState.soundQueue, 'bossEnraged', 'screenShakeHaptic'];
         }
         
         // Different movement patterns based on map - 10 unique patterns

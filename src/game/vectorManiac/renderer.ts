@@ -9,6 +9,14 @@ import { getStoredUpgrades } from '@/hooks/useShipUpgrades';
 export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   
+  // Apply screen shake
+  ctx.save();
+  if (state.screenShakeIntensity > 0) {
+    const shakeX = (Math.random() - 0.5) * state.screenShakeIntensity * 2;
+    const shakeY = (Math.random() - 0.5) * state.screenShakeIntensity * 2;
+    ctx.translate(shakeX, shakeY);
+  }
+  
   // Clear and draw background
   renderBackground(ctx, state);
   
@@ -61,6 +69,9 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
       renderVictoryOverlay(ctx, state);
       break;
   }
+  
+  // Restore context after screen shake
+  ctx.restore();
 }
 
 function renderBossWarningOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {

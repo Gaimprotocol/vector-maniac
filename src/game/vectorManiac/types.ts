@@ -209,6 +209,7 @@ export interface VectorState {
   bossWarningTimer: number;
   bossEnraged: boolean;          // True once boss enters rage mode (< 50% health)
   bossEnragedTimer: number;      // Timer for "ENRAGED!" message display
+  screenShakeIntensity: number;  // Current screen shake intensity (0 = no shake)
   
   // Map transition display
   showMapName: boolean;
