@@ -207,6 +207,8 @@ export interface VectorState {
   bossDefeated: boolean;
   bossWarning: boolean;
   bossWarningTimer: number;
+  bossEnraged: boolean;          // True once boss enters rage mode (< 50% health)
+  bossEnragedTimer: number;      // Timer for "ENRAGED!" message display
   
   // Map transition display
   showMapName: boolean;

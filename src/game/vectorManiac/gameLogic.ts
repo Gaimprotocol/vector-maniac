@@ -165,6 +165,9 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
   if (newState.activePowerUps.doubleShot > 0) newState.activePowerUps.doubleShot--;
   if (newState.activePowerUps.speedBoost > 0) newState.activePowerUps.speedBoost--;
   
+  // Update boss enraged timer
+  if (newState.bossEnragedTimer > 0) newState.bossEnragedTimer--;
+  
   // Apply speed boost
   const effectiveSpeed = newState.activePowerUps.speedBoost > 0 
     ? newState.stats.speed * 1.5 
@@ -377,6 +380,8 @@ function updateWaveCompletePhase(state: VectorState, input: VectorInput): Vector
     newState.bossDefeated = false;
     newState.bossWarning = false;
     newState.bossWarningTimer = 0;
+    newState.bossEnraged = false;      // Reset for next boss
+    newState.bossEnragedTimer = 0;
     // Keep showMapName controlled by mapNameTimer so map info can remain on-screen
     newState.phase = 'playing';
   }
@@ -625,6 +630,13 @@ function updateEnemies(state: VectorState): VectorState {
         const isRaging = healthPercent < 0.5;
         const rageSpeedMultiplier = isRaging ? 1.5 : 1.0;
         const rageFireRateMultiplier = isRaging ? 0.6 : 1.0; // Faster fire rate when raging
+        
+        // Trigger rage mode event (sound + message) only once
+        if (isRaging && !newState.bossEnraged) {
+          newState.bossEnraged = true;
+          newState.bossEnragedTimer = 120; // 2 seconds display
+          newState.soundQueue = [...newState.soundQueue, 'bossEnraged'];
+        }
         
         // Different movement patterns based on map - 10 unique patterns
         const patternType = mapId % 10;

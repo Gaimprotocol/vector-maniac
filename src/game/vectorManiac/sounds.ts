@@ -77,7 +77,7 @@ export function resetGameStartVoice(): void {
 loadLaserSound();
 loadGameStartSound();
 
-export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning';
+export type VectorSoundType = 'shoot' | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -481,6 +481,67 @@ export function playVectorSound(type: VectorSoundType): void {
           beep.start(beepTime);
           beep.stop(beepTime + 0.1);
         }
+        break;
+      }
+      
+      case 'bossEnraged': {
+        // Aggressive rage activation sound - distorted roar
+        const duration = 0.8;
+        
+        // Deep rumbling growl
+        const growl = ctx.createOscillator();
+        const growlGain = ctx.createGain();
+        growl.connect(growlGain);
+        growlGain.connect(ctx.destination);
+        growl.type = 'sawtooth';
+        growl.frequency.setValueAtTime(80, ctx.currentTime);
+        growl.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + duration);
+        growlGain.gain.setValueAtTime(0.35, ctx.currentTime);
+        growlGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        growl.start(ctx.currentTime);
+        growl.stop(ctx.currentTime + duration);
+        
+        // Rising danger tone
+        const danger = ctx.createOscillator();
+        const dangerGain = ctx.createGain();
+        danger.connect(dangerGain);
+        dangerGain.connect(ctx.destination);
+        danger.type = 'square';
+        danger.frequency.setValueAtTime(150, ctx.currentTime);
+        danger.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.3);
+        danger.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.5);
+        dangerGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        dangerGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        danger.start(ctx.currentTime);
+        danger.stop(ctx.currentTime + 0.5);
+        
+        // Rapid distorted beeps
+        for (let i = 0; i < 4; i++) {
+          const beepTime = ctx.currentTime + i * 0.08;
+          const beep = ctx.createOscillator();
+          const beepGain = ctx.createGain();
+          beep.connect(beepGain);
+          beepGain.connect(ctx.destination);
+          beep.type = 'sawtooth';
+          beep.frequency.setValueAtTime(800 + i * 100, beepTime);
+          beepGain.gain.setValueAtTime(0.15, beepTime);
+          beepGain.gain.exponentialRampToValueAtTime(0.001, beepTime + 0.06);
+          beep.start(beepTime);
+          beep.stop(beepTime + 0.06);
+        }
+        
+        // Low impact thump
+        const thump = ctx.createOscillator();
+        const thumpGain = ctx.createGain();
+        thump.connect(thumpGain);
+        thumpGain.connect(ctx.destination);
+        thump.type = 'sine';
+        thump.frequency.setValueAtTime(100, ctx.currentTime);
+        thump.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.3);
+        thumpGain.gain.setValueAtTime(0.4, ctx.currentTime);
+        thumpGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        thump.start(ctx.currentTime);
+        thump.stop(ctx.currentTime + 0.3);
         break;
       }
     }
