@@ -86,42 +86,42 @@ export interface VectorUpgrade {
   apply: (stats: PlayerStats) => PlayerStats;
 }
 
-// Available upgrades - REDUCED BONUSES for better balance
+// Available upgrades - HEAVILY REDUCED BONUSES v2
 export const VECTOR_UPGRADES: VectorUpgrade[] = [
   {
     id: 'magnetRange',
     name: 'Magnet+',
-    description: '+10% salvage magnet range',
+    description: '+8% salvage magnet range',
     icon: '🧲',
-    apply: (stats) => ({ ...stats, magnetRange: stats.magnetRange * 1.1 }), // Was 20%
+    apply: (stats) => ({ ...stats, magnetRange: stats.magnetRange * 1.08 }), // Was 10%
   },
   {
     id: 'fireRate',
     name: 'Rapid Fire',
-    description: '+6% fire rate',
+    description: '+4% fire rate',
     icon: '🔥',
-    apply: (stats) => ({ ...stats, fireRate: stats.fireRate * 0.94 }), // Was 12%
+    apply: (stats) => ({ ...stats, fireRate: stats.fireRate * 0.96 }), // Was 6%
   },
   {
     id: 'bulletSpeed',
     name: 'Velocity',
-    description: '+8% bullet speed',
+    description: '+5% bullet speed',
     icon: '💨',
-    apply: (stats) => ({ ...stats, bulletSpeed: stats.bulletSpeed * 1.08 }), // Was 15%
+    apply: (stats) => ({ ...stats, bulletSpeed: stats.bulletSpeed * 1.05 }), // Was 8%
   },
   {
     id: 'damage',
     name: 'Power',
-    description: '+5% damage',
+    description: '+3% damage',
     icon: '💥',
-    apply: (stats) => ({ ...stats, damage: stats.damage * 1.05 }), // Was 10%
+    apply: (stats) => ({ ...stats, damage: stats.damage * 1.03 }), // Was 5%
   },
   {
     id: 'pierce',
     name: 'Pierce',
     description: '+1 bullet penetration',
     icon: '🎯',
-    maxStack: 2, // Was 3
+    maxStack: 1, // Was 2 - only 1 pierce from boss now
     apply: (stats) => ({ ...stats, pierce: stats.pierce + 1 }),
   },
   {
@@ -129,22 +129,22 @@ export const VECTOR_UPGRADES: VectorUpgrade[] = [
     name: 'Shield',
     description: '+1 extra hit protection',
     icon: '🛡️',
-    maxStack: 2, // Was 3
+    maxStack: 1, // Was 2 - only 1 shield from boss now
     apply: (stats) => ({ ...stats, shields: stats.shields + 1 }),
   },
   {
     id: 'salvageBonus',
     name: 'Scavenger',
-    description: '+10% salvage value',
+    description: '+8% salvage value',
     icon: '💎',
-    apply: (stats) => ({ ...stats, salvageBonus: stats.salvageBonus * 1.1 }), // Was 20%
+    apply: (stats) => ({ ...stats, salvageBonus: stats.salvageBonus * 1.08 }), // Was 10%
   },
   {
     id: 'speed',
     name: 'Thrusters',
-    description: '+5% movement speed',
+    description: '+3% movement speed',
     icon: '🚀',
-    apply: (stats) => ({ ...stats, speed: stats.speed * 1.05 }), // Was 10%
+    apply: (stats) => ({ ...stats, speed: stats.speed * 1.03 }), // Was 5%
   },
 ];
 

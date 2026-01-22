@@ -47,43 +47,43 @@ export const VM_CONFIG = {
   wavesPerMapMax: 3,
   
   // Enemies per wave (base, scales with progression)
-  baseEnemiesPerWave: 3,        // Start with more enemies
-  enemiesPerWaveIncrease: 0.5,  // Slower linear growth, but...
-  enemiesPerMapMultiplier: 0.04, // +4% enemies per map completed (compounding)
+  baseEnemiesPerWave: 4,        // Start with more enemies
+  enemiesPerWaveIncrease: 0.8,  // More linear growth
+  enemiesPerMapMultiplier: 0.06, // +6% enemies per map completed (compounding)
   
   // Enemy stat scaling per map (makes enemies tougher over time)
-  enemyHealthPerMap: 0.025,     // +2.5% health per map
-  enemySpeedPerMap: 0.008,      // +0.8% speed per map
-  enemyDamagePerMap: 0.015,     // +1.5% damage per map
+  enemyHealthPerMap: 0.04,      // +4% health per map (was 2.5%)
+  enemySpeedPerMap: 0.012,      // +1.2% speed per map (was 0.8%)
+  enemyDamagePerMap: 0.025,     // +2.5% damage per map (was 1.5%)
   
   // Spawn timing
-  spawnInterval: 55,            // Slightly faster spawning
+  spawnInterval: 45,            // Faster spawning
   waveTransitionTime: 156,      // ~2.6 seconds for wave complete text
   mapTransitionTime: 15,
   
   // Salvage
   salvageDropChance: {
-    drone: 0.25,
-    shooter: 0.25,
-    elite: 0.50,
+    drone: 0.20,                // Reduced from 0.25
+    shooter: 0.20,              // Reduced from 0.25
+    elite: 0.40,                // Reduced from 0.50
     bounty: 1.0,
     boss: 1.0,
   },
   salvageValue: {
-    drone: 10,
-    shooter: 15,
-    elite: 30,
-    bounty: 100,
-    boss: 200,
+    drone: 8,                   // Reduced from 10
+    shooter: 12,                // Reduced from 15
+    elite: 25,                  // Reduced from 30
+    bounty: 80,                 // Reduced from 100
+    boss: 150,                  // Reduced from 200
   },
   salvageDriftSpeed: 0.3,
   
   // Difficulty scaling per level (after completing all 50 maps)
-  levelDifficultyMultiplier: 1.5, // +50% per full loop (was 25%)
+  levelDifficultyMultiplier: 2.0, // +100% per full loop (was 50%)
   
   // Formation system - enemies spawn in coordinated groups
-  formationChanceBase: 0.1,     // 10% base chance for formation spawn
-  formationChancePerMap: 0.015, // +1.5% per map
+  formationChanceBase: 0.15,    // 15% base chance for formation spawn
+  formationChancePerMap: 0.02,  // +2% per map (reaches ~100% at map 40+)
   
   // Power-ups
   powerUpSize: 18,
