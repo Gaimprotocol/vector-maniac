@@ -541,9 +541,11 @@ function renderProjectiles(ctx: CanvasRenderingContext2D, state: VectorState): v
 
 function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void {
   for (const enemy of state.enemies) {
-    // Use map-specific boss color instead of default
+    // Use map-specific boss color - mapId is encoded in upper bits of behaviorTimer
+    const bossMapId = Math.floor((enemy.behaviorTimer ?? 0) / 10000);
+    const bossColorIndex = (bossMapId > 0 ? bossMapId : state.currentMap) % 10;
     const color = enemy.type === 'boss' 
-      ? VM_CONFIG.bossColors[(Math.floor((enemy.behaviorTimer ?? 0) / 1000) || 1) % 10]
+      ? VM_CONFIG.bossColors[bossColorIndex]
       : VM_CONFIG.enemyColors[enemy.type];
     const healthPercent = enemy.health / enemy.maxHealth;
     

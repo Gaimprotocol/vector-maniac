@@ -524,10 +524,12 @@ function updateEnemies(state: VectorState): VectorState {
         break;
         
       case 'boss': {
-        // Map boss - varied behavior based on behaviorTimer (stores mapId)
-        const mapId = Math.floor(e.behaviorTimer / 1000) || 1;
-        e.behaviorTimer = (e.behaviorTimer % 1000) + 1000 * mapId;
-        const bossTime = e.behaviorTimer % 1000;
+        // Map boss - varied behavior based on mapId stored in upper bits of behaviorTimer
+        // behaviorTimer encodes: mapId * 10000 + bossTime (where bossTime counts up)
+        const storedMapId = Math.floor(e.behaviorTimer / 10000);
+        const mapId = storedMapId > 0 ? storedMapId : state.currentMap;
+        const bossTime = e.behaviorTimer % 10000;
+        e.behaviorTimer = mapId * 10000 + ((bossTime + 1) % 10000);
         
         // Different movement patterns based on map - 10 unique patterns
         const patternType = mapId % 10;

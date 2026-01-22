@@ -118,7 +118,7 @@ export function createBoss(mapId: number, level: number): VectorEnemy {
     maxHealth: finalHealth,
     type: 'boss',
     fireTimer: VM_CONFIG.bossFireRate,
-    behaviorTimer: mapId, // Use mapId to vary behavior
+    behaviorTimer: mapId * 10000, // Encode mapId in upper bits, lower bits for time counter
     targetAngle: spawn.angle,
   };
 }
