@@ -41,6 +41,11 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
     renderBossWarningOverlay(ctx, state);
   }
   
+  // Draw boss enraged overlay
+  if (state.bossEnragedTimer > 0) {
+    renderBossEnragedOverlay(ctx, state);
+  }
+  
   // Draw phase overlays
   switch (state.phase) {
     case 'entering':
@@ -154,6 +159,75 @@ function renderBossWarningOverlay(ctx: CanvasRenderingContext2D, state: VectorSt
   ctx.shadowColor = '#ffff00';
   ctx.shadowBlur = 10;
   ctx.fillText(`${secondsLeft}`, arenaWidth / 2, textY + 100);
+  
+  ctx.restore();
+}
+
+function renderBossEnragedOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const timer = state.bossEnragedTimer;
+  
+  // Calculate alpha based on timer - starts strong, fades out
+  const baseAlpha = Math.min(1, timer / 60);
+  const flashIntensity = Math.sin(state.gameTime * 0.4) * 0.3 + 0.7;
+  
+  ctx.save();
+  
+  // Red pulsing vignette
+  const vignetteAlpha = 0.2 * baseAlpha * flashIntensity;
+  const gradient = ctx.createRadialGradient(
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.2,
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.7
+  );
+  gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+  gradient.addColorStop(1, `rgba(255, 0, 0, ${vignetteAlpha})`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  // Main "ENRAGED!" text
+  const textY = arenaHeight / 2 - 100;
+  const textFlash = Math.floor(state.gameTime / 4) % 2 === 0;
+  const scale = 1 + Math.sin(state.gameTime * 0.3) * 0.05;
+  
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Outer glow
+  ctx.save();
+  ctx.translate(arenaWidth / 2, textY);
+  ctx.scale(scale, scale);
+  
+  if (textFlash) {
+    // Bright flash
+    ctx.fillStyle = '#ff0000';
+    ctx.font = 'bold 52px monospace';
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 30;
+    ctx.fillText('ENRAGED!', 0, 0);
+    
+    // White core
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.5 * baseAlpha;
+    ctx.fillText('ENRAGED!', 0, 0);
+  } else {
+    // Dimmer version
+    ctx.fillStyle = '#aa0000';
+    ctx.font = 'bold 52px monospace';
+    ctx.shadowColor = '#aa0000';
+    ctx.shadowBlur = 15;
+    ctx.fillText('ENRAGED!', 0, 0);
+  }
+  
+  ctx.restore();
+  
+  // Subtitle text
+  ctx.globalAlpha = baseAlpha * 0.8;
+  ctx.fillStyle = '#ff6600';
+  ctx.font = 'bold 18px monospace';
+  ctx.shadowColor = '#ff6600';
+  ctx.shadowBlur = 8;
+  ctx.fillText('BOSS SPEED & FIRE RATE INCREASED!', arenaWidth / 2, textY + 45);
   
   ctx.restore();
 }
