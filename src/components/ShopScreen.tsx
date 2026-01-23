@@ -37,9 +37,19 @@ export const ShopScreen: React.FC = () => {
   const [upgradeVersion, setUpgradeVersion] = useState(0); // Triggers ship preview re-render
   const [purchaseFlash, setPurchaseFlash] = useState<string | null>(null); // Flash effect on purchase
   
-  const { purchaseProduct, isOwned, isLoading, shouldShowAds } = usePurchases();
+  // IMPORTANT: keep IAP loading separate from upgrade loading.
+  // On native, RevenueCat can take a moment; Ship Workshop upgrades must still work.
+  const { purchaseProduct, isOwned, isLoading: purchasesLoading, shouldShowAds } = usePurchases();
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
-  const { getUpgradeLevel, getUpgradeCost, isUpgradeMaxed, purchaseUpgrade, allUpgrades, upgrades } = useShipUpgrades();
+  const {
+    getUpgradeLevel,
+    getUpgradeCost,
+    isUpgradeMaxed,
+    purchaseUpgrade,
+    allUpgrades,
+    upgrades,
+    isLoading: upgradesLoading,
+  } = useShipUpgrades();
   
   const { hasEnteredGalaxy, enterGalaxy, primeAudio } = useMusicContext();
 
@@ -323,7 +333,7 @@ export const ShopScreen: React.FC = () => {
                   
                   <button
                     onClick={() => handleUpgradePurchase(upgrade.id)}
-                    disabled={maxed || isLoading}
+                    disabled={maxed || upgradesLoading}
                     className={`w-full font-pixel text-[8px] py-1.5 rounded transition-all duration-200 transform
                       hover:scale-105 active:scale-90 ${
                       maxed 
@@ -389,7 +399,7 @@ export const ShopScreen: React.FC = () => {
                     </div>
                     <button
                       onClick={() => handleStorePurchase(item)}
-                      disabled={purchasing !== null || isLoading}
+                      disabled={purchasing !== null || purchasesLoading}
                       className={`font-pixel text-[9px] px-3 py-2 rounded-full transition-all duration-300 
                                border-2 disabled:cursor-not-allowed ${
                         owned 
