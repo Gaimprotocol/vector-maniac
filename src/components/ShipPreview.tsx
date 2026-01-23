@@ -51,7 +51,8 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
       ctx.translate(centerX, centerY);
       ctx.scale(1.8, 1.8);
       // Pass upgrades state when available so visuals update instantly on purchase
-      drawMegaShip(ctx, 0, 0, megaShipId, time, undefined, upgrades);
+      // Use 'preview' quality mode - disables expensive effects (shadowBlur, radialGradient) for smooth mobile performance
+      drawMegaShip(ctx, 0, 0, megaShipId, time, undefined, upgrades, 'preview');
       ctx.restore();
 
       animationRef.current = requestAnimationFrame(draw);
