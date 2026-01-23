@@ -108,13 +108,28 @@ const STORAGE_KEY = 'vector_maniac_upgrades';
 
 const defaultUpgradeState: UpgradeState = {};
 
+function canUseLocalStorage(): boolean {
+  try {
+    const k = '__vm_ls_test__';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function useShipUpgrades() {
   const [upgrades, setUpgrades] = useState<UpgradeState>(defaultUpgradeState);
   const [isLoading, setIsLoading] = useState(true);
+  const [storageAvailable] = useState(() => canUseLocalStorage());
 
   // Load upgrades from localStorage on mount
   useEffect(() => {
     try {
+      if (!storageAvailable) {
+        console.warn('[Upgrades] localStorage unavailable (private mode / blocked). Upgrades will work in-session only.');
+      }
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -130,10 +145,13 @@ export function useShipUpgrades() {
   // Save upgrades to localStorage
   const saveUpgrades = useCallback((newUpgrades: UpgradeState) => {
     // Always update React state first so UI updates even if persistence fails
+    console.info('[Upgrades] saveUpgrades ->', newUpgrades);
     setUpgrades(newUpgrades);
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newUpgrades));
+      // Let other parts of the app sync if they rely on stored reads
+      window.dispatchEvent(new CustomEvent('vector_maniac_upgrades_changed', { detail: newUpgrades }));
     } catch (error) {
       console.error('[Upgrades] Failed to persist (UI still updated):', error);
     }
@@ -188,6 +206,7 @@ export function useShipUpgrades() {
   return {
     upgrades,
     isLoading,
+    storageAvailable,
     getUpgradeLevel,
     getUpgradeCost,
     isUpgradeMaxed,
