@@ -49,6 +49,7 @@ export const ShopScreen: React.FC = () => {
     allUpgrades,
     upgrades,
     isLoading: upgradesLoading,
+    storageAvailable,
   } = useShipUpgrades();
   
   const { hasEnteredGalaxy, enterGalaxy, primeAudio } = useMusicContext();
@@ -243,6 +244,11 @@ export const ShopScreen: React.FC = () => {
                 upgradeVersion={upgradeVersion}
                 upgrades={upgrades}
               />
+
+              {/* Debug (helps verify state on iPhone Safari where localStorage can be blocked) */}
+              <div className="mt-2 font-pixel text-[7px] text-gray-500/80 text-center">
+                STORAGE: {storageAvailable ? 'OK' : 'BLOCKED'} • UPGRADES: {Object.keys(upgrades || {}).length}
+              </div>
             </div>
             
             {/* Upgrades Grid */}
