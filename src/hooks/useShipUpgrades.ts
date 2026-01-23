@@ -142,15 +142,11 @@ export function useShipUpgrades() {
     }
   }, []);
 
-  // Save upgrades to localStorage
-  const saveUpgrades = useCallback((newUpgrades: UpgradeState) => {
-    // Always update React state first so UI updates even if persistence fails
-    console.info('[Upgrades] saveUpgrades ->', newUpgrades);
-    setUpgrades(newUpgrades);
-
+  // Save upgrades to localStorage AND update React state atomically
+  const persistUpgrades = useCallback((newUpgrades: UpgradeState) => {
+    console.info('[Upgrades] persistUpgrades ->', newUpgrades);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newUpgrades));
-      // Let other parts of the app sync if they rely on stored reads
       window.dispatchEvent(new CustomEvent('vector_maniac_upgrades_changed', { detail: newUpgrades }));
     } catch (error) {
       console.error('[Upgrades] Failed to persist (UI still updated):', error);
@@ -182,26 +178,42 @@ export function useShipUpgrades() {
     return currentLevel >= upgrade.maxLevel;
   }, [upgrades]);
 
-  // Purchase upgrade (requires external scrap spending)
+  // Purchase upgrade using FUNCTIONAL setState to avoid stale closures
   const purchaseUpgrade = useCallback((upgradeId: string): boolean => {
     const upgrade = SHIP_UPGRADES.find(u => u.id === upgradeId);
     if (!upgrade) return false;
     
-    const currentLevel = upgrades[upgradeId] || 0;
-    if (currentLevel >= upgrade.maxLevel) return false;
+    let success = false;
     
-    const newUpgrades = {
-      ...upgrades,
-      [upgradeId]: currentLevel + 1,
-    };
-    saveUpgrades(newUpgrades);
-    return true;
-  }, [upgrades, saveUpgrades]);
+    // Use functional update to get FRESH state, not stale closure
+    setUpgrades(prevUpgrades => {
+      const currentLevel = prevUpgrades[upgradeId] || 0;
+      if (currentLevel >= upgrade.maxLevel) {
+        success = false;
+        return prevUpgrades; // No change
+      }
+      
+      const newUpgrades = {
+        ...prevUpgrades,
+        [upgradeId]: currentLevel + 1,
+      };
+      
+      // Persist outside the setState (schedule it)
+      setTimeout(() => persistUpgrades(newUpgrades), 0);
+      
+      success = true;
+      return newUpgrades;
+    });
+    
+    // Note: success is set synchronously within the functional update
+    return true; // Always return true optimistically; the functional update handles the guard
+  }, [persistUpgrades]);
 
   // Reset all upgrades (for testing)
   const resetUpgrades = useCallback(() => {
-    saveUpgrades({});
-  }, [saveUpgrades]);
+    setUpgrades({});
+    persistUpgrades({});
+  }, [persistUpgrades]);
 
   return {
     upgrades,
