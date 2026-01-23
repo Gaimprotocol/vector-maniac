@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Ship upgrade definitions
 export interface ShipUpgrade {
@@ -123,6 +123,13 @@ export function useShipUpgrades() {
   const [upgrades, setUpgrades] = useState<UpgradeState>(defaultUpgradeState);
   const [isLoading, setIsLoading] = useState(true);
   const [storageAvailable] = useState(() => canUseLocalStorage());
+  const upgradesRef = useRef<UpgradeState>(defaultUpgradeState);
+
+  // Keep a synchronous ref so callers can get an immediate success/fail answer
+  // (important for Shop spend/refund flow on mobile Safari).
+  useEffect(() => {
+    upgradesRef.current = upgrades;
+  }, [upgrades]);
 
   // Load upgrades from localStorage on mount
   useEffect(() => {
@@ -178,35 +185,28 @@ export function useShipUpgrades() {
     return currentLevel >= upgrade.maxLevel;
   }, [upgrades]);
 
-  // Purchase upgrade using FUNCTIONAL setState to avoid stale closures
+  // Purchase upgrade (sync success/fail)
   const purchaseUpgrade = useCallback((upgradeId: string): boolean => {
     const upgrade = SHIP_UPGRADES.find(u => u.id === upgradeId);
     if (!upgrade) return false;
-    
-    let success = false;
-    
-    // Use functional update to get FRESH state, not stale closure
-    setUpgrades(prevUpgrades => {
-      const currentLevel = prevUpgrades[upgradeId] || 0;
-      if (currentLevel >= upgrade.maxLevel) {
-        success = false;
-        return prevUpgrades; // No change
-      }
-      
-      const newUpgrades = {
-        ...prevUpgrades,
-        [upgradeId]: currentLevel + 1,
-      };
-      
-      // Persist outside the setState (schedule it)
-      setTimeout(() => persistUpgrades(newUpgrades), 0);
-      
-      success = true;
-      return newUpgrades;
-    });
-    
-    // Note: success is set synchronously within the functional update
-    return true; // Always return true optimistically; the functional update handles the guard
+
+    const current = upgradesRef.current;
+    const currentLevel = current[upgradeId] || 0;
+    if (currentLevel >= upgrade.maxLevel) return false;
+
+    const newUpgrades: UpgradeState = {
+      ...current,
+      [upgradeId]: currentLevel + 1,
+    };
+
+    // Update UI immediately
+    setUpgrades(newUpgrades);
+
+    // Persist best-effort (doesn't block UI)
+    // Note: keep this synchronous so other tabs/components that read storage stay in sync.
+    persistUpgrades(newUpgrades);
+
+    return true;
   }, [persistUpgrades]);
 
   // Reset all upgrades (for testing)

@@ -18,6 +18,7 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
+  const lastFrameRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,6 +31,15 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
 
     const draw = () => {
       const time = (performance.now() - startTime) / 1000;
+
+      // Limit FPS in the shop preview (mobile Safari gets slow with lots of glow/shadow effects)
+      // ~30fps is plenty for a preview and reduces battery/CPU a lot.
+      if (time - lastFrameRef.current < 1 / 30) {
+        animationRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrameRef.current = time;
+
       ctx.clearRect(0, 0, width, height);
 
       const centerX = width / 2;
