@@ -6,6 +6,7 @@ import { drawMegaShip } from '../megaShipRenderer';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getStoredSkinColors } from '@/hooks/useEquipment';
 import { getStoredUpgrades } from '@/hooks/useShipUpgrades';
+import { getShipProjectileStyle, ProjectileShape } from './shipProjectiles';
 export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   
@@ -545,13 +546,33 @@ function renderProjectiles(ctx: CanvasRenderingContext2D, state: VectorState): v
     ctx.save();
     
     if (proj.isPlayer) {
-      // Player bullets - cyan
-      ctx.shadowColor = '#00ffff';
+      // Player bullets - use ship-specific styling
+      const style = proj.shipId ? getShipProjectileStyle(proj.shipId) : getShipProjectileStyle('default');
+      const size = proj.size * style.size;
+      
+      ctx.shadowColor = style.glowColor;
       ctx.shadowBlur = 8;
-      ctx.fillStyle = '#00ffff';
-      ctx.beginPath();
-      ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
-      ctx.fill();
+      
+      // Draw trail if enabled
+      if (style.trailLength > 0) {
+        const angle = Math.atan2(proj.vy, proj.vx);
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = style.color;
+        ctx.lineWidth = size * 0.8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(proj.x, proj.y);
+        ctx.lineTo(
+          proj.x - Math.cos(angle) * size * style.trailLength * 3,
+          proj.y - Math.sin(angle) * size * style.trailLength * 3
+        );
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      
+      // Draw projectile based on shape
+      drawPlayerProjectile(ctx, proj.x, proj.y, size, style, proj.vx, proj.vy, state.gameTime);
+      
     } else if (proj.bossType && proj.bossColor) {
       // Boss projectiles - varied styles based on type
       ctx.shadowColor = proj.bossColor;
@@ -1666,4 +1687,189 @@ function renderVictoryOverlay(ctx: CanvasRenderingContext2D, state: VectorState)
   ctx.font = '18px monospace';
   ctx.fillText(`Final Score: ${Math.floor(state.score)}`, arenaWidth / 2, arenaHeight / 2 + 10);
   ctx.fillText(`Total Salvage: ${state.salvageCount}`, arenaWidth / 2, arenaHeight / 2 + 35);
+}
+
+// Draw player projectile with ship-specific shape
+function drawPlayerProjectile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  style: ReturnType<typeof getShipProjectileStyle>,
+  vx: number,
+  vy: number,
+  gameTime: number
+): void {
+  const angle = Math.atan2(vy, vx);
+  
+  ctx.fillStyle = style.color;
+  
+  switch (style.shape) {
+    case 'circle': {
+      // Simple circle
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+      // Core
+      ctx.fillStyle = style.coreColor;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    
+    case 'laser': {
+      // Thin laser beam
+      ctx.strokeStyle = style.color;
+      ctx.lineWidth = size * 0.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x - Math.cos(angle) * size * 2, y - Math.sin(angle) * size * 2);
+      ctx.lineTo(x + Math.cos(angle) * size * 2, y + Math.sin(angle) * size * 2);
+      ctx.stroke();
+      // Core
+      ctx.strokeStyle = style.coreColor;
+      ctx.lineWidth = size * 0.2;
+      ctx.stroke();
+      break;
+    }
+    
+    case 'diamond': {
+      // Spinning diamond
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(gameTime * 0.15);
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size * 0.6, 0);
+      ctx.lineTo(0, size);
+      ctx.lineTo(-size * 0.6, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'star': {
+      // 4-pointed star
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(gameTime * 0.1);
+      ctx.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        ctx.lineTo(Math.cos(a) * size * 1.2, Math.sin(a) * size * 1.2);
+        const a2 = ((i + 0.5) / 4) * Math.PI * 2;
+        ctx.lineTo(Math.cos(a2) * size * 0.4, Math.sin(a2) * size * 0.4);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'triangle': {
+      // Forward-pointing triangle
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(size * 1.2, 0);
+      ctx.lineTo(-size * 0.6, size * 0.8);
+      ctx.lineTo(-size * 0.6, -size * 0.8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'plasma': {
+      // Pulsing plasma orb
+      const pulseSize = size + Math.sin(gameTime * 0.2) * size * 0.3;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize * 1.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = style.coreColor;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    
+    case 'needle': {
+      // Long thin needle
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(size * 2, 0);
+      ctx.lineTo(-size, size * 0.3);
+      ctx.lineTo(-size, -size * 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'crescent': {
+      // Crescent moon shape
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.arc(0, 0, size, -Math.PI * 0.6, Math.PI * 0.6);
+      ctx.arc(size * 0.4, 0, size * 0.7, Math.PI * 0.5, -Math.PI * 0.5, true);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'ring': {
+      // Hollow ring
+      ctx.strokeStyle = style.color;
+      ctx.lineWidth = size * 0.4;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = style.coreColor;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    
+    case 'bolt': {
+      // Lightning bolt shape
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(size * 1.5, 0);
+      ctx.lineTo(size * 0.2, size * 0.4);
+      ctx.lineTo(size * 0.5, 0);
+      ctx.lineTo(-size, size * 0.3);
+      ctx.lineTo(-size * 0.3, 0);
+      ctx.lineTo(-size, -size * 0.3);
+      ctx.lineTo(size * 0.5, 0);
+      ctx.lineTo(size * 0.2, -size * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    default: {
+      // Fallback circle
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+  }
 }
