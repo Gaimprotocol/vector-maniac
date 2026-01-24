@@ -31,126 +31,102 @@ export interface SkinOption {
   };
 }
 
-// Available skins from each pack
+// Available skins from each pack - Vector Maniac theme (neon green palette)
 export const SHIP_SKINS: SkinOption[] = [
   // === FREE SKINS (always available) ===
   { 
     id: 'default', 
-    name: 'STANDARD', 
+    name: 'STANDARD GRID', 
     packId: 'default',
-    colors: { primary: '#ffffff', secondary: '#cccccc', accent: '#ffaa00', glow: '#00ddff' }
+    colors: { primary: '#00ff88', secondary: '#00aa55', accent: '#88ffaa', glow: '#00ff88' }
   },
   { 
     id: 'void_hunter', 
-    name: 'VOID HUNTER', 
+    name: 'DARK VECTOR', 
     packId: 'default',
-    colors: { primary: '#1a1a2e', secondary: '#16213e', accent: '#e94560', glow: '#e94560' }
+    colors: { primary: '#115533', secondary: '#0a3322', accent: '#00ff88', glow: '#00ff66' }
   },
   
   // === NEON SHIPS PACK ===
   { 
     id: 'neon_cyan', 
-    name: 'NEON CYAN', 
+    name: 'CYAN WIRE', 
     packId: 'neon_ships',
-    colors: { primary: '#00ffff', secondary: '#0088aa', accent: '#00ffff', glow: '#00ffff' }
-  },
-  { 
-    id: 'neon_pink', 
-    name: 'NEON PINK', 
-    packId: 'neon_ships',
-    colors: { primary: '#ff00ff', secondary: '#aa0088', accent: '#ff00ff', glow: '#ff00ff' }
+    colors: { primary: '#00ffcc', secondary: '#00aa88', accent: '#88ffee', glow: '#00ffcc' }
   },
   { 
     id: 'neon_green', 
-    name: 'NEON GREEN', 
+    name: 'LIME PULSE', 
     packId: 'neon_ships',
-    colors: { primary: '#00ff00', secondary: '#008800', accent: '#00ff00', glow: '#00ff00' }
+    colors: { primary: '#88ff00', secondary: '#55aa00', accent: '#ccff88', glow: '#88ff00' }
   },
   
-  // === MOTHERSHIP SKINS PACK (8 skins) ===
+  // === MOTHERSHIP SKINS PACK (6 skins) ===
   { 
     id: 'plasma_fury', 
-    name: 'PLASMA FURY', 
+    name: 'PLASMA GRID', 
     packId: 'mothership_skins',
-    colors: { primary: '#ff6b35', secondary: '#f7c59f', accent: '#efefef', glow: '#ff6b35' }
+    colors: { primary: '#00ff99', secondary: '#00aa66', accent: '#77ffbb', glow: '#00ff99' }
   },
   { 
     id: 'arctic_phantom', 
-    name: 'ARCTIC PHANTOM', 
+    name: 'FROST BYTE', 
     packId: 'mothership_skins',
-    colors: { primary: '#a8d8ea', secondary: '#aa96da', accent: '#fcbad3', glow: '#a8d8ea' }
+    colors: { primary: '#66ffcc', secondary: '#44aa88', accent: '#aaffee', glow: '#66ffcc' }
   },
   { 
     id: 'crimson_viper', 
-    name: 'CRIMSON VIPER', 
+    name: 'MATRIX RED', 
     packId: 'mothership_skins',
-    colors: { primary: '#8b0000', secondary: '#dc143c', accent: '#ff4444', glow: '#ff2222' }
+    colors: { primary: '#22ff77', secondary: '#11aa55', accent: '#88ff99', glow: '#44ff88' }
   },
   { 
     id: 'emerald_dragon', 
-    name: 'EMERALD DRAGON', 
+    name: 'DEEP CODE', 
     packId: 'mothership_skins',
-    colors: { primary: '#2d5a27', secondary: '#228b22', accent: '#7cfc00', glow: '#00ff7f' }
+    colors: { primary: '#00ff66', secondary: '#00aa44', accent: '#66ff88', glow: '#00ff66' }
   },
   { 
     id: 'nebula_drifter', 
-    name: 'NEBULA DRIFTER', 
+    name: 'VOID DRIFT', 
     packId: 'mothership_skins',
-    colors: { primary: '#4a0e4e', secondary: '#812772', accent: '#c74b50', glow: '#ff69b4' }
+    colors: { primary: '#33ff99', secondary: '#22aa66', accent: '#99ffcc', glow: '#33ff99' }
   },
   { 
     id: 'thunder_hawk', 
-    name: 'THUNDER HAWK', 
+    name: 'SURGE LINE', 
     packId: 'mothership_skins',
-    colors: { primary: '#2c3e50', secondary: '#34495e', accent: '#f1c40f', glow: '#e67e22' }
-  },
-  { 
-    id: 'cosmic_shadow', 
-    name: 'COSMIC SHADOW', 
-    packId: 'mothership_skins',
-    colors: { primary: '#0d0d0d', secondary: '#1a1a1a', accent: '#8e44ad', glow: '#9b59b6' }
-  },
-  { 
-    id: 'solar_phoenix', 
-    name: 'SOLAR PHOENIX', 
-    packId: 'mothership_skins',
-    colors: { primary: '#ff8c00', secondary: '#ff4500', accent: '#ffe4b5', glow: '#ffff00' }
+    colors: { primary: '#44ffaa', secondary: '#33aa77', accent: '#aaffcc', glow: '#44ffaa' }
   },
   
   // === LUNAR EXPANSION (Moon Variants) ===
   { 
     id: 'moon_ice', 
-    name: 'ICE SHARD', 
+    name: 'CRYO LINK', 
     packId: 'lunar_expansion',
-    colors: { primary: '#aaddff', secondary: '#6699cc', accent: '#ffffff', glow: '#aaddff' }
+    colors: { primary: '#88ffdd', secondary: '#55aa99', accent: '#ccffee', glow: '#88ffdd' }
   },
   { 
     id: 'moon_crystal', 
-    name: 'CRYSTAL', 
+    name: 'CRYSTAL NODE', 
     packId: 'lunar_expansion',
-    colors: { primary: '#cc88ff', secondary: '#8844cc', accent: '#ff88ff', glow: '#cc88ff' }
-  },
-  { 
-    id: 'moon_sulfur', 
-    name: 'SULFUR', 
-    packId: 'lunar_expansion',
-    colors: { primary: '#ffdd44', secondary: '#aa8800', accent: '#ffff00', glow: '#ffdd44' }
+    colors: { primary: '#55ffbb', secondary: '#44aa88', accent: '#aaffdd', glow: '#55ffbb' }
   },
   
   // === ULTIMATE EDITION EXCLUSIVE ===
   { 
     id: 'golden', 
-    name: 'GOLDEN DELUXE', 
+    name: 'PRIME VECTOR', 
     packId: 'ultimate_edition',
-    colors: { primary: '#ffd700', secondary: '#b8860b', accent: '#ffff00', glow: '#ffd700' }
+    colors: { primary: '#aaffaa', secondary: '#77cc77', accent: '#eeffee', glow: '#aaffaa' }
   },
   
   // === REMAINING FREE SKIN ===
   { 
     id: 'titanium_wraith', 
-    name: 'TITANIUM WRAITH', 
+    name: 'GHOST FRAME', 
     packId: 'default',
-    colors: { primary: '#708090', secondary: '#4a4a4a', accent: '#c0c0c0', glow: '#87ceeb' }
+    colors: { primary: '#55ff99', secondary: '#33aa66', accent: '#99ffcc', glow: '#55ff99' }
   },
 ];
 
