@@ -68,7 +68,7 @@ export interface VectorSalvage {
   isRare: boolean; // 5% chance, gives full health
 }
 
-export type PowerUpType = 'shield' | 'nuke' | 'doublePoints' | 'doubleShot' | 'speedBoost';
+export type PowerUpType = 'shield' | 'nuke' | 'doublePoints' | 'doubleShot' | 'speedBoost' | 'warpShield' | 'formationBreaker' | 'timeWarp' | 'magnetPulse';
 
 export interface VectorPowerUp {
   id: string;
@@ -84,6 +84,9 @@ export interface ActivePowerUps {
   doublePoints: number; // Frames remaining
   doubleShot: number;
   speedBoost: number;
+  warpShield: number;    // Hyperspace-only: absorbs 3 hits
+  timeWarp: number;      // Hyperspace-only: slows enemies
+  magnetPulse: number;   // Hyperspace-only: pulls all salvage
 }
 
 export interface VectorUpgrade {
