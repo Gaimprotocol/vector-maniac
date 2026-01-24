@@ -269,3 +269,19 @@ export function createPowerUp(x: number, y: number, type?: PowerUpType): VectorP
     life: VM_CONFIG.powerUpLifetime,
   };
 }
+
+// Create hyperspace-specific power-ups
+export function createHyperspacePowerUp(x: number, y: number): VectorPowerUp {
+  const hyperspaceTypes: PowerUpType[] = ['warpShield', 'formationBreaker', 'timeWarp', 'magnetPulse'];
+  const powerUpType = hyperspaceTypes[Math.floor(Math.random() * hyperspaceTypes.length)];
+  
+  return {
+    id: generateId(),
+    x,
+    y,
+    vx: 0,
+    vy: 2, // Move downward with the flow
+    type: powerUpType,
+    life: VM_CONFIG.powerUpLifetime,
+  };
+}

@@ -70,6 +70,9 @@ export function createVectorManiacState(): VectorState {
       doublePoints: 0,
       doubleShot: 0,
       speedBoost: 0,
+      warpShield: 0,
+      timeWarp: 0,
+      magnetPulse: 0,
     },
     
     // New map-based progression

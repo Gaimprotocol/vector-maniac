@@ -104,6 +104,11 @@ export const VM_CONFIG = {
     doublePoints: '#ffff00',
     doubleShot: '#ff00ff',
     speedBoost: '#00ff88',
+    // Hyperspace-specific power-ups
+    warpShield: '#00ffff',      // Cyan - multi-hit shield
+    formationBreaker: '#ff8800', // Orange - clears screen
+    timeWarp: '#aa00ff',         // Purple - slows enemies
+    magnetPulse: '#ffff00',      // Gold - attracts all salvage
   },
   
   // Hyperspace mode configuration

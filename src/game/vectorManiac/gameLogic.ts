@@ -13,7 +13,8 @@ import {
   createEnemyProjectile,
   createParticle,
   createSalvage,
-  createPowerUp
+  createPowerUp,
+  createHyperspacePowerUp
 } from './entities';
 import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap, getNextHyperspaceMapTarget, shouldTriggerHyperspace } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
@@ -556,6 +557,18 @@ function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorSt
   if (newState.activePowerUps.doublePoints > 0) newState.activePowerUps.doublePoints--;
   if (newState.activePowerUps.doubleShot > 0) newState.activePowerUps.doubleShot--;
   if (newState.activePowerUps.speedBoost > 0) newState.activePowerUps.speedBoost--;
+  if (newState.activePowerUps.warpShield > 0) newState.activePowerUps.warpShield--;
+  if (newState.activePowerUps.timeWarp > 0) newState.activePowerUps.timeWarp--;
+  if (newState.activePowerUps.magnetPulse > 0) newState.activePowerUps.magnetPulse--;
+  
+  // Spawn hyperspace-specific power-ups occasionally
+  if (newState.gameTime % 300 === 0 && Math.random() < 0.5) {
+    const powerUp = createHyperspacePowerUp(
+      VM_CONFIG.arenaPadding + Math.random() * (VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding * 2),
+      -20
+    );
+    newState.powerups = [...newState.powerups, powerUp];
+  }
   
   // Spawn enemy formations from top
   newState.hyperspaceFormationTimer--;
@@ -732,22 +745,25 @@ function updateHyperspaceEnemies(state: VectorState): VectorState {
   let newState = { ...state };
   const updatedEnemies: VectorEnemy[] = [];
   
+  // Time warp slows enemies by 50%
+  const timeWarpMultiplier = newState.activePowerUps.timeWarp > 0 ? 0.5 : 1;
+  
   for (const enemy of newState.enemies) {
     let e = { ...enemy };
     
-    // Move downward in hyperspace
-    e.y += e.vy;
+    // Move downward in hyperspace (affected by time warp)
+    e.y += e.vy * timeWarpMultiplier;
     
     // Slight horizontal tracking toward player
     const dx = newState.playerX - e.x;
-    e.x += dx * 0.01;
+    e.x += dx * 0.01 * timeWarpMultiplier;
     
     // Face downward (toward player)
     e.targetAngle = Math.PI / 2;
     
-    // Shooters fire at player
+    // Shooters fire at player (slower when time warped)
     if (e.type === 'shooter' || e.type === 'elite') {
-      e.fireTimer--;
+      e.fireTimer -= timeWarpMultiplier;
       if (e.fireTimer <= 0 && e.y > 0 && e.y < VM_CONFIG.arenaHeight * 0.7) {
         const proj = createEnemyProjectile(e.x, e.y, newState.playerX, newState.playerY);
         newState.projectiles = [...newState.projectiles, proj];
@@ -1554,6 +1570,51 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
       
     case 'speedBoost':
       newState.activePowerUps.speedBoost = VM_CONFIG.powerUpDuration;
+      break;
+      
+    // Hyperspace-specific power-ups
+    case 'warpShield':
+      // Multi-hit shield that lasts the entire hyperspace
+      newState.activePowerUps.warpShield = VM_CONFIG.powerUpDuration * 2;
+      newState.shields += 3; // Add 3 shields
+      break;
+      
+    case 'formationBreaker':
+      // Destroys all current enemies on screen (like nuke but hyperspace-themed)
+      for (const enemy of newState.enemies) {
+        const particles = createParticle(
+          enemy.x, 
+          enemy.y, 
+          '#ff8800', 
+          8
+        );
+        newState.particles = [...newState.particles, ...particles];
+        
+        // Give score
+        const baseScore = enemy.type === 'elite' ? 100 :
+                          enemy.type === 'shooter' ? 50 : 25;
+        newState.score += baseScore;
+        
+        // Chance to drop salvage
+        if (Math.random() < 0.3) {
+          const salvage = createSalvage(enemy.x, enemy.y, 10);
+          newState.salvage = [...newState.salvage, salvage];
+        }
+      }
+      newState.enemies = [];
+      newState.soundQueue = [...newState.soundQueue, 'explosion'];
+      break;
+      
+    case 'timeWarp':
+      // Slows all enemies for duration
+      newState.activePowerUps.timeWarp = VM_CONFIG.powerUpDuration;
+      break;
+      
+    case 'magnetPulse':
+      // Attracts all salvage on screen instantly
+      newState.activePowerUps.magnetPulse = VM_CONFIG.powerUpDuration;
+      // Magnetize all current salvage
+      newState.salvage = newState.salvage.map(s => ({ ...s, magnetized: true }));
       break;
   }
   

@@ -608,11 +608,16 @@ function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void
     
     let icon = '?';
     switch (powerUp.type) {
-      case 'shield': icon = '🛡'; break;
-      case 'nuke': icon = '💥'; break;
+      case 'shield': icon = 'S'; break;
+      case 'nuke': icon = 'N'; break;
       case 'doublePoints': icon = '×2'; break;
-      case 'doubleShot': icon = '⚡'; break;
-      case 'speedBoost': icon = '🚀'; break;
+      case 'doubleShot': icon = 'D'; break;
+      case 'speedBoost': icon = '>'; break;
+      // Hyperspace power-ups
+      case 'warpShield': icon = 'W'; break;
+      case 'formationBreaker': icon = 'F'; break;
+      case 'timeWarp': icon = 'T'; break;
+      case 'magnetPulse': icon = 'M'; break;
     }
     ctx.fillText(icon, 0, 0);
     
