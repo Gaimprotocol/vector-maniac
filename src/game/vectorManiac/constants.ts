@@ -106,6 +106,15 @@ export const VM_CONFIG = {
     speedBoost: '#00ff88',
   },
   
+  // Hyperspace mode configuration
+  hyperspaceDurationMin: 1200, // 20 seconds at 60fps
+  hyperspaceDurationMax: 3000, // 50 seconds at 60fps
+  hyperspaceScrollSpeed: 4,    // Background scroll speed
+  hyperspacePlayerYMin: 1200,  // Player can move back to here (250px from bottom)
+  hyperspacePlayerYMax: 950,   // Player can move forward to here (250px range)
+  hyperspaceFormationInterval: 90, // Spawn formation every 1.5 seconds
+  hyperspaceTransitionDuration: 60, // 1 second transition
+  
   // Visual
   bgColor1: '#050510',
   bgColor2: '#0a0a20',

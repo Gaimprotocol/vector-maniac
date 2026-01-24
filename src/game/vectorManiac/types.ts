@@ -7,7 +7,10 @@ export type VectorPhase =
   | 'portalChoice'   // Safe vs Risk portal choice
   | 'upgradePick'    // Picking upgrades
   | 'gameOver'       // Player died
-  | 'victory';       // Beat the bounty boss
+  | 'victory'        // Beat the bounty boss
+  | 'hyperspace'     // Vertical scrolling shooter mode
+  | 'hyperspaceEnter' // Transition into hyperspace
+  | 'hyperspaceExit'; // Transition out of hyperspace
 
 export interface VectorEnemy {
   id: string;
@@ -240,4 +243,14 @@ export interface VectorState {
   
   // Input tracking
   inputReleased: boolean;
+  
+  // Hyperspace mode
+  hyperspaceActive: boolean;
+  hyperspaceTimer: number;           // Duration remaining in frames
+  hyperspaceDuration: number;        // Total duration for this hyperspace
+  hyperspaceScrollOffset: number;    // Background scroll position
+  hyperspaceTransitionProgress: number; // 0-1 for smooth transitions
+  nextHyperspaceMap: number;         // Map number when next hyperspace triggers
+  hyperspaceFormationTimer: number;  // Timer for spawning enemy formations
+  hyperspacePlayerBaseY: number;     // Player's base Y position during hyperspace
 }
