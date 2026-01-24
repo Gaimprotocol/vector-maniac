@@ -154,7 +154,8 @@ export function createPlayerProjectile(
   angle: number,
   speed: number,
   damage: number,
-  pierce: number
+  pierce: number,
+  shipId?: string
 ): VectorProjectile {
   return {
     id: generateId(),
@@ -166,6 +167,7 @@ export function createPlayerProjectile(
     isPlayer: true,
     size: 4,
     pierce,
+    shipId,
   };
 }
 

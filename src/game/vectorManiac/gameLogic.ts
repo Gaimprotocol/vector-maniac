@@ -18,6 +18,8 @@ import {
 import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './sounds';
+import { getStoredMegaShipId } from '@/hooks/useMegaShips';
+import { getShipProjectileStyle } from './shipProjectiles';
 interface VectorInput {
   touchX: number;
   touchY: number;
@@ -180,6 +182,10 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
   
   // Fire while touching - shoot in facing direction from ship tip
   if (isShooting && newState.fireTimer <= 0) {
+    // Get current ship ID for projectile styling
+    const shipId = getStoredMegaShipId();
+    const projectileStyle = getShipProjectileStyle(shipId);
+    
     // Calculate projectile spawn position at the tip of the ship
     const tipOffset = VM_CONFIG.playerSize + 8; // Spawn from ship tip
     const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
@@ -197,7 +203,8 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
         newState.playerAngle - spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
-        newState.stats.pierce
+        newState.stats.pierce,
+        shipId
       ));
       newProjectiles.push(createPlayerProjectile(
         spawnX,
@@ -205,7 +212,8 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
         newState.playerAngle + spreadAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
-        newState.stats.pierce
+        newState.stats.pierce,
+        shipId
       ));
     } else {
       newProjectiles.push(createPlayerProjectile(
@@ -214,7 +222,8 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
         newState.playerAngle,
         newState.stats.bulletSpeed,
         newState.stats.damage,
-        newState.stats.pierce
+        newState.stats.pierce,
+        shipId
       ));
     }
     
@@ -249,14 +258,16 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
           cannonAngle,
           newState.stats.bulletSpeed * 0.9, // Slightly slower
           newState.stats.damage * 0.7, // Less damage
-          Math.max(0, newState.stats.pierce - 1) // Less pierce
+          Math.max(0, newState.stats.pierce - 1), // Less pierce
+          shipId
         ));
       }
     }
     
     newState.projectiles = [...newState.projectiles, ...newProjectiles];
     newState.fireTimer = newState.stats.fireRate;
-    newState.soundQueue = [...newState.soundQueue, 'shoot'];
+    // Use ship-specific shoot sound
+    newState.soundQueue = [...newState.soundQueue, `shoot_${projectileStyle.sound}`];
   }
   
   // Spawn enemies (only during playing phase, not during wave transitions)

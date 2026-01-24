@@ -38,6 +38,8 @@ export interface VectorProjectile {
   pierce: number; // How many enemies it can hit
   bossType?: BossProjectileType; // For boss projectile visual variation
   bossColor?: string; // For boss-specific projectile colors
+  // Ship-specific projectile styling (player bullets only)
+  shipId?: string; // The ship model that fired this projectile
 }
 
 export interface VectorParticle {
