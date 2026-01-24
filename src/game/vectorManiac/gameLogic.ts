@@ -1845,6 +1845,9 @@ function completeWave(state: VectorState): VectorState {
     newState.totalMapsCompleted++;
     newState.score += 1000 * state.currentMap;
     
+    // Check hyperspace trigger BEFORE changing currentMap
+    const shouldHyperspace = shouldTriggerHyperspace(newState);
+    
     // Check if this was the final map (50)
     if (isFinalMap(state.currentMap)) {
       // All 50 maps complete - increase level and restart
@@ -1871,10 +1874,27 @@ function completeWave(state: VectorState): VectorState {
     newState.showMapName = true;
     newState.mapNameTimer = 156; // ~2.6 seconds (same as wave complete)
     
-    // Upgrade pick after every boss (map completion)
-    newState.upgradesPending = 1;
-    newState.availableUpgrades = getRandomUpgrades(3);
-    newState.phase = 'upgradePick';
+    // If hyperspace should trigger, go directly to hyperspace (skip upgrade)
+    if (shouldHyperspace) {
+      newState.phase = 'hyperspaceEnter';
+      newState.phaseTimer = VM_CONFIG.hyperspaceTransitionDuration;
+      newState.hyperspaceActive = true;
+      newState.hyperspaceDuration = VM_CONFIG.hyperspaceDurationMin + 
+        Math.floor(Math.random() * (VM_CONFIG.hyperspaceDurationMax - VM_CONFIG.hyperspaceDurationMin));
+      newState.hyperspaceTimer = newState.hyperspaceDuration;
+      newState.hyperspaceScrollOffset = 0;
+      newState.hyperspaceTransitionProgress = 0;
+      newState.hyperspaceFormationTimer = 60;
+      newState.hyperspacePlayerBaseY = VM_CONFIG.arenaHeight - 300;
+      newState.soundQueue = [...newState.soundQueue, 'hyperspaceEnter'];
+      // Set next hyperspace target for after this one
+      newState.nextHyperspaceMap = getNextHyperspaceMapTarget(newState.currentMap);
+    } else {
+      // Upgrade pick after every boss (map completion)
+      newState.upgradesPending = 1;
+      newState.availableUpgrades = getRandomUpgrades(3);
+      newState.phase = 'upgradePick';
+    }
   } else {
     // Wave complete - continue to next wave in map
     newState.phase = 'waveComplete';
