@@ -45,28 +45,33 @@ export function useScrapCurrency() {
 
   // Add scraps (from game or purchase)
   const addScraps = useCallback((amount: number) => {
-    const next = Math.max(0, Math.floor(scrapsRef.current + amount));
-    scrapsRef.current = next;
-    try {
-      localStorage.setItem(STORAGE_KEY, next.toString());
-    } catch (error) {
-      console.error('[Scraps] Failed to persist add (UI still updated):', error);
-    }
-    setScraps(next);
+    setScraps(prev => {
+      const next = Math.max(0, Math.floor(prev + amount));
+      scrapsRef.current = next;
+      try {
+        localStorage.setItem(STORAGE_KEY, next.toString());
+      } catch (error) {
+        console.error('[Scraps] Failed to persist add:', error);
+      }
+      return next;
+    });
   }, []);
 
   // Spend scraps (returns true if successful)
+  // Uses ref for immediate synchronous check, then schedules React state update.
   const spendScraps = useCallback((amount: number): boolean => {
     const current = scrapsRef.current;
     if (current < amount) return false;
 
     const next = Math.max(0, Math.floor(current - amount));
+    // Update ref immediately so subsequent sync calls see the new value
     scrapsRef.current = next;
     try {
       localStorage.setItem(STORAGE_KEY, next.toString());
     } catch (error) {
-      console.error('[Scraps] Failed to persist spend (UI still updated):', error);
+      console.error('[Scraps] Failed to persist spend:', error);
     }
+    // Schedule React state update (batched, safe for HMR)
     setScraps(next);
     return true;
   }, []);
