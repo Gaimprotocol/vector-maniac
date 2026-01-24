@@ -1923,25 +1923,9 @@ export function selectUpgrade(state: VectorState, upgradeId: string): VectorStat
   newState.upgradesPending--;
   
   if (newState.upgradesPending <= 0) {
-    // Check if hyperspace should trigger on this map
-    if (shouldTriggerHyperspace(newState)) {
-      // Start hyperspace mode!
-      newState.phase = 'hyperspaceEnter';
-      newState.phaseTimer = VM_CONFIG.hyperspaceTransitionDuration;
-      newState.hyperspaceActive = true;
-      newState.hyperspaceDuration = VM_CONFIG.hyperspaceDurationMin + 
-        Math.floor(Math.random() * (VM_CONFIG.hyperspaceDurationMax - VM_CONFIG.hyperspaceDurationMin));
-      newState.hyperspaceTimer = newState.hyperspaceDuration;
-      newState.hyperspaceScrollOffset = 0;
-      newState.hyperspaceTransitionProgress = 0;
-      newState.hyperspaceFormationTimer = 60; // Start spawning formations after 1 second
-      newState.hyperspacePlayerBaseY = VM_CONFIG.arenaHeight - 300;
-      newState.soundQueue = [...newState.soundQueue, 'hyperspaceEnter'];
-    } else {
-      // Normal transition to next wave
-      newState.phase = 'waveComplete';
-      newState.phaseTimer = VM_CONFIG.mapTransitionTime;
-    }
+    // After upgrade, go directly to playing phase on new map
+    newState.phase = 'playing';
+    newState.spawnTimer = 60; // Start spawning enemies soon
   } else {
     // More upgrades to pick - refresh available upgrades
     newState.availableUpgrades = getRandomUpgrades(3);
