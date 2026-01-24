@@ -1,10 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const STORAGE_KEY = 'vector_maniac_scraps';
 
 export function useScrapCurrency() {
   const [scraps, setScraps] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  // Keep a synchronous ref so callers can get immediate success/fail answers.
+  // This avoids relying on React state update timing (important on mobile Safari / concurrent rendering).
+  const scrapsRef = useRef<number>(0);
+
+  useEffect(() => {
+    scrapsRef.current = scraps;
+  }, [scraps]);
 
   // Load scraps from localStorage on mount
   useEffect(() => {
@@ -14,6 +21,7 @@ export function useScrapCurrency() {
         const value = parseInt(stored, 10);
         if (!isNaN(value) && value >= 0) {
           setScraps(value);
+          scrapsRef.current = value;
         }
       }
     } catch (error) {
@@ -29,6 +37,7 @@ export function useScrapCurrency() {
       const safeValue = Math.max(0, Math.floor(newValue));
       localStorage.setItem(STORAGE_KEY, safeValue.toString());
       setScraps(safeValue);
+      scrapsRef.current = safeValue;
     } catch (error) {
       console.error('[Scraps] Failed to save:', error);
     }
@@ -36,26 +45,30 @@ export function useScrapCurrency() {
 
   // Add scraps (from game or purchase)
   const addScraps = useCallback((amount: number) => {
-    setScraps(current => {
-      const newValue = current + amount;
-      localStorage.setItem(STORAGE_KEY, newValue.toString());
-      return newValue;
-    });
+    const next = Math.max(0, Math.floor(scrapsRef.current + amount));
+    scrapsRef.current = next;
+    try {
+      localStorage.setItem(STORAGE_KEY, next.toString());
+    } catch (error) {
+      console.error('[Scraps] Failed to persist add (UI still updated):', error);
+    }
+    setScraps(next);
   }, []);
 
   // Spend scraps (returns true if successful)
   const spendScraps = useCallback((amount: number): boolean => {
-    let success = false;
-    setScraps(current => {
-      if (current >= amount) {
-        const newValue = current - amount;
-        localStorage.setItem(STORAGE_KEY, newValue.toString());
-        success = true;
-        return newValue;
-      }
-      return current;
-    });
-    return success;
+    const current = scrapsRef.current;
+    if (current < amount) return false;
+
+    const next = Math.max(0, Math.floor(current - amount));
+    scrapsRef.current = next;
+    try {
+      localStorage.setItem(STORAGE_KEY, next.toString());
+    } catch (error) {
+      console.error('[Scraps] Failed to persist spend (UI still updated):', error);
+    }
+    setScraps(next);
+    return true;
   }, []);
 
   // Check if can afford
