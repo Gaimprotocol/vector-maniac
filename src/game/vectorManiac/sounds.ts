@@ -80,7 +80,8 @@ loadGameStartSound();
 
 export type VectorSoundType = 
   | 'shoot' | 'shoot_shoot' | 'shoot_laser' | 'shoot_plasma' | 'shoot_energy' | 'shoot_pulse' | 'shoot_fire' | 'shoot_ice'
-  | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged' | 'screenShakeHaptic';
+  | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged' | 'screenShakeHaptic'
+  | 'hyperspaceEnter' | 'hyperspaceExit' | 'hyperspaceLoop' | 'warpShield' | 'formationBreaker' | 'timeWarp' | 'magnetPulse';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -558,6 +559,277 @@ export function playVectorSound(type: VectorSoundType): void {
       case 'screenShakeHaptic': {
         // Trigger haptic feedback for screen shake events (boss rage, big explosions)
         triggerHapticFeedback('rage');
+        break;
+      }
+      
+      // ============= HYPERSPACE SOUNDS =============
+      
+      case 'hyperspaceEnter': {
+        // Dramatic warp drive activation - rising synth whoosh
+        const duration = 1.2;
+        
+        // Rising synth sweep
+        const sweep = ctx.createOscillator();
+        const sweepGain = ctx.createGain();
+        sweep.connect(sweepGain);
+        sweepGain.connect(ctx.destination);
+        sweep.type = 'sawtooth';
+        sweep.frequency.setValueAtTime(80, ctx.currentTime);
+        sweep.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.6);
+        sweep.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + duration);
+        sweepGain.gain.setValueAtTime(0.25, ctx.currentTime);
+        sweepGain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.5);
+        sweepGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        sweep.start(ctx.currentTime);
+        sweep.stop(ctx.currentTime + duration);
+        
+        // Deep bass rumble
+        const bass = ctx.createOscillator();
+        const bassGain = ctx.createGain();
+        bass.connect(bassGain);
+        bassGain.connect(ctx.destination);
+        bass.type = 'sine';
+        bass.frequency.setValueAtTime(40, ctx.currentTime);
+        bass.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + duration);
+        bassGain.gain.setValueAtTime(0.4, ctx.currentTime);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        bass.start(ctx.currentTime);
+        bass.stop(ctx.currentTime + duration);
+        
+        // Shimmer harmonics
+        for (let i = 0; i < 5; i++) {
+          const harmonic = ctx.createOscillator();
+          const harmonicGain = ctx.createGain();
+          harmonic.connect(harmonicGain);
+          harmonicGain.connect(ctx.destination);
+          harmonic.type = 'sine';
+          const startTime = ctx.currentTime + i * 0.1;
+          harmonic.frequency.setValueAtTime(400 * (i + 1), startTime);
+          harmonic.frequency.exponentialRampToValueAtTime(800 * (i + 1), startTime + 0.5);
+          harmonicGain.gain.setValueAtTime(0.08 / (i + 1), startTime);
+          harmonicGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+          harmonic.start(startTime);
+          harmonic.stop(startTime + 0.6);
+        }
+        
+        triggerHapticFeedback('rage');
+        break;
+      }
+      
+      case 'hyperspaceExit': {
+        // Warp drive deceleration - falling synth whoosh
+        const duration = 0.8;
+        
+        // Falling synth sweep
+        const sweep = ctx.createOscillator();
+        const sweepGain = ctx.createGain();
+        sweep.connect(sweepGain);
+        sweepGain.connect(ctx.destination);
+        sweep.type = 'sawtooth';
+        sweep.frequency.setValueAtTime(3000, ctx.currentTime);
+        sweep.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
+        sweepGain.gain.setValueAtTime(0.3, ctx.currentTime);
+        sweepGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        sweep.start(ctx.currentTime);
+        sweep.stop(ctx.currentTime + duration);
+        
+        // Impact thump at end
+        const thump = ctx.createOscillator();
+        const thumpGain = ctx.createGain();
+        thump.connect(thumpGain);
+        thumpGain.connect(ctx.destination);
+        thump.type = 'sine';
+        thump.frequency.setValueAtTime(80, ctx.currentTime + 0.3);
+        thump.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + duration);
+        thumpGain.gain.setValueAtTime(0.001, ctx.currentTime);
+        thumpGain.gain.setValueAtTime(0.5, ctx.currentTime + 0.3);
+        thumpGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        thump.start(ctx.currentTime);
+        thump.stop(ctx.currentTime + duration);
+        
+        triggerHapticFeedback('rage');
+        break;
+      }
+      
+      case 'hyperspaceLoop': {
+        // Continuous engine hum/pulse (played periodically during hyperspace)
+        const pulse = ctx.createOscillator();
+        const pulseGain = ctx.createGain();
+        pulse.connect(pulseGain);
+        pulseGain.connect(ctx.destination);
+        pulse.type = 'sine';
+        pulse.frequency.setValueAtTime(60, ctx.currentTime);
+        pulse.frequency.setValueAtTime(80, ctx.currentTime + 0.1);
+        pulse.frequency.setValueAtTime(60, ctx.currentTime + 0.2);
+        pulseGain.gain.setValueAtTime(0.15, ctx.currentTime);
+        pulseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        pulse.start(ctx.currentTime);
+        pulse.stop(ctx.currentTime + 0.3);
+        break;
+      }
+      
+      case 'warpShield': {
+        // Energy shield activation - crystalline charge up
+        const duration = 0.5;
+        const notes = [523, 659, 784, 1047, 1319]; // C5, E5, G5, C6, E6
+        
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          const startTime = ctx.currentTime + i * 0.05;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.15, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+          osc.start(startTime);
+          osc.stop(startTime + 0.3);
+        });
+        
+        // Shimmer layer
+        const shimmer = ctx.createOscillator();
+        const shimmerGain = ctx.createGain();
+        shimmer.connect(shimmerGain);
+        shimmerGain.connect(ctx.destination);
+        shimmer.type = 'triangle';
+        shimmer.frequency.setValueAtTime(2000, ctx.currentTime);
+        shimmer.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 0.2);
+        shimmerGain.gain.setValueAtTime(0.08, ctx.currentTime);
+        shimmerGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        shimmer.start(ctx.currentTime);
+        shimmer.stop(ctx.currentTime + duration);
+        break;
+      }
+      
+      case 'formationBreaker': {
+        // Massive shockwave blast - deep explosion with energy release
+        const duration = 0.8;
+        
+        // Initial impact
+        const impact = ctx.createOscillator();
+        const impactGain = ctx.createGain();
+        impact.connect(impactGain);
+        impactGain.connect(ctx.destination);
+        impact.type = 'sine';
+        impact.frequency.setValueAtTime(200, ctx.currentTime);
+        impact.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.3);
+        impactGain.gain.setValueAtTime(0.5, ctx.currentTime);
+        impactGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        impact.start(ctx.currentTime);
+        impact.stop(ctx.currentTime + 0.3);
+        
+        // Spreading shockwave
+        const wave = ctx.createOscillator();
+        const waveGain = ctx.createGain();
+        wave.connect(waveGain);
+        waveGain.connect(ctx.destination);
+        wave.type = 'sawtooth';
+        wave.frequency.setValueAtTime(800, ctx.currentTime);
+        wave.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + duration);
+        waveGain.gain.setValueAtTime(0.3, ctx.currentTime);
+        waveGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        wave.start(ctx.currentTime);
+        wave.stop(ctx.currentTime + duration);
+        
+        // Energy crackle
+        for (let i = 0; i < 8; i++) {
+          const crackle = ctx.createOscillator();
+          const crackleGain = ctx.createGain();
+          crackle.connect(crackleGain);
+          crackleGain.connect(ctx.destination);
+          const crackleTime = ctx.currentTime + i * 0.05 + Math.random() * 0.02;
+          crackle.type = 'square';
+          crackle.frequency.setValueAtTime(1000 + Math.random() * 2000, crackleTime);
+          crackleGain.gain.setValueAtTime(0.1, crackleTime);
+          crackleGain.gain.exponentialRampToValueAtTime(0.001, crackleTime + 0.03);
+          crackle.start(crackleTime);
+          crackle.stop(crackleTime + 0.03);
+        }
+        
+        triggerHapticFeedback('rage');
+        break;
+      }
+      
+      case 'timeWarp': {
+        // Time dilation effect - warbling slowdown
+        const duration = 0.6;
+        
+        // Descending warble
+        const warble = ctx.createOscillator();
+        const warbleGain = ctx.createGain();
+        warble.connect(warbleGain);
+        warbleGain.connect(ctx.destination);
+        warble.type = 'sine';
+        warble.frequency.setValueAtTime(800, ctx.currentTime);
+        warble.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
+        warbleGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        warbleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        warble.start(ctx.currentTime);
+        warble.stop(ctx.currentTime + duration);
+        
+        // Pulsating undertone
+        for (let i = 0; i < 6; i++) {
+          const pulse = ctx.createOscillator();
+          const pulseGain = ctx.createGain();
+          pulse.connect(pulseGain);
+          pulseGain.connect(ctx.destination);
+          const pulseTime = ctx.currentTime + i * 0.1;
+          pulse.type = 'triangle';
+          pulse.frequency.setValueAtTime(150 - i * 15, pulseTime);
+          pulseGain.gain.setValueAtTime(0.12, pulseTime);
+          pulseGain.gain.exponentialRampToValueAtTime(0.001, pulseTime + 0.08);
+          pulse.start(pulseTime);
+          pulse.stop(pulseTime + 0.08);
+        }
+        break;
+      }
+      
+      case 'magnetPulse': {
+        // Magnetic attraction pulse - electrical charging sound
+        const duration = 0.4;
+        
+        // Electric charge up
+        const charge = ctx.createOscillator();
+        const chargeGain = ctx.createGain();
+        charge.connect(chargeGain);
+        chargeGain.connect(ctx.destination);
+        charge.type = 'sawtooth';
+        charge.frequency.setValueAtTime(100, ctx.currentTime);
+        charge.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
+        charge.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + duration);
+        chargeGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        chargeGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        charge.start(ctx.currentTime);
+        charge.stop(ctx.currentTime + duration);
+        
+        // Magnetic hum
+        const hum = ctx.createOscillator();
+        const humGain = ctx.createGain();
+        hum.connect(humGain);
+        humGain.connect(ctx.destination);
+        hum.type = 'sine';
+        hum.frequency.setValueAtTime(60, ctx.currentTime);
+        humGain.gain.setValueAtTime(0.25, ctx.currentTime);
+        humGain.gain.setValueAtTime(0.25, ctx.currentTime + 0.2);
+        humGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        hum.start(ctx.currentTime);
+        hum.stop(ctx.currentTime + duration);
+        
+        // Sparkle pings
+        for (let i = 0; i < 5; i++) {
+          const ping = ctx.createOscillator();
+          const pingGain = ctx.createGain();
+          ping.connect(pingGain);
+          pingGain.connect(ctx.destination);
+          const pingTime = ctx.currentTime + i * 0.06;
+          ping.type = 'sine';
+          ping.frequency.setValueAtTime(1500 + i * 200, pingTime);
+          pingGain.gain.setValueAtTime(0.08, pingTime);
+          pingGain.gain.exponentialRampToValueAtTime(0.001, pingTime + 0.05);
+          ping.start(pingTime);
+          ping.stop(pingTime + 0.05);
+        }
         break;
       }
     }
