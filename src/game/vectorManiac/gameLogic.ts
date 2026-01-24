@@ -1844,10 +1844,7 @@ function completeWave(state: VectorState): VectorState {
     // Map complete! Move to next map
     newState.totalMapsCompleted++;
     newState.score += 1000 * state.currentMap;
-    
-    // Check hyperspace trigger BEFORE changing currentMap
-    const shouldHyperspace = shouldTriggerHyperspace(newState);
-    
+
     // Check if this was the final map (50)
     if (isFinalMap(state.currentMap)) {
       // All 50 maps complete - increase level and restart
@@ -1873,6 +1870,17 @@ function completeWave(state: VectorState): VectorState {
     // Show new map name
     newState.showMapName = true;
     newState.mapNameTimer = 156; // ~2.6 seconds (same as wave complete)
+
+    // Hyperspace is a BETWEEN-MAPS transition. That means we check after advancing currentMap.
+    // (Also keep a legacy check on the pre-advanced state so existing runs created before
+    // the fix can still enter hyperspace without requiring a restart.)
+    const shouldHyperspace = shouldTriggerHyperspace(newState) || shouldTriggerHyperspace(state);
+    if (import.meta.env.DEV) {
+      // Helpful when balancing / verifying triggers
+      console.log(
+        `[VM] map->${newState.currentMap} nextHyperspaceMap=${newState.nextHyperspaceMap} shouldHyperspace=${shouldHyperspace}`
+      );
+    }
     
     // If hyperspace should trigger, go directly to hyperspace (skip upgrade)
     if (shouldHyperspace) {

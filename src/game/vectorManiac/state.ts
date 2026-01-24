@@ -149,13 +149,21 @@ export function isFinalMap(mapId: number): boolean {
 // Get next map when hyperspace should trigger
 // Pattern: maps 2-4, then 6-9, then 11-14, then 16-19, etc.
 export function getNextHyperspaceMapTarget(currentMap: number): number {
-  // Find which "cycle" we're in (each cycle is 5 maps)
+  // We group maps into 5-map cycles: 1–5, 6–10, 11–15, ...
+  // Hyperspace should happen within these ranges:
+  // - cycleStart+1 .. cycleStart+3  (e.g. 2–4)
+  // - nextCycleStart .. nextCycleStart+3 (e.g. 6–9)
   const cycleStart = Math.floor((currentMap - 1) / 5) * 5 + 1;
-  const nextCycleStart = cycleStart + 5;
-  
-  // Random map within next range (2nd to 4th map of next cycle)
-  const offset = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3
-  return nextCycleStart + offset;
+
+  // If we're still before the end of the current cycle (maps 1–4, 6–9, 11–14, ...),
+  // pick a target inside the "2nd to 4th" maps of THIS cycle.
+  if (currentMap < cycleStart + 4) {
+    return cycleStart + 1 + Math.floor(Math.random() * 3); // +1..+3 => 2–4 in the cycle
+  }
+
+  // If we're at the end of the cycle (map 5, 10, 15, ...), pick inside the next cycle's
+  // hyperspace window (e.g. 6–9).
+  return cycleStart + 5 + Math.floor(Math.random() * 4); // +5..+8 => 6–9 in the next cycle
 }
 
 // Check if we should trigger hyperspace on current map
