@@ -14,248 +14,248 @@ export interface ShipModel {
   };
 }
 
-// 20 Unique Ship Models
+// 40 Unique Vector Maniac Ship Models
 export const SHIP_MODELS: ShipModel[] = [
   {
     id: 'default',
-    name: 'FALCON',
-    description: 'Klassiskt stridsskepp med balanserad design',
-    colors: { primary: '#ffffff', secondary: '#cccccc', accent: '#ffaa00', glow: '#00ddff', cockpit: '#00ddff' }
+    name: 'VECTOR-1',
+    description: 'Standard vektor-fighter med balanserad design',
+    colors: { primary: '#00ff88', secondary: '#00aa55', accent: '#88ffaa', glow: '#00ff88', cockpit: '#ffffff' }
   },
   {
     id: 'viper',
-    name: 'VIPER',
+    name: 'NEON DART',
     description: 'Smal och snabb med dubbla vingar',
-    colors: { primary: '#1a1a2e', secondary: '#16213e', accent: '#e94560', glow: '#e94560', cockpit: '#ff4488' }
+    colors: { primary: '#00ffcc', secondary: '#00aa88', accent: '#88ffdd', glow: '#00ffcc', cockpit: '#ffffff' }
   },
   {
     id: 'phantom',
-    name: 'PHANTOM',
+    name: 'GHOST WIRE',
     description: 'Stealth-design med vinklade ytor',
-    colors: { primary: '#2d2d44', secondary: '#1a1a2a', accent: '#8844ff', glow: '#aa66ff', cockpit: '#cc88ff' }
+    colors: { primary: '#44ff88', secondary: '#22aa44', accent: '#aaffcc', glow: '#44ff88', cockpit: '#ffffff' }
   },
   {
     id: 'hammer',
-    name: 'HAMMER',
+    name: 'GRID HAMMER',
     description: 'Tung attackare med bred front',
-    colors: { primary: '#4a3728', secondary: '#2d1f15', accent: '#ff8844', glow: '#ffaa00', cockpit: '#ffdd00' }
+    colors: { primary: '#00ff66', secondary: '#00aa44', accent: '#88ff88', glow: '#00ff66', cockpit: '#ccffcc' }
   },
   {
     id: 'needle',
-    name: 'NEEDLE',
+    name: 'PIXEL SPIKE',
     description: 'Ultratunn interceptor för max hastighet',
-    colors: { primary: '#88ddff', secondary: '#44aacc', accent: '#ffffff', glow: '#88ffff', cockpit: '#ffffff' }
+    colors: { primary: '#66ffaa', secondary: '#44aa77', accent: '#ccffdd', glow: '#66ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'trident',
-    name: 'TRIDENT',
+    name: 'TRIFORK',
     description: 'Tre-spetsad design med bred eldkraft',
-    colors: { primary: '#225522', secondary: '#113311', accent: '#44ff44', glow: '#00ff88', cockpit: '#88ff88' }
+    colors: { primary: '#00ff99', secondary: '#00aa66', accent: '#88ffbb', glow: '#00ff99', cockpit: '#aaffcc' }
   },
   {
     id: 'mantis',
-    name: 'MANTIS',
+    name: 'CIRCUIT BUG',
     description: 'Insektliknande med böjda vingar',
-    colors: { primary: '#44aa44', secondary: '#226622', accent: '#ccff44', glow: '#88ff00', cockpit: '#ffff00' }
+    colors: { primary: '#33ff77', secondary: '#22aa55', accent: '#99ffaa', glow: '#33ff77', cockpit: '#ccff88' }
   },
   {
     id: 'scorpion',
-    name: 'SCORPION',
+    name: 'DATACLASH',
     description: 'Krokig design med svanskanon',
-    colors: { primary: '#553322', secondary: '#331100', accent: '#ff4400', glow: '#ff6600', cockpit: '#ffaa00' }
+    colors: { primary: '#11ff88', secondary: '#11aa55', accent: '#77ffaa', glow: '#11ff88', cockpit: '#aaffcc' }
   },
   {
     id: 'delta',
-    name: 'DELTA',
+    name: 'TRIGON',
     description: 'Triangulär stealth-fighter',
-    colors: { primary: '#333355', secondary: '#222244', accent: '#6666ff', glow: '#4444ff', cockpit: '#8888ff' }
+    colors: { primary: '#00ffaa', secondary: '#00aa77', accent: '#66ffcc', glow: '#00ffaa', cockpit: '#ccffee' }
   },
   {
     id: 'stingray',
-    name: 'STINGRAY',
+    name: 'FLATLINE',
     description: 'Platt undervattensdesign',
-    colors: { primary: '#224488', secondary: '#112244', accent: '#44aaff', glow: '#00aaff', cockpit: '#88ddff' }
+    colors: { primary: '#22ff99', secondary: '#11aa66', accent: '#88ffbb', glow: '#22ff99', cockpit: '#ddffee' }
   },
   {
     id: 'phoenix',
-    name: 'PHOENIX',
+    name: 'PULSE HAWK',
     description: 'Eldvingar med dramatisk silhuett',
-    colors: { primary: '#ff4400', secondary: '#aa2200', accent: '#ffff00', glow: '#ff8800', cockpit: '#ffffff' }
+    colors: { primary: '#44ffaa', secondary: '#33aa77', accent: '#bbffcc', glow: '#44ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'shark',
-    name: 'SHARK',
+    name: 'BYTE SHARK',
     description: 'Aggressiv hajdesign med fenor',
-    colors: { primary: '#445566', secondary: '#223344', accent: '#88aacc', glow: '#aaccff', cockpit: '#ffffff' }
+    colors: { primary: '#00ff77', secondary: '#00aa55', accent: '#66ff99', glow: '#00ff77', cockpit: '#aaffbb' }
   },
   {
     id: 'wasp',
-    name: 'WASP',
+    name: 'GLITCH WASP',
     description: 'Smal kropp med vassa vingar',
-    colors: { primary: '#ffcc00', secondary: '#aa8800', accent: '#222222', glow: '#ffff00', cockpit: '#ff4400' }
+    colors: { primary: '#55ff88', secondary: '#44aa66', accent: '#aaffaa', glow: '#55ff88', cockpit: '#eeffcc' }
   },
   {
     id: 'corsair',
-    name: 'CORSAIR',
+    name: 'ROGUE CODE',
     description: 'Piratdesign med assymetriska vingar',
-    colors: { primary: '#442222', secondary: '#221111', accent: '#cc0000', glow: '#ff4444', cockpit: '#ffaa00' }
+    colors: { primary: '#11ff99', secondary: '#11aa66', accent: '#77ffbb', glow: '#11ff99', cockpit: '#ccffdd' }
   },
   {
     id: 'specter',
-    name: 'SPECTER',
+    name: 'NULL SPECTER',
     description: 'Spöklik med genomskinliga element',
-    colors: { primary: '#aaaacc', secondary: '#888899', accent: '#ffffff', glow: '#ccccff', cockpit: '#eeeeff' }
+    colors: { primary: '#88ffbb', secondary: '#66aa88', accent: '#ccffdd', glow: '#88ffbb', cockpit: '#ffffff' }
   },
   {
     id: 'raptor',
-    name: 'RAPTOR',
+    name: 'BIT RAPTOR',
     description: 'Rovfågelsdesign med klor',
-    colors: { primary: '#554433', secondary: '#332211', accent: '#ffaa44', glow: '#ffcc00', cockpit: '#ff8800' }
+    colors: { primary: '#33ffaa', secondary: '#22aa77', accent: '#99ffcc', glow: '#33ffaa', cockpit: '#ddffee' }
   },
   {
     id: 'aurora',
-    name: 'AURORA',
+    name: 'FLUX WAVE',
     description: 'Elegant kurvor med norrsken',
-    colors: { primary: '#44ddaa', secondary: '#228866', accent: '#ff88ff', glow: '#88ffcc', cockpit: '#ffffff' }
+    colors: { primary: '#00ffdd', secondary: '#00aa99', accent: '#88ffee', glow: '#00ffdd', cockpit: '#ffffff' }
   },
   {
     id: 'gladiator',
-    name: 'GLADIATOR',
+    name: 'MEGA BLOCK',
     description: 'Massiv pansrad stridsvagn',
-    colors: { primary: '#666666', secondary: '#444444', accent: '#ffcc00', glow: '#ffffff', cockpit: '#ff4444' }
+    colors: { primary: '#44ff99', secondary: '#33aa77', accent: '#aaffcc', glow: '#44ff99', cockpit: '#ffffff' }
   },
   {
     id: 'eclipse',
-    name: 'ECLIPSE',
+    name: 'VOID RING',
     description: 'Cirkulär design med månring',
-    colors: { primary: '#111122', secondary: '#000011', accent: '#8888ff', glow: '#aaaaff', cockpit: '#ffffff' }
+    colors: { primary: '#00ff88', secondary: '#00aa66', accent: '#66ffaa', glow: '#00ff88', cockpit: '#ccffdd' }
   },
   {
     id: 'basilisk',
-    name: 'BASILISK',
+    name: 'COIL SNAKE',
     description: 'Ormliknande med böjd kropp',
-    colors: { primary: '#446644', secondary: '#224422', accent: '#88ff88', glow: '#44ff44', cockpit: '#ffff00' }
+    colors: { primary: '#22ff77', secondary: '#11aa55', accent: '#88ff99', glow: '#22ff77', cockpit: '#aaffbb' }
   },
-  // ============= 20 NEW RETRO SCI-FI SHIPS =============
+  // ============= 20 VECTOR STYLE SHIPS =============
   {
     id: 'interceptor',
-    name: 'INTERCEPTOR',
-    description: 'Klassisk blå stridsmaskin med röda detaljer',
-    colors: { primary: '#2255aa', secondary: '#1a3d7a', accent: '#cc3333', glow: '#4488ff', cockpit: '#88ccff' }
+    name: 'GRID RUNNER',
+    description: 'Klassisk vektor-stridsmaskin',
+    colors: { primary: '#00ffbb', secondary: '#00aa88', accent: '#77ffdd', glow: '#00ffbb', cockpit: '#eeffff' }
   },
   {
     id: 'valkyrie',
-    name: 'VALKYRIE',
+    name: 'CHROME EDGE',
     description: 'Silvrig attackare med skarpa vingar',
-    colors: { primary: '#aabbcc', secondary: '#778899', accent: '#cc4444', glow: '#ffffff', cockpit: '#44aaff' }
+    colors: { primary: '#66ffaa', secondary: '#44aa77', accent: '#bbffcc', glow: '#66ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'crimson',
-    name: 'CRIMSON HAWK',
-    description: 'Röd jagare med dubbla motorer',
-    colors: { primary: '#aa2222', secondary: '#661111', accent: '#ffcc00', glow: '#ff4444', cockpit: '#ffffff' }
+    name: 'MATRIX CLAW',
+    description: 'Aggressiv jagare med dubbla motorer',
+    colors: { primary: '#33ff99', secondary: '#22aa66', accent: '#99ffbb', glow: '#33ff99', cockpit: '#ddffee' }
   },
   {
     id: 'goldwing',
-    name: 'GOLDWING',
-    description: 'Gyllene tungt skepp med bred profil',
-    colors: { primary: '#cc9933', secondary: '#997722', accent: '#ffffff', glow: '#ffdd44', cockpit: '#88ccff' }
+    name: 'WIDE SCAN',
+    description: 'Tungt skepp med bred profil',
+    colors: { primary: '#55ff88', secondary: '#44aa66', accent: '#aaffaa', glow: '#55ff88', cockpit: '#ccffcc' }
   },
   {
     id: 'cobalt',
-    name: 'COBALT STRIKER',
-    description: 'Strömlinjeformad blå fighter',
-    colors: { primary: '#3366cc', secondary: '#224488', accent: '#ffffff', glow: '#66aaff', cockpit: '#aaddff' }
+    name: 'LASER LINE',
+    description: 'Strömlinjeformad vektor-fighter',
+    colors: { primary: '#00ffcc', secondary: '#00aa99', accent: '#88ffdd', glow: '#00ffcc', cockpit: '#ffffff' }
   },
   {
     id: 'ironclad',
-    name: 'IRONCLAD',
-    description: 'Pansrad grå fregattskepp',
-    colors: { primary: '#667788', secondary: '#445566', accent: '#ffaa33', glow: '#aabbcc', cockpit: '#44aaff' }
+    name: 'ARMOR NODE',
+    description: 'Pansrad fregatt med tung plåt',
+    colors: { primary: '#44ff77', secondary: '#33aa55', accent: '#99ff99', glow: '#44ff77', cockpit: '#aaffbb' }
   },
   {
     id: 'redtail',
-    name: 'REDTAIL',
-    description: 'Snabb röd interceptor med gul markering',
-    colors: { primary: '#cc4422', secondary: '#882211', accent: '#ffcc22', glow: '#ff6644', cockpit: '#ffffff' }
+    name: 'QUICK SYNC',
+    description: 'Snabb interceptor med markering',
+    colors: { primary: '#22ffaa', secondary: '#11aa77', accent: '#88ffcc', glow: '#22ffaa', cockpit: '#ddffee' }
   },
   {
     id: 'sunburst',
-    name: 'SUNBURST',
-    description: 'Gul attackare med solmönster',
-    colors: { primary: '#ddaa22', secondary: '#aa7711', accent: '#ff4400', glow: '#ffcc44', cockpit: '#ffffff' }
+    name: 'NOVA BURST',
+    description: 'Attackare med explosiv kraft',
+    colors: { primary: '#66ff99', secondary: '#55aa77', accent: '#bbffbb', glow: '#66ff99', cockpit: '#ffffff' }
   },
   {
     id: 'steelwolf',
-    name: 'STEEL WOLF',
-    description: 'Aggressiv grå jaktmaskin',
-    colors: { primary: '#889999', secondary: '#556666', accent: '#33aacc', glow: '#aaccdd', cockpit: '#66ddff' }
+    name: 'WOLF GRID',
+    description: 'Aggressiv jaktmaskin',
+    colors: { primary: '#00ff99', secondary: '#00aa77', accent: '#77ffbb', glow: '#00ff99', cockpit: '#ccffdd' }
   },
   {
     id: 'blueshift',
-    name: 'BLUESHIFT',
-    description: 'Aerodynamisk blå racer',
-    colors: { primary: '#4477cc', secondary: '#2255aa', accent: '#ff6633', glow: '#66aaff', cockpit: '#ccddff' }
+    name: 'SHIFT BOOST',
+    description: 'Aerodynamisk vektor-racer',
+    colors: { primary: '#33ffbb', secondary: '#22aa88', accent: '#99ffdd', glow: '#33ffbb', cockpit: '#eeffff' }
   },
   {
     id: 'thunderbolt',
-    name: 'THUNDERBOLT',
-    description: 'Massiv röd-silver stridskryssare',
-    colors: { primary: '#bb4433', secondary: '#882222', accent: '#cccccc', glow: '#ff6655', cockpit: '#88ddff' }
+    name: 'THUNDER GRID',
+    description: 'Massiv stridskryssare',
+    colors: { primary: '#11ff88', secondary: '#11aa66', accent: '#88ffaa', glow: '#11ff88', cockpit: '#ccffcc' }
   },
   {
     id: 'yellowjacket',
-    name: 'YELLOW JACKET',
-    description: 'Smidig gul-svart fighter',
-    colors: { primary: '#ccaa22', secondary: '#aa8811', accent: '#222222', glow: '#ffdd44', cockpit: '#ffffff' }
+    name: 'STING CORE',
+    description: 'Smidig fighter med gaddar',
+    colors: { primary: '#55ffaa', secondary: '#44aa77', accent: '#aaffcc', glow: '#55ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'silverfox',
-    name: 'SILVER FOX',
-    description: 'Elegant silver-blå spanare',
-    colors: { primary: '#99aabc', secondary: '#667788', accent: '#4488cc', glow: '#ccddee', cockpit: '#88ccff' }
+    name: 'SCAN FOX',
+    description: 'Elegant spanare med sensorer',
+    colors: { primary: '#77ff99', secondary: '#55aa77', accent: '#bbffbb', glow: '#77ff99', cockpit: '#ddffdd' }
   },
   {
     id: 'firebird',
-    name: 'FIREBIRD',
-    description: 'Eldröd med orange flammor',
-    colors: { primary: '#dd3311', secondary: '#aa2211', accent: '#ff8822', glow: '#ff5533', cockpit: '#ffcc44' }
+    name: 'CORE BLAST',
+    description: 'Explosiv attackare',
+    colors: { primary: '#44ffbb', secondary: '#33aa88', accent: '#aaffdd', glow: '#44ffbb', cockpit: '#ffffff' }
   },
   {
     id: 'arctic',
-    name: 'ARCTIC WOLF',
-    description: 'Isblå med vita detaljer',
-    colors: { primary: '#88bbdd', secondary: '#5588aa', accent: '#ffffff', glow: '#aaddff', cockpit: '#ffffff' }
+    name: 'CRYO LINK',
+    description: 'Isig fighter med kalla linjer',
+    colors: { primary: '#88ffcc', secondary: '#66aa99', accent: '#ccffee', glow: '#88ffcc', cockpit: '#ffffff' }
   },
   {
     id: 'commander',
-    name: 'COMMANDER',
-    description: 'Stort grått befälsskepp',
-    colors: { primary: '#778888', secondary: '#556666', accent: '#cc9933', glow: '#99aabb', cockpit: '#66aadd' }
+    name: 'ADMIN NODE',
+    description: 'Stort befälsskepp',
+    colors: { primary: '#22ff99', secondary: '#11aa77', accent: '#99ffcc', glow: '#22ff99', cockpit: '#ddffee' }
   },
   {
     id: 'scarlet',
-    name: 'SCARLET BLADE',
-    description: 'Skarp röd duellant',
-    colors: { primary: '#cc2233', secondary: '#991122', accent: '#ff8844', glow: '#ff4455', cockpit: '#ffaa77' }
+    name: 'RAZOR SYNC',
+    description: 'Skarp duellant med precision',
+    colors: { primary: '#00ffaa', secondary: '#00aa88', accent: '#77ffcc', glow: '#00ffaa', cockpit: '#eeffff' }
   },
   {
     id: 'goldenrod',
-    name: 'GOLDENROD',
-    description: 'Klassisk gul transportjagare',
-    colors: { primary: '#bb9922', secondary: '#886611', accent: '#446688', glow: '#ddbb44', cockpit: '#88aacc' }
+    name: 'DATA HAUL',
+    description: 'Klassisk transportjagare',
+    colors: { primary: '#55ff99', secondary: '#44aa77', accent: '#aaffbb', glow: '#55ff99', cockpit: '#ccffdd' }
   },
   {
     id: 'bluehawk',
-    name: 'BLUE HAWK',
-    description: 'Snabb blå attackfågel',
-    colors: { primary: '#3355aa', secondary: '#223377', accent: '#ff4422', glow: '#5577cc', cockpit: '#aaccff' }
+    name: 'SWIFT CODE',
+    description: 'Snabb attackfågel',
+    colors: { primary: '#33ffaa', secondary: '#22aa88', accent: '#99ffcc', glow: '#33ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'titanium',
-    name: 'TITANIUM',
-    description: 'Ultra-pansrad grå destroyer',
-    colors: { primary: '#8899aa', secondary: '#667788', accent: '#dd6633', glow: '#aabbcc', cockpit: '#55aadd' }
+    name: 'ENDFRAME',
+    description: 'Ultra-pansrad destroyer',
+    colors: { primary: '#66ffbb', secondary: '#55aa88', accent: '#bbffdd', glow: '#66ffbb', cockpit: '#eeffff' }
   }
 ];
 
