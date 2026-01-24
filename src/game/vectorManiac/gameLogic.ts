@@ -476,6 +476,11 @@ function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorSt
   // Count down hyperspace timer
   newState.hyperspaceTimer--;
   
+  // Play periodic engine pulse sound
+  if (newState.gameTime % 120 === 0) {
+    newState.soundQueue = [...newState.soundQueue, 'hyperspaceLoop'];
+  }
+  
   // Scroll background
   newState.hyperspaceScrollOffset += VM_CONFIG.hyperspaceScrollSpeed;
   
@@ -610,7 +615,7 @@ function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorSt
   if (newState.hyperspaceTimer <= 0) {
     newState.phase = 'hyperspaceExit';
     newState.phaseTimer = VM_CONFIG.hyperspaceTransitionDuration;
-    newState.soundQueue = [...newState.soundQueue, 'waveComplete'];
+    newState.soundQueue = [...newState.soundQueue, 'hyperspaceExit'];
   }
   
   // Check game over
@@ -1577,6 +1582,7 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
       // Multi-hit shield that lasts the entire hyperspace
       newState.activePowerUps.warpShield = VM_CONFIG.powerUpDuration * 2;
       newState.shields += 3; // Add 3 shields
+      newState.soundQueue = [...newState.soundQueue, 'warpShield'];
       break;
       
     case 'formationBreaker':
@@ -1602,12 +1608,13 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
         }
       }
       newState.enemies = [];
-      newState.soundQueue = [...newState.soundQueue, 'explosion'];
+      newState.soundQueue = [...newState.soundQueue, 'formationBreaker'];
       break;
       
     case 'timeWarp':
       // Slows all enemies for duration
       newState.activePowerUps.timeWarp = VM_CONFIG.powerUpDuration;
+      newState.soundQueue = [...newState.soundQueue, 'timeWarp'];
       break;
       
     case 'magnetPulse':
@@ -1615,6 +1622,7 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
       newState.activePowerUps.magnetPulse = VM_CONFIG.powerUpDuration;
       // Magnetize all current salvage
       newState.salvage = newState.salvage.map(s => ({ ...s, magnetized: true }));
+      newState.soundQueue = [...newState.soundQueue, 'magnetPulse'];
       break;
   }
   
@@ -1908,7 +1916,7 @@ export function selectUpgrade(state: VectorState, upgradeId: string): VectorStat
       newState.hyperspaceTransitionProgress = 0;
       newState.hyperspaceFormationTimer = 60; // Start spawning formations after 1 second
       newState.hyperspacePlayerBaseY = VM_CONFIG.arenaHeight - 300;
-      newState.soundQueue = [...newState.soundQueue, 'bossWarning']; // Use boss warning as hyperspace sound
+      newState.soundQueue = [...newState.soundQueue, 'hyperspaceEnter'];
     } else {
       // Normal transition to next wave
       newState.phase = 'waveComplete';
