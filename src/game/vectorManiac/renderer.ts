@@ -63,6 +63,13 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
     case 'waveComplete':
       renderWaveCompleteOverlay(ctx, state);
       break;
+    case 'hyperspaceEnter':
+    case 'hyperspace':
+      renderHyperspaceOverlay(ctx, state);
+      break;
+    case 'hyperspaceExit':
+      renderHyperspaceExitOverlay(ctx, state);
+      break;
     case 'gameOver':
       renderGameOverOverlay(ctx, state);
       break;
@@ -250,15 +257,98 @@ function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): vo
   // Get theme for current map
   const theme = getMapTheme(state.currentMap);
   
-  const gradient = ctx.createRadialGradient(
-    arenaWidth / 2, arenaHeight / 2, 0,
-    arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
-  );
-  gradient.addColorStop(0, theme.bg2);
-  gradient.addColorStop(1, theme.bg1);
+  // Check if in hyperspace mode
+  const isHyperspace = state.phase === 'hyperspace' || 
+                       state.phase === 'hyperspaceEnter' || 
+                       state.phase === 'hyperspaceExit';
   
-  ctx.fillStyle = gradient;
+  if (isHyperspace) {
+    // Hyperspace background - deep blue/purple with speed lines
+    const gradient = ctx.createLinearGradient(0, 0, 0, arenaHeight);
+    gradient.addColorStop(0, '#000022');
+    gradient.addColorStop(0.5, '#001144');
+    gradient.addColorStop(1, '#002255');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+    
+    // Render speed lines (star streaks)
+    renderHyperspaceSpeedLines(ctx, state);
+  } else {
+    const gradient = ctx.createRadialGradient(
+      arenaWidth / 2, arenaHeight / 2, 0,
+      arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
+    );
+    gradient.addColorStop(0, theme.bg2);
+    gradient.addColorStop(1, theme.bg1);
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  }
+}
+
+// Render hyperspace speed lines effect
+function renderHyperspaceSpeedLines(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const scrollOffset = state.hyperspaceScrollOffset;
+  const transitionProgress = state.hyperspaceTransitionProgress;
+  
+  ctx.save();
+  
+  // Star streaks that move downward
+  const lineCount = 80;
+  for (let i = 0; i < lineCount; i++) {
+    // Use deterministic "random" based on index
+    const seed = i * 137.5;
+    const x = ((seed * 7.3) % arenaWidth);
+    const baseY = ((seed * 11.7 + scrollOffset * (1 + (i % 3) * 0.5)) % (arenaHeight + 200)) - 100;
+    
+    // Line length varies based on transition progress and "speed"
+    const lineLength = 20 + (i % 5) * 15 + transitionProgress * 60;
+    
+    // Color varies - mostly cyan/white with some variation
+    const hue = 180 + (i % 40);
+    const lightness = 70 + (i % 30);
+    const alpha = 0.3 + transitionProgress * 0.4;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.lineTo(x, baseY + lineLength);
+    ctx.strokeStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`;
+    ctx.lineWidth = 1 + (i % 3);
+    ctx.stroke();
+  }
+  
+  // Add some brighter "close" stars
+  for (let i = 0; i < 20; i++) {
+    const seed = i * 97.3;
+    const x = ((seed * 13.7) % arenaWidth);
+    const baseY = ((seed * 17.3 + scrollOffset * 2) % (arenaHeight + 300)) - 150;
+    const lineLength = 80 + (i % 4) * 40 + transitionProgress * 100;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.lineTo(x, baseY + lineLength);
+    
+    const gradient = ctx.createLinearGradient(x, baseY, x, baseY + lineLength);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(0.3, `rgba(0, 255, 255, ${0.5 + transitionProgress * 0.3})`);
+    gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 2 + (i % 2);
+    ctx.stroke();
+  }
+  
+  // Vignette effect for hyperspace
+  const vignetteGradient = ctx.createRadialGradient(
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.3,
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.8
+  );
+  vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  vignetteGradient.addColorStop(1, `rgba(0, 50, 100, ${0.3 * transitionProgress})`);
+  ctx.fillStyle = vignetteGradient;
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  ctx.restore();
 }
 
 function renderPattern(ctx: CanvasRenderingContext2D, state: VectorState): void {
@@ -1872,4 +1962,56 @@ function drawPlayerProjectile(
       break;
     }
   }
+}
+
+// Hyperspace overlay - shows "HYPERSPACE" text and timer
+function renderHyperspaceOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { arenaWidth } = VM_CONFIG;
+  
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Show "HYPERSPACE" during enter phase
+  if (state.phase === 'hyperspaceEnter') {
+    const alpha = state.hyperspaceTransitionProgress;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#00ffff';
+    ctx.font = 'bold 48px monospace';
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 20;
+    ctx.fillText('HYPERSPACE', arenaWidth / 2, 200);
+  }
+  
+  // Show timer during hyperspace
+  if (state.phase === 'hyperspace') {
+    const secondsLeft = Math.ceil(state.hyperspaceTimer / 60);
+    ctx.fillStyle = '#00ffff';
+    ctx.font = 'bold 24px monospace';
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 10;
+    ctx.globalAlpha = 0.7;
+    ctx.fillText(`${secondsLeft}s`, arenaWidth / 2, 80);
+  }
+  
+  ctx.restore();
+}
+
+// Hyperspace exit overlay
+function renderHyperspaceExitOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
+  const { arenaWidth } = VM_CONFIG;
+  
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  const alpha = state.hyperspaceTransitionProgress;
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 36px monospace';
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 15;
+  ctx.fillText('EXITING HYPERSPACE', arenaWidth / 2, 200);
+  
+  ctx.restore();
 }

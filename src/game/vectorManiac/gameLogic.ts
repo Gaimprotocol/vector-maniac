@@ -15,11 +15,12 @@ import {
   createSalvage,
   createPowerUp
 } from './entities';
-import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap } from './state';
+import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap, getNextHyperspaceMapTarget, shouldTriggerHyperspace } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './sounds';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getShipProjectileStyle } from './shipProjectiles';
+
 interface VectorInput {
   touchX: number;
   touchY: number;
@@ -49,6 +50,15 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
       break;
     case 'waveComplete':
       newState = updateWaveCompletePhase(newState, input);
+      break;
+    case 'hyperspaceEnter':
+      newState = updateHyperspaceEnterPhase(newState, input);
+      break;
+    case 'hyperspace':
+      newState = updateHyperspacePhase(newState, input);
+      break;
+    case 'hyperspaceExit':
+      newState = updateHyperspaceExitPhase(newState, input);
       break;
     case 'portalChoice':
     case 'upgradePick':
@@ -406,6 +416,352 @@ function updateWaveCompletePhase(state: VectorState, input: VectorInput): Vector
   // but don't spawn new enemies
   newState = updatePlayingPhaseCore(newState, input, false);
   
+  return newState;
+}
+
+// ============= HYPERSPACE MODE =============
+
+function updateHyperspaceEnterPhase(state: VectorState, input: VectorInput): VectorState {
+  let newState = { ...state };
+  newState.phaseTimer--;
+  
+  // Smooth transition progress
+  const transitionDuration = VM_CONFIG.hyperspaceTransitionDuration;
+  newState.hyperspaceTransitionProgress = 1 - (newState.phaseTimer / transitionDuration);
+  
+  // Start scrolling background during transition
+  newState.hyperspaceScrollOffset += VM_CONFIG.hyperspaceScrollSpeed * newState.hyperspaceTransitionProgress;
+  
+  // Smoothly move player to hyperspace position (bottom center, facing up)
+  const targetY = newState.hyperspacePlayerBaseY;
+  const targetX = VM_CONFIG.arenaWidth / 2;
+  newState.playerX = lerp(newState.playerX, targetX, 0.05);
+  newState.playerY = lerp(newState.playerY, targetY, 0.05);
+  newState.playerAngle = lerpAngle(newState.playerAngle, -Math.PI / 2, 0.1); // Face up
+  
+  // Update particles and projectiles
+  newState.particles = updateParticles(newState.particles);
+  newState = updateProjectiles(newState);
+  
+  // Create speed effect particles
+  if (newState.gameTime % 2 === 0) {
+    const particles = createParticle(
+      Math.random() * VM_CONFIG.arenaWidth,
+      0,
+      '#00ffff',
+      1
+    );
+    particles.forEach(p => {
+      p.vy = 15 + Math.random() * 10; // Fast downward motion
+      p.vx = 0;
+      p.life = 60;
+      p.maxLife = 60;
+    });
+    newState.particles = [...newState.particles, ...particles];
+  }
+  
+  if (newState.phaseTimer <= 0) {
+    newState.phase = 'hyperspace';
+    newState.hyperspaceTransitionProgress = 1;
+    newState.soundQueue = [...newState.soundQueue, 'waveComplete'];
+  }
+  
+  return newState;
+}
+
+function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorState {
+  let newState = { ...state };
+  
+  // Count down hyperspace timer
+  newState.hyperspaceTimer--;
+  
+  // Scroll background
+  newState.hyperspaceScrollOffset += VM_CONFIG.hyperspaceScrollSpeed;
+  
+  // Update player position - horizontal movement is free, vertical is limited
+  if (input.isTouching) {
+    newState.targetX = input.touchX;
+    // Limit vertical movement to 250px range
+    const clampedY = clamp(
+      input.touchY,
+      VM_CONFIG.hyperspacePlayerYMax,
+      VM_CONFIG.hyperspacePlayerYMin
+    );
+    newState.targetY = clampedY;
+  }
+  
+  // Smooth movement
+  const dx = newState.targetX - newState.playerX;
+  const dy = newState.targetY - newState.playerY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  
+  if (dist > 2) {
+    const moveSpeed = Math.min(newState.stats.speed * 3, dist * 0.5);
+    const dir = normalize(dx, dy);
+    newState.playerX += dir.x * moveSpeed;
+    newState.playerY += dir.y * moveSpeed;
+  }
+  
+  // Keep player facing up in hyperspace
+  newState.playerAngle = lerpAngle(newState.playerAngle, -Math.PI / 2, 0.2);
+  
+  // Clamp horizontal position
+  const padding = VM_CONFIG.arenaPadding;
+  newState.playerX = clamp(newState.playerX, padding, VM_CONFIG.arenaWidth - padding);
+  newState.playerY = clamp(newState.playerY, VM_CONFIG.hyperspacePlayerYMax, VM_CONFIG.hyperspacePlayerYMin);
+  
+  // Firing - same as normal but always facing up
+  if (input.isTouching && newState.fireTimer <= 0) {
+    const shipId = getStoredMegaShipId();
+    const projectileStyle = getShipProjectileStyle(shipId);
+    
+    const tipOffset = VM_CONFIG.playerSize + 8;
+    const spawnX = newState.playerX;
+    const spawnY = newState.playerY - tipOffset; // Fire upward
+    
+    const newProjectiles: VectorProjectile[] = [];
+    
+    if (newState.activePowerUps.doubleShot > 0) {
+      newProjectiles.push(createPlayerProjectile(spawnX - 8, spawnY, -Math.PI / 2, newState.stats.bulletSpeed, newState.stats.damage, newState.stats.pierce, shipId));
+      newProjectiles.push(createPlayerProjectile(spawnX + 8, spawnY, -Math.PI / 2, newState.stats.bulletSpeed, newState.stats.damage, newState.stats.pierce, shipId));
+    } else {
+      newProjectiles.push(createPlayerProjectile(spawnX, spawnY, -Math.PI / 2, newState.stats.bulletSpeed, newState.stats.damage, newState.stats.pierce, shipId));
+    }
+    
+    // Extra cannons
+    const extraCannons = newState.stats.extraCannons || 0;
+    for (let i = 0; i < Math.min(extraCannons, 4); i++) {
+      const side = i % 2 === 0 ? 1 : -1;
+      const tier = Math.floor(i / 2);
+      const sideOffset = 12 + tier * 8;
+      const cannonX = newState.playerX + side * sideOffset;
+      const cannonAngle = -Math.PI / 2 + (side * 0.1 * (tier + 1));
+      
+      newProjectiles.push(createPlayerProjectile(cannonX, spawnY, cannonAngle, newState.stats.bulletSpeed * 0.9, newState.stats.damage * 0.7, Math.max(0, newState.stats.pierce - 1), shipId));
+    }
+    
+    newState.projectiles = [...newState.projectiles, ...newProjectiles];
+    newState.fireTimer = newState.stats.fireRate;
+    newState.soundQueue = [...newState.soundQueue, `shoot_${projectileStyle.sound}`];
+  }
+  
+  if (newState.fireTimer > 0) newState.fireTimer--;
+  if (newState.invulnerableTimer > 0) newState.invulnerableTimer--;
+  if (newState.comboTimer > 0) {
+    newState.comboTimer--;
+    if (newState.comboTimer <= 0) newState.combo = 0;
+  }
+  
+  // Update power-up timers
+  if (newState.activePowerUps.doublePoints > 0) newState.activePowerUps.doublePoints--;
+  if (newState.activePowerUps.doubleShot > 0) newState.activePowerUps.doubleShot--;
+  if (newState.activePowerUps.speedBoost > 0) newState.activePowerUps.speedBoost--;
+  
+  // Spawn enemy formations from top
+  newState.hyperspaceFormationTimer--;
+  if (newState.hyperspaceFormationTimer <= 0) {
+    newState = spawnHyperspaceFormation(newState);
+    newState.hyperspaceFormationTimer = VM_CONFIG.hyperspaceFormationInterval;
+  }
+  
+  // Update entities with hyperspace-specific behavior
+  newState = updateHyperspaceEnemies(newState);
+  newState = updateProjectiles(newState);
+  newState = updateSalvage(newState);
+  newState = updatePowerUps(newState);
+  newState.particles = updateParticles(newState.particles);
+  
+  // Check collisions
+  newState = checkCollisions(newState);
+  newState = checkPowerUpCollisions(newState);
+  
+  // Create speed trail particles
+  if (newState.gameTime % 3 === 0) {
+    const particles = createParticle(
+      Math.random() * VM_CONFIG.arenaWidth,
+      0,
+      '#00ffff',
+      1
+    );
+    particles.forEach(p => {
+      p.vy = 12 + Math.random() * 8;
+      p.vx = 0;
+      p.life = 80;
+      p.maxLife = 80;
+      p.size = 1 + Math.random() * 2;
+    });
+    newState.particles = [...newState.particles, ...particles];
+  }
+  
+  // Check if hyperspace is complete
+  if (newState.hyperspaceTimer <= 0) {
+    newState.phase = 'hyperspaceExit';
+    newState.phaseTimer = VM_CONFIG.hyperspaceTransitionDuration;
+    newState.soundQueue = [...newState.soundQueue, 'waveComplete'];
+  }
+  
+  // Check game over
+  if (newState.health <= 0) {
+    newState.phase = 'gameOver';
+  }
+  
+  return newState;
+}
+
+function updateHyperspaceExitPhase(state: VectorState, input: VectorInput): VectorState {
+  let newState = { ...state };
+  newState.phaseTimer--;
+  
+  // Transition progress (going back to normal)
+  const transitionDuration = VM_CONFIG.hyperspaceTransitionDuration;
+  newState.hyperspaceTransitionProgress = newState.phaseTimer / transitionDuration;
+  
+  // Slow down scrolling
+  newState.hyperspaceScrollOffset += VM_CONFIG.hyperspaceScrollSpeed * newState.hyperspaceTransitionProgress;
+  
+  // Move player back to center
+  const targetY = VM_CONFIG.arenaHeight / 2;
+  const targetX = VM_CONFIG.arenaWidth / 2;
+  newState.playerX = lerp(newState.playerX, targetX, 0.05);
+  newState.playerY = lerp(newState.playerY, targetY, 0.05);
+  
+  // Update particles
+  newState.particles = updateParticles(newState.particles);
+  newState = updateProjectiles(newState);
+  
+  if (newState.phaseTimer <= 0) {
+    // Exit hyperspace - return to normal playing mode
+    newState.phase = 'playing';
+    newState.hyperspaceActive = false;
+    newState.hyperspaceTransitionProgress = 0;
+    newState.hyperspaceScrollOffset = 0;
+    
+    // Set next hyperspace trigger
+    newState.nextHyperspaceMap = getNextHyperspaceMapTarget(newState.currentMap);
+    
+    // Clear remaining hyperspace enemies
+    newState.enemies = [];
+    
+    // Give a brief respite before enemies spawn again
+    newState.spawnTimer = 90;
+  }
+  
+  return newState;
+}
+
+// Spawn enemies in formation patterns from the top
+function spawnHyperspaceFormation(state: VectorState): VectorState {
+  let newState = { ...state };
+  
+  // Formation types
+  const formationTypes = ['v', 'line', 'diamond', 'wave'];
+  const formationType = formationTypes[Math.floor(Math.random() * formationTypes.length)];
+  
+  const formationSize = 3 + Math.floor(Math.random() * 4); // 3-6 enemies
+  const centerX = VM_CONFIG.arenaWidth / 2 + (Math.random() - 0.5) * 300;
+  const startY = -50;
+  
+  const enemies: VectorEnemy[] = [];
+  
+  // Calculate scaling
+  const mapScaling = {
+    health: 1 + (state.currentMap - 1) * VM_CONFIG.enemyHealthPerMap,
+  };
+  const levelScaling = 1 + (state.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
+  
+  for (let i = 0; i < formationSize; i++) {
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    switch (formationType) {
+      case 'v':
+        // V formation
+        offsetX = (i - formationSize / 2) * 50;
+        offsetY = Math.abs(i - formationSize / 2) * 30;
+        break;
+      case 'line':
+        // Horizontal line
+        offsetX = (i - formationSize / 2) * 60;
+        offsetY = 0;
+        break;
+      case 'diamond':
+        // Diamond pattern
+        if (i === 0) { offsetX = 0; offsetY = -30; }
+        else if (i < formationSize / 2) { offsetX = -40 * i; offsetY = i * 25; }
+        else { offsetX = 40 * (i - formationSize / 2); offsetY = (i - formationSize / 2) * 25; }
+        break;
+      case 'wave':
+        // Wave pattern
+        offsetX = (i - formationSize / 2) * 55;
+        offsetY = Math.sin(i * 0.8) * 40;
+        break;
+    }
+    
+    // Create enemy (mostly drones and shooters in hyperspace)
+    const roll = Math.random();
+    let enemy: VectorEnemy;
+    
+    if (roll < 0.15) {
+      enemy = createElite(centerX + offsetX, startY + offsetY);
+    } else if (roll < 0.5) {
+      enemy = createShooter(centerX + offsetX, startY + offsetY);
+    } else {
+      enemy = createDrone(centerX + offsetX, startY + offsetY);
+    }
+    
+    // Override position and velocity for hyperspace (move downward)
+    enemy.x = centerX + offsetX;
+    enemy.y = startY + offsetY;
+    enemy.vx = 0;
+    enemy.vy = 2 + Math.random() * 1.5; // Move downward
+    
+    // Apply scaling
+    enemy.health *= state.difficultyMultiplier * levelScaling * mapScaling.health;
+    enemy.maxHealth = enemy.health;
+    
+    enemies.push(enemy);
+  }
+  
+  newState.enemies = [...newState.enemies, ...enemies];
+  
+  return newState;
+}
+
+// Update enemies specifically for hyperspace (move downward)
+function updateHyperspaceEnemies(state: VectorState): VectorState {
+  let newState = { ...state };
+  const updatedEnemies: VectorEnemy[] = [];
+  
+  for (const enemy of newState.enemies) {
+    let e = { ...enemy };
+    
+    // Move downward in hyperspace
+    e.y += e.vy;
+    
+    // Slight horizontal tracking toward player
+    const dx = newState.playerX - e.x;
+    e.x += dx * 0.01;
+    
+    // Face downward (toward player)
+    e.targetAngle = Math.PI / 2;
+    
+    // Shooters fire at player
+    if (e.type === 'shooter' || e.type === 'elite') {
+      e.fireTimer--;
+      if (e.fireTimer <= 0 && e.y > 0 && e.y < VM_CONFIG.arenaHeight * 0.7) {
+        const proj = createEnemyProjectile(e.x, e.y, newState.playerX, newState.playerY);
+        newState.projectiles = [...newState.projectiles, proj];
+        e.fireTimer = VM_CONFIG.shooterFireRate * (e.type === 'elite' ? 0.7 : 1);
+      }
+    }
+    
+    // Remove enemies that go off screen
+    if (e.y < VM_CONFIG.arenaHeight + 100) {
+      updatedEnemies.push(e);
+    }
+  }
+  
+  newState.enemies = updatedEnemies;
   return newState;
 }
 
@@ -1478,9 +1834,25 @@ export function selectUpgrade(state: VectorState, upgradeId: string): VectorStat
   newState.upgradesPending--;
   
   if (newState.upgradesPending <= 0) {
-    // All upgrades picked - continue to next map
-    newState.phase = 'waveComplete';
-    newState.phaseTimer = VM_CONFIG.mapTransitionTime;
+    // Check if hyperspace should trigger on this map
+    if (shouldTriggerHyperspace(newState)) {
+      // Start hyperspace mode!
+      newState.phase = 'hyperspaceEnter';
+      newState.phaseTimer = VM_CONFIG.hyperspaceTransitionDuration;
+      newState.hyperspaceActive = true;
+      newState.hyperspaceDuration = VM_CONFIG.hyperspaceDurationMin + 
+        Math.floor(Math.random() * (VM_CONFIG.hyperspaceDurationMax - VM_CONFIG.hyperspaceDurationMin));
+      newState.hyperspaceTimer = newState.hyperspaceDuration;
+      newState.hyperspaceScrollOffset = 0;
+      newState.hyperspaceTransitionProgress = 0;
+      newState.hyperspaceFormationTimer = 60; // Start spawning formations after 1 second
+      newState.hyperspacePlayerBaseY = VM_CONFIG.arenaHeight - 300;
+      newState.soundQueue = [...newState.soundQueue, 'bossWarning']; // Use boss warning as hyperspace sound
+    } else {
+      // Normal transition to next wave
+      newState.phase = 'waveComplete';
+      newState.phaseTimer = VM_CONFIG.mapTransitionTime;
+    }
   } else {
     // More upgrades to pick - refresh available upgrades
     newState.availableUpgrades = getRandomUpgrades(3);

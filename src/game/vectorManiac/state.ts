@@ -109,6 +109,16 @@ export function createVectorManiacState(): VectorState {
     
     soundQueue: [],
     inputReleased: false,
+    
+    // Hyperspace mode
+    hyperspaceActive: false,
+    hyperspaceTimer: 0,
+    hyperspaceDuration: 0,
+    hyperspaceScrollOffset: 0,
+    hyperspaceTransitionProgress: 0,
+    nextHyperspaceMap: getNextHyperspaceMapTarget(1), // Random between 2-4
+    hyperspaceFormationTimer: 0,
+    hyperspacePlayerBaseY: VM_CONFIG.arenaHeight - 300,
   };
 }
 
@@ -131,4 +141,21 @@ export function isLastWaveInMap(state: VectorState): boolean {
 
 export function isFinalMap(mapId: number): boolean {
   return mapId >= VM_CONFIG.totalMaps;
+}
+
+// Get next map when hyperspace should trigger
+// Pattern: maps 2-4, then 6-9, then 11-14, then 16-19, etc.
+export function getNextHyperspaceMapTarget(currentMap: number): number {
+  // Find which "cycle" we're in (each cycle is 5 maps)
+  const cycleStart = Math.floor((currentMap - 1) / 5) * 5 + 1;
+  const nextCycleStart = cycleStart + 5;
+  
+  // Random map within next range (2nd to 4th map of next cycle)
+  const offset = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3
+  return nextCycleStart + offset;
+}
+
+// Check if we should trigger hyperspace on current map
+export function shouldTriggerHyperspace(state: VectorState): boolean {
+  return state.currentMap === state.nextHyperspaceMap && !state.hyperspaceActive;
 }
