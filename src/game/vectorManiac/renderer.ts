@@ -1971,25 +1971,100 @@ function drawPlayerProjectile(
 
 // Hyperspace overlay - shows "HYPERSPACE" text and timer
 function renderHyperspaceOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth } = VM_CONFIG;
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
   
   ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
   
-  // Show "HYPERSPACE" during enter phase
+  // Show dramatic "ENTERING HYPERSPACE" during enter phase (similar to boss warning)
   if (state.phase === 'hyperspaceEnter') {
-    const alpha = state.hyperspaceTransitionProgress;
+    const alpha = Math.min(state.hyperspaceTransitionProgress * 1.5, 1);
+    
+    // Flashing cyan vignette effect
+    const flashIntensity = Math.sin(state.gameTime * 0.4) * 0.5 + 0.5;
+    const vignetteAlpha = 0.1 + flashIntensity * 0.15;
+    
+    // Cyan vignette
+    const gradient = ctx.createRadialGradient(
+      arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.3,
+      arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.8
+    );
+    gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+    gradient.addColorStop(1, `rgba(0, 255, 255, ${vignetteAlpha * alpha})`);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+    
+    // Flashing warning bars at top and bottom (cyan/white)
+    const barHeight = 8;
+    const barFlash = Math.floor(state.gameTime / 8) % 2 === 0;
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = '#00ffff';
-    ctx.font = 'bold 48px monospace';
-    ctx.shadowColor = '#00ffff';
-    ctx.shadowBlur = 20;
-    ctx.fillText('HYPERSPACE', arenaWidth / 2, 200);
+    if (barFlash) {
+      ctx.fillStyle = '#00ffff';
+      ctx.fillRect(0, 50, arenaWidth, barHeight);
+      ctx.fillRect(0, arenaHeight - 50 - barHeight, arenaWidth, barHeight);
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 50, arenaWidth, barHeight);
+      ctx.fillRect(0, arenaHeight - 50 - barHeight, arenaWidth, barHeight);
+    }
+    
+    // Text content
+    const textFlash = Math.floor(state.gameTime / 6) % 2 === 0;
+    const textY = arenaHeight / 2 - 60;
+    
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.globalAlpha = alpha;
+    
+    if (textFlash) {
+      // "ENTERING" text
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 36px monospace';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 20;
+      ctx.fillText('▶ ENTERING ▶', arenaWidth / 2, textY);
+      
+      // "HYPERSPACE" main text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 52px monospace';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 25;
+      ctx.fillText('HYPERSPACE', arenaWidth / 2, textY + 55);
+      
+      // "HOLD ON" subtext
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 24px monospace';
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 12;
+      ctx.fillText('HOLD ON', arenaWidth / 2, textY + 95);
+    } else {
+      // Dimmer version for flash effect
+      ctx.fillStyle = '#008888';
+      ctx.font = 'bold 36px monospace';
+      ctx.shadowColor = '#008888';
+      ctx.shadowBlur = 10;
+      ctx.fillText('▶ ENTERING ▶', arenaWidth / 2, textY);
+      
+      // Dimmer "HYPERSPACE"
+      ctx.fillStyle = '#aaaaaa';
+      ctx.font = 'bold 52px monospace';
+      ctx.shadowColor = '#008888';
+      ctx.shadowBlur = 15;
+      ctx.fillText('HYPERSPACE', arenaWidth / 2, textY + 55);
+      
+      // Dimmer subtext
+      ctx.fillStyle = '#006644';
+      ctx.font = 'bold 24px monospace';
+      ctx.shadowColor = '#006644';
+      ctx.shadowBlur = 6;
+      ctx.fillText('HOLD ON', arenaWidth / 2, textY + 95);
+    }
   }
   
   // Show timer during hyperspace
   if (state.phase === 'hyperspace') {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
     const secondsLeft = Math.ceil(state.hyperspaceTimer / 60);
     ctx.fillStyle = '#00ffff';
     ctx.font = 'bold 24px monospace';
@@ -1997,6 +2072,11 @@ function renderHyperspaceOverlay(ctx: CanvasRenderingContext2D, state: VectorSta
     ctx.shadowBlur = 10;
     ctx.globalAlpha = 0.7;
     ctx.fillText(`${secondsLeft}s`, arenaWidth / 2, 80);
+    
+    // Show "HYPERSPACE" label at top during the mode
+    ctx.globalAlpha = 0.5;
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText('HYPERSPACE MODE', arenaWidth / 2, 110);
   }
   
   ctx.restore();
@@ -2004,19 +2084,55 @@ function renderHyperspaceOverlay(ctx: CanvasRenderingContext2D, state: VectorSta
 
 // Hyperspace exit overlay
 function renderHyperspaceExitOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
-  const { arenaWidth } = VM_CONFIG;
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
   
   ctx.save();
+  
+  const alpha = state.hyperspaceTransitionProgress;
+  
+  // Fading green vignette
+  const gradient = ctx.createRadialGradient(
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.3,
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.8
+  );
+  gradient.addColorStop(0, 'rgba(0, 255, 136, 0)');
+  gradient.addColorStop(1, `rgba(0, 255, 136, ${0.15 * alpha})`);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
-  const alpha = state.hyperspaceTransitionProgress;
+  const textY = arenaHeight / 2 - 30;
+  const textFlash = Math.floor(state.gameTime / 10) % 2 === 0;
+  
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = '#00ff88';
-  ctx.font = 'bold 36px monospace';
-  ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 15;
-  ctx.fillText('EXITING HYPERSPACE', arenaWidth / 2, 200);
+  
+  if (textFlash) {
+    ctx.fillStyle = '#00ff88';
+    ctx.font = 'bold 36px monospace';
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 20;
+    ctx.fillText('◀ EXITING ◀', arenaWidth / 2, textY);
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 42px monospace';
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 15;
+    ctx.fillText('HYPERSPACE', arenaWidth / 2, textY + 50);
+  } else {
+    ctx.fillStyle = '#006644';
+    ctx.font = 'bold 36px monospace';
+    ctx.shadowColor = '#006644';
+    ctx.shadowBlur = 10;
+    ctx.fillText('◀ EXITING ◀', arenaWidth / 2, textY);
+    
+    ctx.fillStyle = '#888888';
+    ctx.font = 'bold 42px monospace';
+    ctx.shadowColor = '#006644';
+    ctx.shadowBlur = 8;
+    ctx.fillText('HYPERSPACE', arenaWidth / 2, textY + 50);
+  }
   
   ctx.restore();
 }
