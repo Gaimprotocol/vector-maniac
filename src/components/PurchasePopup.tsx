@@ -1,7 +1,8 @@
 import React from 'react';
+import { CheckIcon, ScrapIcon } from './VectorIcons';
 
 interface PurchasePopupProps {
-  type: 'success' | 'already_owned';
+  type: 'success' | 'already_owned' | 'not_enough';
   productName: string;
   onClose: () => void;
 }
@@ -12,6 +13,15 @@ export const PurchasePopup: React.FC<PurchasePopupProps> = ({
   onClose,
 }) => {
   const isSuccess = type === 'success';
+  const isNotEnough = type === 'not_enough';
+  
+  const getColor = () => {
+    if (isSuccess) return '#00ff88';
+    if (isNotEnough) return '#ff4444';
+    return '#ffaa00';
+  };
+  
+  const color = getColor();
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -23,83 +33,80 @@ export const PurchasePopup: React.FC<PurchasePopupProps> = ({
       
       {/* Popup content */}
       <div 
-        className={`relative z-10 w-[300px] border-4 rounded-lg p-6 text-center ${
-          isSuccess ? 'border-green-400' : 'border-orange-400'
-        }`}
+        className="relative z-10 w-[300px] border-2 rounded-lg p-6 text-center"
         style={{
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)',
-          boxShadow: isSuccess 
-            ? '0 0 40px rgba(0, 255, 100, 0.4), inset 0 0 20px rgba(0, 255, 100, 0.1)'
-            : '0 0 40px rgba(255, 165, 0, 0.4), inset 0 0 20px rgba(255, 165, 0, 0.1)',
+          borderColor: color,
+          background: 'linear-gradient(180deg, #051510 0%, #020a08 100%)',
+          boxShadow: `0 0 40px ${color}40, inset 0 0 20px ${color}10`,
         }}
       >
-        {/* Scanlines overlay */}
+        {/* Grid overlay */}
         <div 
-          className="absolute inset-0 pointer-events-none opacity-10"
+          className="absolute inset-0 pointer-events-none opacity-[0.03]"
           style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
+            backgroundImage: 'linear-gradient(#00ff88 1px, transparent 1px), linear-gradient(90deg, #00ff88 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
           }}
         />
         
         {/* Icon */}
         <div 
-          className="text-5xl mb-4"
-          style={{ 
-            filter: `drop-shadow(0 0 20px ${isSuccess ? 'rgba(0, 255, 100, 0.8)' : 'rgba(255, 165, 0, 0.8)'})`,
-          }}
+          className="flex justify-center mb-4"
+          style={{ filter: `drop-shadow(0 0 20px ${color})` }}
         >
-          {isSuccess ? '✅' : 'ℹ️'}
+          {isSuccess ? <CheckIcon size={48} /> : isNotEnough ? <ScrapIcon size={48} /> : <ScrapIcon size={48} />}
         </div>
         
         {/* Title */}
         <h2 
-          className={`font-pixel text-lg mb-2 ${
-            isSuccess ? 'text-green-400' : 'text-orange-400'
-          }`}
+          className="text-lg mb-2"
           style={{ 
-            textShadow: isSuccess 
-              ? '0 0 20px rgba(0, 255, 100, 0.8)' 
-              : '0 0 20px rgba(255, 165, 0, 0.8)',
+            fontFamily: 'Orbitron, monospace',
+            color: color,
+            textShadow: `0 0 20px ${color}80`,
           }}
         >
-          {isSuccess ? 'PURCHASE SUCCESSFUL' : 'ALREADY OWNED'}
+          {isSuccess ? 'UPGRADE COMPLETE' : isNotEnough ? 'NOT ENOUGH SCRAPS' : 'ALREADY MAXED'}
         </h2>
         
         {/* Product name */}
-        <p className="font-pixel text-[10px] text-cyan-400 mb-2">
+        <p 
+          className="text-[10px] text-[#00ff88]/80 mb-2"
+          style={{ fontFamily: 'Orbitron, monospace' }}
+        >
           {productName}
         </p>
         
         {/* Description */}
-        <p className="font-pixel text-[9px] text-gray-400 mb-6">
+        <p 
+          className="text-[9px] text-[#00ff88]/40 mb-6"
+          style={{ fontFamily: 'Rajdhani, sans-serif' }}
+        >
           {isSuccess 
-            ? 'Your purchase has been unlocked!' 
-            : 'You already own this item.'}
+            ? 'Upgrade installed successfully!' 
+            : isNotEnough
+              ? 'Collect more scraps to purchase this upgrade.'
+              : 'This upgrade is already at maximum level.'}
         </p>
         
         {/* OK button */}
         <button
           onClick={onClose}
-          className={`font-pixel text-sm text-black px-8 py-3 rounded-full 
-                     transition-all duration-300 hover:scale-105 active:scale-95 ${
-            isSuccess 
-              ? 'bg-gradient-to-r from-green-400 to-green-500 hover:from-green-300 hover:to-green-400'
-              : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-300 hover:to-orange-400'
-          }`}
+          className="text-sm text-black px-8 py-3 rounded transition-all duration-300 hover:scale-105 active:scale-95"
           style={{
-            boxShadow: isSuccess 
-              ? '0 0 20px rgba(0, 255, 100, 0.5)'
-              : '0 0 20px rgba(255, 165, 0, 0.5)',
+            fontFamily: 'Orbitron, monospace',
+            background: color,
+            boxShadow: `0 0 20px ${color}50`,
           }}
         >
           OK
         </button>
         
-        {/* Pixel border decoration */}
-        <div className={`absolute top-2 left-2 w-2 h-2 ${isSuccess ? 'bg-green-400' : 'bg-orange-400'}`} />
-        <div className={`absolute top-2 right-2 w-2 h-2 ${isSuccess ? 'bg-green-400' : 'bg-orange-400'}`} />
-        <div className={`absolute bottom-2 left-2 w-2 h-2 ${isSuccess ? 'bg-green-400' : 'bg-orange-400'}`} />
-        <div className={`absolute bottom-2 right-2 w-2 h-2 ${isSuccess ? 'bg-green-400' : 'bg-orange-400'}`} />
+        {/* Corner decorations */}
+        <div className="absolute top-2 left-2 w-2 h-2" style={{ background: color }} />
+        <div className="absolute top-2 right-2 w-2 h-2" style={{ background: color }} />
+        <div className="absolute bottom-2 left-2 w-2 h-2" style={{ background: color }} />
+        <div className="absolute bottom-2 right-2 w-2 h-2" style={{ background: color }} />
       </div>
     </div>
   );

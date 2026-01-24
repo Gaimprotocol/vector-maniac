@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMusicContext } from '@/contexts/MusicContext';
-import { ShopIcon } from './ShopIcons';
 import { playPopSoundsWithDelays } from '@/utils/popSound';
-import { GameIcon } from './GameIcon';
+import { 
+  ArrowBackIcon, InfoIcon, TargetIcon, ShieldIcon, ZapIcon, 
+  TouchIcon, AimIcon, PauseIcon, GridIcon, ShipIcon 
+} from './VectorIcons';
 
 type TabType = 'about' | 'objectives' | 'powerups' | 'controls';
 
 const POWERUPS = [
-  { variant: 'forceField', name: 'FORCE FIELD', color: '#00aaff', description: 'Destroys enemies on contact for 4 seconds' },
-  { variant: 'health', name: 'HEALTH', color: '#ff4488', description: 'Repairs hull damage' },
-  { variant: 'homingMissile', name: 'HOMING MISSILES', color: '#ff8800', description: 'Auto-targeting missiles for 6 seconds' },
-  { variant: 'shield', name: 'SHIELD', color: '#00ccff', description: 'Invincibility for 8 seconds' },
-  { variant: 'megaBomb', name: 'MEGA BOMB', color: '#ffff00', description: 'Destroys all enemies on screen' },
-  { variant: 'tripleShot', name: 'TRIPLE SHOT', color: '#ff00ff', description: 'Three projectiles for 5 seconds' },
-  { variant: 'electricPulse', name: 'ELECTRIC PULSE', color: '#00ffff', description: 'Damages all visible enemies' },
-  { variant: 'escort', name: 'ESCORT PLANES', color: '#88ff00', description: 'Allied ships assist you for 6 seconds' },
+  { name: 'FORCE FIELD', description: 'Destroys enemies on contact for 4 seconds' },
+  { name: 'HEALTH', description: 'Repairs hull damage' },
+  { name: 'HOMING MISSILES', description: 'Auto-targeting missiles for 6 seconds' },
+  { name: 'SHIELD', description: 'Invincibility for 8 seconds' },
+  { name: 'MEGA BOMB', description: 'Destroys all enemies on screen' },
+  { name: 'TRIPLE SHOT', description: 'Three projectiles for 5 seconds' },
+  { name: 'ELECTRIC PULSE', description: 'Damages all visible enemies' },
+  { name: 'ESCORT PLANES', description: 'Allied ships assist you for 6 seconds' },
 ];
 
 const ENEMIES = [
-  { variant: 'turret', name: 'TURRETS', description: 'Stationary defenses on terrain' },
-  { variant: 'drone', name: 'DRONES', description: 'Flying enemies with erratic movement' },
-  { variant: 'bomber', name: 'BOMBERS', description: 'Drop explosives from above' },
-  { variant: 'sniper', name: 'SNIPERS', description: 'Precise long-range attackers' },
-  { variant: 'tank', name: 'TANKS', description: 'Heavy ground units with big guns' },
-  { variant: 'leech', name: 'LEECHES', description: 'Attach to civilians - rescue quickly!' },
-  { variant: 'hostilePerson', name: 'HOSTILE SOLDIERS', description: 'Ground troops that fire at you' },
+  { name: 'TURRETS', description: 'Stationary defenses on terrain' },
+  { name: 'DRONES', description: 'Flying enemies with erratic movement' },
+  { name: 'BOMBERS', description: 'Drop explosives from above' },
+  { name: 'SNIPERS', description: 'Precise long-range attackers' },
+  { name: 'TANKS', description: 'Heavy ground units with big guns' },
+  { name: 'LEECHES', description: 'Attach to civilians - rescue quickly!' },
 ];
 
 export const InfoScreen: React.FC = () => {
@@ -33,16 +34,13 @@ export const InfoScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('about');
   const { hasEnteredGalaxy, enterGalaxy } = useMusicContext();
 
-  // If user navigates directly to info without entering galaxy, auto-enter
   useEffect(() => {
     if (!hasEnteredGalaxy) {
       enterGalaxy();
     }
   }, [hasEnteredGalaxy, enterGalaxy]);
 
-  // Play pop sounds on mount for animations
   useEffect(() => {
-    // Delays match the animationDelay values: 0, 50, 100, 150-300 (tabs), 350ms
     playPopSoundsWithDelays([0, 50, 100, 150, 200, 250, 300, 350]);
   }, []);
 
@@ -56,9 +54,7 @@ export const InfoScreen: React.FC = () => {
   return (
     <div 
       className="fixed inset-0 flex flex-col items-center pt-14 pb-16 px-4 overflow-y-auto"
-      style={{ 
-        background: 'radial-gradient(ellipse at center, #0a1628 0%, #050810 70%, #020305 100%)'
-      }}
+      style={{ background: 'radial-gradient(ellipse at center, #051510 0%, #020a08 70%, #010504 100%)' }}
     >
       {/* Floating particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -67,12 +63,12 @@ export const InfoScreen: React.FC = () => {
             key={i}
             className="absolute rounded-full"
             style={{
-              width: Math.random() * 3 + 1 + 'px',
-              height: Math.random() * 3 + 1 + 'px',
+              width: Math.random() * 2 + 1 + 'px',
+              height: Math.random() * 2 + 1 + 'px',
               left: Math.random() * 100 + '%',
               top: Math.random() * 100 + '%',
-              background: i % 3 === 0 ? '#00e5ff' : i % 3 === 1 ? '#ff00ff' : '#ffffff',
-              opacity: Math.random() * 0.5 + 0.2,
+              background: '#00ff88',
+              opacity: Math.random() * 0.4 + 0.1,
               animation: `float ${Math.random() * 10 + 10}s ease-in-out infinite`,
               animationDelay: `-${Math.random() * 10}s`,
             }}
@@ -80,27 +76,39 @@ export const InfoScreen: React.FC = () => {
         ))}
       </div>
 
+      {/* Grid overlay */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: 'linear-gradient(#00ff88 1px, transparent 1px), linear-gradient(90deg, #00ff88 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+
       {/* Header */}
       <div className="relative z-10 w-full max-w-md pt-2.5">
         <button
           onClick={() => navigate('/')}
-          className="font-pixel text-[10px] text-cyan-400/70 hover:text-cyan-400 mb-4 flex items-center gap-2 opacity-0 animate-pop-in"
-          style={{ animationDelay: '0ms' }}
+          className="text-[11px] tracking-wider text-[#00ff88]/60 hover:text-[#00ff88] mb-4 flex items-center gap-2 transition-colors opacity-0 animate-pop-in"
+          style={{ fontFamily: 'Orbitron, monospace', animationDelay: '0ms' }}
         >
-          ← BACK TO MENU
+          <ArrowBackIcon size={14} glow={false} /> BACK TO MENU
         </button>
 
-        <h1 className="font-pixel text-2xl text-center mb-2 opacity-0 animate-pop-in" style={{ animationDelay: '50ms' }}>
-          <span className="text-magenta" style={{ textShadow: '0 0 20px #ff00ff' }}>
-            GALACTIC
-          </span>{' '}
-          <span className="text-cyan-400" style={{ textShadow: '0 0 20px #00e5ff' }}>
-            INFO
+        <h1 
+          className="text-2xl text-center mb-2 opacity-0 animate-pop-in tracking-widest"
+          style={{ fontFamily: 'Orbitron, monospace', animationDelay: '50ms' }}
+        >
+          <span className="text-[#00ff88]" style={{ textShadow: '0 0 20px #00ff88, 0 0 40px #00ff8850' }}>
+            SYSTEM INFO
           </span>
         </h1>
 
-        <p className="font-pixel text-[8px] text-gray-500 text-center mb-6 tracking-wider opacity-0 animate-pop-in" style={{ animationDelay: '100ms' }}>
-          LEARN THE WAYS OF THE VOID
+        <p 
+          className="text-[8px] text-[#00ff88]/40 text-center mb-6 tracking-[0.3em] opacity-0 animate-pop-in"
+          style={{ fontFamily: 'Orbitron, monospace', animationDelay: '100ms' }}
+        >
+          VECTOR MANIAC MANUAL
         </p>
       </div>
 
@@ -110,12 +118,12 @@ export const InfoScreen: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`font-pixel text-[9px] px-3 py-1.5 rounded-full transition-all duration-300 opacity-0 animate-pop-in ${
+            className={`text-[9px] px-3 py-1.5 rounded transition-all duration-300 opacity-0 animate-pop-in ${
               activeTab === tab.id
-                ? 'bg-cyan-400/20 text-cyan-400 border border-cyan-400'
-                : 'text-gray-500 border border-gray-600 hover:border-gray-400 hover:text-gray-400'
+                ? 'bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]'
+                : 'text-[#00ff88]/50 border border-[#00ff88]/30 hover:border-[#00ff88]/60 hover:text-[#00ff88]/80'
             }`}
-            style={{ animationDelay: `${150 + index * 50}ms` }}
+            style={{ fontFamily: 'Orbitron, monospace', animationDelay: `${150 + index * 50}ms` }}
           >
             {tab.label}
           </button>
@@ -125,32 +133,57 @@ export const InfoScreen: React.FC = () => {
       {/* Content */}
       <div 
         className="relative z-10 w-full max-w-md rounded-lg p-5 min-h-[300px] mb-8 opacity-0 animate-pop-in"
-        style={{
-          animationDelay: '350ms',
-        }}
+        style={{ animationDelay: '350ms' }}
       >
         {activeTab === 'about' && (
           <div className="space-y-4">
-            <h2 className="font-pixel text-[12px] text-cyan-400 mb-3">THE STORY</h2>
-            <p className="font-pixel text-[9px] text-gray-400 leading-relaxed">
-              In the year 3087, humanity's last frontier colonies are under attack by the 
-              VOID ARMADA. As an elite rescue pilot, you must navigate treacherous 
-              galactic zones, rescue stranded survivors, and destroy enemy forces.
+            <h2 
+              className="text-[12px] text-[#00ff88] mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              THE STORY
+            </h2>
+            <p 
+              className="text-[9px] text-[#00ff88]/60 leading-relaxed"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              In the digital void of the VECTOR GRID, rogue data streams threaten to 
+              corrupt the core systems. As an elite Vector Pilot, you must navigate 
+              infinite procedural mazes, destroy hostile code fragments, and survive 
+              the endless onslaught.
             </p>
-            <p className="font-pixel text-[9px] text-gray-400 leading-relaxed">
-              Your ship, the NEON STRIKER, is equipped with advanced weapons and the 
-              ability to enter special combat zones including lunar surfaces, underwater 
-              bases, and fortified bunkers.
+            <p 
+              className="text-[9px] text-[#00ff88]/60 leading-relaxed"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              Your ship, equipped with advanced vector-based weapons, is the last 
+              line of defense. Upgrade your systems, unlock new ships, and push 
+              your high score to the limit.
             </p>
             
-            <h2 className="font-pixel text-[12px] text-cyan-400 mt-6 mb-3">ENEMIES</h2>
+            <h2 
+              className="text-[12px] text-[#00ff88] mt-6 mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              ENEMIES
+            </h2>
             <div className="grid grid-cols-2 gap-3">
               {ENEMIES.map((enemy) => (
                 <div key={enemy.name} className="flex items-center gap-2">
-                  <GameIcon type="enemy" variant={enemy.variant} size={28} />
+                  <TargetIcon size={24} />
                   <div>
-                    <span className="font-pixel text-[9px] text-magenta">{enemy.name}</span>
-                    <p className="font-pixel text-[7px] text-gray-500">{enemy.description}</p>
+                    <span 
+                      className="text-[9px] text-[#00ff88]"
+                      style={{ fontFamily: 'Orbitron, monospace' }}
+                    >
+                      {enemy.name}
+                    </span>
+                    <p 
+                      className="text-[7px] text-[#00ff88]/40"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                    >
+                      {enemy.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -160,88 +193,114 @@ export const InfoScreen: React.FC = () => {
 
         {activeTab === 'objectives' && (
           <div className="space-y-4">
-            <h2 className="font-pixel text-[12px] text-cyan-400 mb-3">PRIMARY OBJECTIVES</h2>
+            <h2 
+              className="text-[12px] text-[#00ff88] mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              PRIMARY OBJECTIVES
+            </h2>
             
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <ShopIcon type="rescue" size={24} />
+                <ShipIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-yellow-400">RESCUE CIVILIANS</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Fly close to stranded survivors to rescue them. They auto-rescue when 
-                    your ship passes directly above them.
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    SURVIVE THE GRID
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
+                    Navigate through endless waves of enemies. The longer you 
+                    survive, the higher your score multiplier.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <ShopIcon type="destroy" size={24} />
+                <TargetIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-red-400">DESTROY ENEMIES</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Eliminate enemy forces to clear the path and earn points. 
-                    Different enemy types require different tactics.
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    DESTROY HOSTILES
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
+                    Eliminate enemy code fragments to earn points and collect 
+                    scraps for permanent upgrades.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <GameIcon type="pickup" variant="forceField" size={24} />
+                <ZapIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-cyan-400">USE FORCE FIELD</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Collect force field power-ups to destroy enemies 
-                    on contact. The field lasts 4 seconds.
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    COLLECT POWER-UPS
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
+                    Grab power-ups to temporarily enhance your ship's abilities 
+                    and turn the tide of battle.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <ShopIcon type="galaxy" size={24} />
+                <GridIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-cyan-400">COMPLETE SPECIAL MISSIONS</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Every few maps, enter special zones: defend bunkers, drive 
-                    moon rovers, or pilot submarines in underwater missions.
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    UPGRADE YOUR SHIP
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
+                    Spend scraps in the Workshop to permanently improve your 
+                    ship's weapons, armor, and systems.
                   </p>
                 </div>
               </div>
             </div>
 
-            <h2 className="font-pixel text-[12px] text-red-400 mt-5 mb-3 flex items-center gap-2">
-              <ShopIcon type="hazard" size={16} /> HAZARDS
+            <h2 
+              className="text-[12px] text-[#ff4444] mt-5 mb-3 flex items-center gap-2"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              <ShieldIcon size={16} /> HAZARDS
             </h2>
             
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-2 rounded border border-red-500/30 bg-red-500/5">
-                <ShopIcon type="fire" size={24} />
+              <div className="flex items-start gap-3 p-2 rounded border border-[#ff4444]/20 bg-[#ff4444]/5">
+                <ZapIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-red-400">HAZARDOUS TERRAIN</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Some zones have deadly walls! Look for red pulsing terrain - 
-                    touching it causes damage. A "COLLISION WARNING" appears in these areas.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2 rounded border border-orange-500/30 bg-orange-500/5">
-                <ShopIcon type="rock" size={24} />
-                <div>
-                  <h3 className="font-pixel text-[10px] text-orange-400">FALLING DEBRIS</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    In certain caves and ruins, rocks fall from above! Watch for 
-                    red pulsing debris and dodge carefully to avoid damage.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2 rounded border border-cyan-500/30 bg-cyan-500/5">
-                <ShopIcon type="lightning" size={24} />
-                <div>
-                  <h3 className="font-pixel text-[10px] text-cyan-400">HYPERSPACE BURSTS</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Your ship periodically enters hyperspace - speed triples and 
-                    stars blur past you. Stay focused during these intense moments!
+                  <h3 
+                    className="text-[10px] text-[#ff6666]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    GRID BOUNDARIES
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
+                    The edges of the vector grid are dangerous. Stay within bounds 
+                    to avoid system damage.
                   </p>
                 </div>
               </div>
@@ -251,24 +310,34 @@ export const InfoScreen: React.FC = () => {
 
         {activeTab === 'powerups' && (
           <div className="space-y-3">
-            <h2 className="font-pixel text-[12px] text-cyan-400 mb-3">COLLECTIBLE POWER-UPS</h2>
+            <h2 
+              className="text-[12px] text-[#00ff88] mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              COLLECTIBLE POWER-UPS
+            </h2>
             
             <div className="grid gap-2">
               {POWERUPS.map((powerup) => (
                 <div 
                   key={powerup.name}
-                  className="flex items-center gap-3 p-2 rounded border border-gray-700/50"
-                  style={{ background: `${powerup.color}08` }}
+                  className="flex items-center gap-3 p-2 rounded border border-[#00ff88]/20"
+                  style={{ background: 'rgba(0, 255, 136, 0.03)' }}
                 >
-                  <GameIcon type="pickup" variant={powerup.variant} size={28} />
+                  <ZapIcon size={24} />
                   <div>
                     <span 
-                      className="font-pixel text-[9px]"
-                      style={{ color: powerup.color }}
+                      className="text-[9px] text-[#00ff88]"
+                      style={{ fontFamily: 'Orbitron, monospace' }}
                     >
                       {powerup.name}
                     </span>
-                    <p className="font-pixel text-[7px] text-gray-500">{powerup.description}</p>
+                    <p 
+                      className="text-[7px] text-[#00ff88]/40"
+                      style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                    >
+                      {powerup.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -278,47 +347,65 @@ export const InfoScreen: React.FC = () => {
 
         {activeTab === 'controls' && (
           <div className="space-y-4">
-            <h2 className="font-pixel text-[12px] text-cyan-400 mb-3">TOUCH CONTROLS</h2>
+            <h2 
+              className="text-[12px] text-[#00ff88] mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              TOUCH CONTROLS
+            </h2>
             
             <div className="space-y-3">
-              <div className="flex items-start gap-3 p-2 rounded border border-cyan-400/20 bg-cyan-400/5">
-                <ShopIcon type="touch" size={24} />
+              <div className="flex items-start gap-3 p-2 rounded border border-[#00ff88]/20 bg-[#00ff88]/5">
+                <TouchIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-cyan-400">TOUCH & DRAG</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    TOUCH & DRAG
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
                     Touch anywhere to move your ship. The ship follows your finger 
-                    with a slight offset so you can see where you're going.
+                    with a slight offset for visibility.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-2 rounded border border-yellow-400/20 bg-yellow-400/5">
-                <ShopIcon type="autofire" size={24} />
+              <div className="flex items-start gap-3 p-2 rounded border border-[#00ff88]/20 bg-[#00ff88]/5">
+                <AimIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-yellow-400">AUTO-FIRE</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    AUTO-FIRE
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
                     Your ship fires automatically while touching the screen. 
-                    No need to tap - just focus on dodging!
+                    Focus on positioning and dodging!
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-2 rounded border border-magenta/20 bg-magenta/5">
-                <ShopIcon type="bomb" size={24} />
+              <div className="flex items-start gap-3 p-2 rounded border border-[#00ff88]/20 bg-[#00ff88]/5">
+                <PauseIcon size={24} />
                 <div>
-                  <h3 className="font-pixel text-[10px] text-magenta">DOUBLE-TAP</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
-                    Quick double-tap to drop a bomb. Bombs fall downward and 
-                    explode on impact - great for ground targets.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-2 rounded border border-gray-400/20 bg-gray-400/5">
-                <ShopIcon type="pause" size={24} />
-                <div>
-                  <h3 className="font-pixel text-[10px] text-gray-400">PAUSE</h3>
-                  <p className="font-pixel text-[8px] text-gray-500">
+                  <h3 
+                    className="text-[10px] text-[#00ff88]"
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    PAUSE
+                  </h3>
+                  <p 
+                    className="text-[8px] text-[#00ff88]/50"
+                    style={{ fontFamily: 'Rajdhani, sans-serif' }}
+                  >
                     Tap the pause button in the top corner to pause the game 
                     at any time.
                   </p>
@@ -326,11 +413,18 @@ export const InfoScreen: React.FC = () => {
               </div>
             </div>
 
-            <h2 className="font-pixel text-[12px] text-cyan-400 mt-4 mb-3">KEYBOARD (DESKTOP)</h2>
-            <div className="grid grid-cols-2 gap-2 text-[8px] font-pixel text-gray-500">
+            <h2 
+              className="text-[12px] text-[#00ff88] mt-4 mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              KEYBOARD (DESKTOP)
+            </h2>
+            <div 
+              className="grid grid-cols-2 gap-2 text-[8px] text-[#00ff88]/60"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
               <div>WASD / Arrows - Move</div>
               <div>Space - Fire</div>
-              <div>X - Drop Bomb</div>
               <div>P / Esc - Pause</div>
             </div>
           </div>
@@ -347,14 +441,11 @@ export const InfoScreen: React.FC = () => {
         @keyframes pop-in {
           0% {
             opacity: 0;
-            transform: scale(0.5);
-            filter: drop-shadow(0 0 30px rgba(0, 229, 255, 0.8)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.5));
-          }
-          50% {
-            filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 40px rgba(255, 0, 255, 0.3));
+            transform: scale(0.8);
+            filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.6));
           }
           70% {
-            transform: scale(1.05);
+            transform: scale(1.02);
           }
           100% {
             opacity: 1;
@@ -363,7 +454,7 @@ export const InfoScreen: React.FC = () => {
           }
         }
         .animate-pop-in {
-          animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
     </div>
