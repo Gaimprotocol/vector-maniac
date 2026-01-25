@@ -209,7 +209,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
                   boxShadow: '0 0 20px rgba(250, 204, 21, 0.2)',
                 }}
               >
-                {isAdLoading ? '⏳ Loading...' : '🎬 Watch Ad → Continue'}
+                {isAdLoading ? '◌ Loading...' : '▶ Watch Ad → Continue'}
               </button>
               {displayError && (
                 <p 
