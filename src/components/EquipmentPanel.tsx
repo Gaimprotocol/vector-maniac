@@ -13,6 +13,7 @@ import {
   ArrowBackIcon, ShipIcon, SkinIcon, MusicIcon, SettingsIcon, 
   CheckIcon, LockIcon, PlayingIcon 
 } from './VectorIcons';
+import { SHIP_MODELS, drawShipModel, getActiveShipModelId, setActiveShipModelId } from '@/game/shipModels';
 
 // Draw a mini preview using the actual mega ship renderer with skin colors
 function drawMiniShip(ctx: CanvasRenderingContext2D, ship: MegaShip, time: number, skinColors?: ShipSkinColors) {
@@ -98,10 +99,164 @@ const MegaShipCard: React.FC<{
   );
 };
 
+// Omega Prime Card Component - 3 columns wide with locked/unlocked state
+const OmegaPrimeEquipmentCard: React.FC<{
+  isActive: boolean;
+  isUnlocked: boolean;
+  onSelect: () => void;
+}> = ({ isActive, isUnlocked, onSelect }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  const omegaShip = SHIP_MODELS.find(m => m.id === 'omega_prime');
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let running = true;
+    const draw = () => {
+      if (!running) return;
+      const time = Date.now();
+      
+      // Dark background with gold accents
+      const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+      bgGrad.addColorStop(0, '#0a0a12');
+      bgGrad.addColorStop(0.5, '#1a1a2e');
+      bgGrad.addColorStop(1, '#0a0a12');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Gold radial glow
+      const glow = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 10, canvas.width / 2, canvas.height / 2, 100);
+      glow.addColorStop(0, 'rgba(255, 215, 0, 0.15)');
+      glow.addColorStop(0.6, 'rgba(255, 170, 0, 0.05)');
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      if (isUnlocked) {
+        // Show the actual ship - 35% larger (legendary)
+        const baseScale = 1.0;
+        const shipScale = baseScale * 1.35;
+        
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(shipScale, shipScale);
+        drawShipModel(ctx, 'omega_prime', 60, 30, time);
+        ctx.restore();
+      } else {
+        // Show locked silhouette
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        
+        // Draw ship silhouette (blurred/hidden)
+        ctx.globalAlpha = 0.15;
+        ctx.filter = 'blur(8px)';
+        ctx.scale(1.0 * 1.35, 1.0 * 1.35);
+        drawShipModel(ctx, 'omega_prime', 60, 30, time);
+        ctx.restore();
+        
+        // Lock icon
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.fillStyle = '#ffd700';
+        ctx.globalAlpha = 0.8;
+        ctx.font = 'bold 24px Orbitron';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🔒', 0, 0);
+        ctx.restore();
+      }
+      
+      animRef.current = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(animRef.current);
+    };
+  }, [isUnlocked]);
+
+  return (
+    <button
+      onClick={isUnlocked ? onSelect : undefined}
+      disabled={!isUnlocked}
+      className="relative rounded-lg border-2 p-2 transition-all col-span-3"
+      style={{
+        borderColor: isActive ? '#ffd700' : '#ffd70060',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #0a0a12 100%)',
+        boxShadow: isActive
+          ? '0 0 20px rgba(255, 215, 0, 0.4)'
+          : '0 0 10px rgba(255, 215, 0, 0.1)',
+        cursor: isUnlocked ? 'pointer' : 'not-allowed',
+        opacity: isUnlocked ? 1 : 0.7,
+        ...(isUnlocked && isActive ? { transform: 'scale(1.02)' } : {})
+      }}
+    >
+      {/* Legendary badge */}
+      <span 
+        className="absolute -top-2 left-4 text-[8px] px-2 py-0.5 rounded-full z-10"
+        style={{ 
+          fontFamily: 'Orbitron, monospace',
+          background: 'linear-gradient(90deg, #ffd700, #ffaa00)',
+          color: '#000',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em'
+        }}
+      >
+        ◆ LEGENDARY
+      </span>
+      
+      <canvas ref={canvasRef} width={280} height={60} className="w-full rounded mb-1" />
+      
+      <div className="text-center">
+        <p 
+          className="text-xs font-bold"
+          style={{ 
+            fontFamily: 'Orbitron, monospace',
+            color: '#ffd700',
+            textShadow: '0 0 15px #ffd700',
+            letterSpacing: '0.1em'
+          }}
+        >
+          {isUnlocked ? (omegaShip?.name || 'OMEGA PRIME') : '??? LOCKED ???'}
+        </p>
+        <p 
+          className="text-[7px]"
+          style={{ 
+            fontFamily: 'Rajdhani, sans-serif',
+            color: isUnlocked ? '#ffd700aa' : '#ffd70060',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}
+        >
+          {isUnlocked ? 'Vector Maniac exclusive legendary ship' : 'Unlock with Omega Pack in Shop'}
+        </p>
+      </div>
+      
+      {isActive && isUnlocked && (
+        <span 
+          className="absolute top-3 right-3 text-[12px]"
+          style={{ 
+            color: '#ffd700',
+            textShadow: '0 0 10px #ffd700'
+          }}
+        >
+          ◆
+        </span>
+      )}
+    </button>
+  );
+};
+
 export const EquipmentPanel: React.FC = () => {
   const navigate = useNavigate();
   const { equipment, setActiveShipSkin } = useEquipment();
-  const { hasShipsMegaPack, hasGoldenSkin, hasSoundtrackPack, hasMothershipSkins } = usePurchases();
+  const { hasShipsMegaPack, hasGoldenSkin, hasSoundtrackPack, hasMothershipSkins, hasSecretShip } = usePurchases();
   const { hasEnteredGalaxy, enterGalaxy, startMusicRef } = useMusicContext();
   const { state: megaShipState, setActiveMegaShip, getActiveMegaShip } = useMegaShips();
   const { state: soundtrackState, setActiveSoundtrack } = useSoundtrack();
@@ -109,8 +264,15 @@ export const EquipmentPanel: React.FC = () => {
   
   const hasUltimate = hasGoldenSkin();
   const hasSoundtrack = hasSoundtrackPack();
+  const isOmegaUnlocked = hasSecretShip();
+  const [activeShipModelId, setActiveShipModelIdState] = useState(getActiveShipModelId());
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [previewingTrackId, setPreviewingTrackId] = useState<string | null>(null);
+  
+  const handleOmegaSelect = () => {
+    setActiveShipModelId('omega_prime');
+    setActiveShipModelIdState('omega_prime');
+  };
 
   useEffect(() => {
     if (!hasEnteredGalaxy) {
@@ -255,6 +417,36 @@ export const EquipmentPanel: React.FC = () => {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Omega Prime - Vector Maniac Exclusive */}
+      <div className="relative z-10 w-full max-w-md mb-6 opacity-0 animate-pop-in" style={{ animationDelay: '175ms' }}>
+        <h2 
+          className="text-sm mb-2 flex items-center gap-2"
+          style={{ 
+            fontFamily: 'Orbitron, monospace', 
+            color: '#ffd700',
+            textShadow: '0 0 10px #ffd700' 
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>◆</span> VECTOR MANIAC SHIP
+        </h2>
+        <p 
+          className="text-[7px] mb-3"
+          style={{ 
+            fontFamily: 'Rajdhani, sans-serif',
+            color: isOmegaUnlocked ? '#ffd700aa' : '#ffd70060'
+          }}
+        >
+          {isOmegaUnlocked ? 'Legendary ship for Vector Maniac mode' : 'Unlock with Omega Pack in Shop'}
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          <OmegaPrimeEquipmentCard
+            isActive={activeShipModelId === 'omega_prime'}
+            isUnlocked={isOmegaUnlocked}
+            onSelect={handleOmegaSelect}
+          />
+        </div>
       </div>
 
       {/* Ship Skins Section */}
