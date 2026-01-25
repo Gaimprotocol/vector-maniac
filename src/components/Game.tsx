@@ -346,8 +346,8 @@ export const Game: React.FC<GameProps> = ({
           canvasRef={canvasRef}
         />
 
-        {/* HUD overlay */}
-        {(gameData.state === 'playing' || gameData.state === 'vectorManiac') && (
+        {/* HUD overlay - only for regular game mode (Vector Maniac renders its own HUD on canvas) */}
+        {gameData.state === 'playing' && (
           <GameUI 
             gameData={gameData} 
             activeRewards={externalActiveRewardsList || getActiveRewardsList()}

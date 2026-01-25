@@ -1348,45 +1348,49 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth } = VM_CONFIG;
   const theme = getMapTheme(state.currentMap);
   
-  // Top bar
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-  ctx.fillRect(0, 0, arenaWidth, 40);
+  // Get high score from localStorage
+  const highScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
+  
+  // Top bar background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.fillRect(0, 0, arenaWidth, 44);
   
   ctx.textBaseline = 'middle';
   
-  // Map and Level indicator (left side)
+  // Left side: Score + Hi-Score
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#00ffff';
+  ctx.font = 'bold 13px monospace';
+  ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 8;
+  ctx.fillText(`SCORE: ${Math.floor(state.score).toString().padStart(8, '0')}`, 10, 14);
+  ctx.shadowBlur = 0;
+  
+  ctx.fillStyle = '#888888';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillText(`HI: ${highScore.toString().padStart(8, '0')}`, 10, 32);
+  
+  // Center: Map & Level
+  ctx.textAlign = 'center';
   ctx.fillStyle = theme.accentColor;
   ctx.font = 'bold 12px monospace';
-  ctx.textAlign = 'left';
-  ctx.fillText(`MAP ${state.currentMap}/${VM_CONFIG.totalMaps}`, 10, 12);
+  ctx.shadowColor = theme.accentColor;
+  ctx.shadowBlur = 10;
+  ctx.fillText(`MAP ${state.currentMap}/${VM_CONFIG.totalMaps}`, arenaWidth / 2, 14);
+  ctx.shadowBlur = 0;
   
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 10px monospace';
-  ctx.fillText(`LEVEL ${state.currentLevel}`, 10, 28);
+  ctx.fillText(`LEVEL ${state.currentLevel}`, arenaWidth / 2, 32);
   
-  // Wave indicator (next to map)
-  ctx.fillStyle = '#ffff00';
-  ctx.font = 'bold 11px monospace';
-  ctx.fillText(`WAVE ${state.currentWave}/${state.wavesInMap}`, 110, 20);
-  
-  // Score (center)
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 14px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(`SCORE: ${Math.floor(state.score)}`, arenaWidth / 2, 20);
-  
-  // Salvage (right)
+  // Right side: Scraps
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#00ff88';
-  ctx.font = 'bold 12px monospace';
-  ctx.fillText(`💎 ${state.salvageCount}`, arenaWidth - 10, 12);
-  
-  // Boss indicator when active
-  if (state.bossActive) {
-    ctx.fillStyle = '#ff4444';
-    ctx.font = 'bold 10px monospace';
-    ctx.fillText('⚠ BOSS', arenaWidth - 10, 28);
-  }
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 13px monospace';
+  ctx.shadowColor = '#ffcc00';
+  ctx.shadowBlur = 8;
+  ctx.fillText(`⚙ ${state.salvageCount}`, arenaWidth - 10, 22);
+  ctx.shadowBlur = 0;
   
   // Health bar (bottom left)
   const healthBarWidth = 100;
