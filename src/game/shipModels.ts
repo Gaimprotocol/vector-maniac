@@ -256,6 +256,13 @@ export const SHIP_MODELS: ShipModel[] = [
     name: 'ENDFRAME',
     description: 'Ultra-pansrad destroyer',
     colors: { primary: '#66ffbb', secondary: '#55aa88', accent: '#bbffdd', glow: '#66ffbb', cockpit: '#eeffff' }
+  },
+  // ============= SECRET OMEGA PACK EXCLUSIVE =============
+  {
+    id: 'omega_prime',
+    name: 'OMEGA PRIME',
+    description: '⬡ LEGENDARY - Exclusive Omega Pack ship',
+    colors: { primary: '#ffd700', secondary: '#1a1a2e', accent: '#00ff88', glow: '#ffd700', cockpit: '#ffffff' }
   }
 ];
 
@@ -392,6 +399,9 @@ export function drawShipModel(
       break;
     case 'titanium':
       drawTitanium(ctx, width, height, colors, time);
+      break;
+    case 'omega_prime':
+      drawOmegaPrime(ctx, width, height, colors, time);
       break;
     default:
       drawFalcon(ctx, width, height, colors, time);
@@ -2502,6 +2512,302 @@ function drawTitanium(ctx: CanvasRenderingContext2D, w: number, h: number, color
   ctx.fill();
   
   drawEngine(ctx, -25, 0, colors, time, 1.3);
+}
+
+// OMEGA PRIME - Legendary Omega Pack Exclusive Ship
+function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  // Animated pulse effect
+  const pulse = Math.sin(time * 0.003) * 0.15 + 1;
+  const goldPulse = Math.sin(time * 0.005) * 0.1 + 1;
+  const rotateAngle = time * 0.001;
+  
+  // --- OUTER ENERGY AURA ---
+  ctx.save();
+  ctx.globalAlpha = 0.15 + Math.sin(time * 0.002) * 0.08;
+  const auraGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, 45);
+  auraGrad.addColorStop(0, '#ffd700');
+  auraGrad.addColorStop(0.5, '#00ff88');
+  auraGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 42 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  
+  // --- ROTATING HEXAGON RING ---
+  ctx.save();
+  ctx.rotate(rotateAngle);
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.6 + Math.sin(time * 0.004) * 0.2;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * 32;
+    const y = Math.sin(angle) * 32;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+  
+  // --- INNER ROTATING TRIANGLE ---
+  ctx.save();
+  ctx.rotate(-rotateAngle * 1.5);
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const angle = (i / 3) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * 22;
+    const y = Math.sin(angle) * 22;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+  
+  // --- MAIN BODY - SLEEK ANGULAR DESIGN ---
+  // Black core body with gold trim
+  const bodyGrad = ctx.createLinearGradient(-25, 0, 40, 0);
+  bodyGrad.addColorStop(0, '#0a0a12');
+  bodyGrad.addColorStop(0.3, '#1a1a2e');
+  bodyGrad.addColorStop(0.7, '#0f0f1a');
+  bodyGrad.addColorStop(1, '#1a1a2e');
+  ctx.fillStyle = bodyGrad;
+  
+  // Central fuselage - sharp angular shape
+  ctx.beginPath();
+  ctx.moveTo(42, 0);           // Tip
+  ctx.lineTo(28, -5);
+  ctx.lineTo(15, -6);
+  ctx.lineTo(-5, -5);
+  ctx.lineTo(-22, -3);
+  ctx.lineTo(-28, 0);          // Rear
+  ctx.lineTo(-22, 3);
+  ctx.lineTo(-5, 5);
+  ctx.lineTo(15, 6);
+  ctx.lineTo(28, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Gold trim outline
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.9;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  
+  // --- SWEPT WINGS ---
+  // Upper wing
+  const wingGrad = ctx.createLinearGradient(-15, -8, -15, -20);
+  wingGrad.addColorStop(0, '#1a1a2e');
+  wingGrad.addColorStop(0.5, '#0a0a12');
+  wingGrad.addColorStop(1, '#1a1a2e');
+  ctx.fillStyle = wingGrad;
+  
+  ctx.beginPath();
+  ctx.moveTo(10, -6);
+  ctx.lineTo(-8, -8);
+  ctx.lineTo(-25, -18);
+  ctx.lineTo(-30, -16);
+  ctx.lineTo(-20, -6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Lower wing
+  ctx.beginPath();
+  ctx.moveTo(10, 6);
+  ctx.lineTo(-8, 8);
+  ctx.lineTo(-25, 18);
+  ctx.lineTo(-30, 16);
+  ctx.lineTo(-20, 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // --- WING TIP ENERGY NODES ---
+  // Upper node
+  ctx.fillStyle = colors.accent;
+  ctx.globalAlpha = 0.7 + Math.sin(time * 0.006) * 0.3;
+  ctx.beginPath();
+  ctx.arc(-27, -17, 3 * goldPulse, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Lower node
+  ctx.beginPath();
+  ctx.arc(-27, 17, 3 * goldPulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // --- GOLD ACCENT LINES ---
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.8;
+  
+  // Central gold stripe
+  ctx.beginPath();
+  ctx.moveTo(38, 0);
+  ctx.lineTo(-20, 0);
+  ctx.stroke();
+  
+  // Upper accent
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(25, -3);
+  ctx.lineTo(5, -4);
+  ctx.lineTo(-10, -3);
+  ctx.stroke();
+  
+  // Lower accent
+  ctx.beginPath();
+  ctx.moveTo(25, 3);
+  ctx.lineTo(5, 4);
+  ctx.lineTo(-10, 3);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  
+  // --- OMEGA SYMBOL COCKPIT ---
+  const cockpitGrad = ctx.createRadialGradient(25, 0, 0, 25, 0, 8);
+  cockpitGrad.addColorStop(0, '#ffffff');
+  cockpitGrad.addColorStop(0.3, '#ffd700');
+  cockpitGrad.addColorStop(0.7, '#ffaa00');
+  cockpitGrad.addColorStop(1, '#cc8800');
+  ctx.fillStyle = cockpitGrad;
+  
+  // Hexagonal cockpit shape
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const x = 25 + Math.cos(angle) * 5;
+    const y = Math.sin(angle) * 4;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  
+  // Cockpit inner glow
+  ctx.fillStyle = '#ffffff';
+  ctx.globalAlpha = 0.6 + Math.sin(time * 0.008) * 0.3;
+  ctx.beginPath();
+  ctx.arc(25, 0, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // --- FORWARD WEAPON PRONGS ---
+  ctx.fillStyle = '#1a1a2e';
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1;
+  
+  // Upper prong
+  ctx.beginPath();
+  ctx.moveTo(30, -4);
+  ctx.lineTo(38, -6);
+  ctx.lineTo(44, -4);
+  ctx.lineTo(38, -3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Lower prong
+  ctx.beginPath();
+  ctx.moveTo(30, 4);
+  ctx.lineTo(38, 6);
+  ctx.lineTo(44, 4);
+  ctx.lineTo(38, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Prong tips glow
+  ctx.fillStyle = colors.accent;
+  ctx.globalAlpha = 0.8 + Math.sin(time * 0.007) * 0.2;
+  ctx.beginPath();
+  ctx.arc(43, -4, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(43, 4, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // --- DUAL ENGINES ---
+  drawOmegaEngine(ctx, -26, -8, colors, time);
+  drawOmegaEngine(ctx, -26, 8, colors, time);
+  
+  // --- CENTRAL REAR THRUSTER ---
+  const thrusterGrad = ctx.createLinearGradient(-28, 0, -45, 0);
+  thrusterGrad.addColorStop(0, '#ffffff');
+  thrusterGrad.addColorStop(0.15, '#ffd700');
+  thrusterGrad.addColorStop(0.4, colors.accent);
+  thrusterGrad.addColorStop(0.7, '#00aa55');
+  thrusterGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = thrusterGrad;
+  
+  const exhaustLen = 20 + Math.sin(time * 0.01) * 5;
+  ctx.beginPath();
+  ctx.moveTo(-28, -2);
+  ctx.quadraticCurveTo(-35, -3, -28 - exhaustLen, 0);
+  ctx.quadraticCurveTo(-35, 3, -28, 2);
+  ctx.closePath();
+  ctx.fill();
+  
+  // --- PARTICLE TRAIL SPARKS ---
+  ctx.globalAlpha = 0.6;
+  for (let i = 0; i < 5; i++) {
+    const sparkX = -30 - i * 6 - Math.random() * 4;
+    const sparkY = (Math.random() - 0.5) * 8;
+    const sparkSize = 1 + Math.random() * 1.5;
+    ctx.fillStyle = i % 2 === 0 ? '#ffd700' : colors.accent;
+    ctx.beginPath();
+    ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Helper: Omega Prime engine exhaust
+function drawOmegaEngine(ctx: CanvasRenderingContext2D, x: number, y: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const exhaustLen = 12 + Math.sin(time * 0.012 + y) * 4;
+  
+  // Engine housing
+  ctx.fillStyle = '#0a0a12';
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(x + 2, y, 4, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  
+  // Exhaust flame
+  const flameGrad = ctx.createLinearGradient(x, y, x - exhaustLen, y);
+  flameGrad.addColorStop(0, '#ffffff');
+  flameGrad.addColorStop(0.2, '#ffd700');
+  flameGrad.addColorStop(0.5, colors.accent);
+  flameGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = flameGrad;
+  
+  ctx.beginPath();
+  ctx.moveTo(x, y - 2);
+  ctx.quadraticCurveTo(x - exhaustLen * 0.5, y - 2.5, x - exhaustLen, y);
+  ctx.quadraticCurveTo(x - exhaustLen * 0.5, y + 2.5, x, y + 2);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Inner core
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  ctx.beginPath();
+  ctx.moveTo(x, y - 1);
+  ctx.lineTo(x - exhaustLen * 0.35, y);
+  ctx.lineTo(x, y + 1);
+  ctx.closePath();
+  ctx.fill();
 }
 
 // Helper: Draw engine exhaust

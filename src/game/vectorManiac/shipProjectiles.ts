@@ -420,6 +420,17 @@ export const SHIP_PROJECTILE_STYLES: Record<string, ShipProjectileStyle> = {
     trailLength: 0,
     sound: 'pulse',
   },
+  
+  // ============= OMEGA PACK EXCLUSIVE =============
+  omega_prime: {
+    shape: 'star',
+    color: '#ffd700',
+    glowColor: '#ffaa00',
+    coreColor: '#00ff88',
+    size: 1.8,
+    trailLength: 3,
+    sound: 'plasma',
+  },
 };
 
 // Get projectile style for a ship (returns default if not found)
