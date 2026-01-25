@@ -263,11 +263,27 @@ function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): vo
                        state.phase === 'hyperspaceExit';
   
   if (isHyperspace) {
-    // Hyperspace background - deep blue/purple with speed lines
+    // Get hyperspace variant for color variation
+    const variantIndex = (state.currentMap - 1) % VM_CONFIG.hyperspaceVariants.length;
+    const variant = VM_CONFIG.hyperspaceVariants[variantIndex];
+    
+    // Parse variant color to get hue for background
+    // Hyperspace background - deep variant-tinted colors
     const gradient = ctx.createLinearGradient(0, 0, 0, arenaHeight);
-    gradient.addColorStop(0, '#000022');
-    gradient.addColorStop(0.5, '#001144');
-    gradient.addColorStop(1, '#002255');
+    
+    // Use different background tints based on variant
+    const bgColors: Record<string, [string, string, string]> = {
+      '#00ffff': ['#000022', '#001144', '#002255'], // Cyan - default
+      '#ff00ff': ['#110022', '#220044', '#330066'], // Magenta - nebula
+      '#ffaa00': ['#221100', '#332200', '#443300'], // Orange - asteroid
+      '#8800ff': ['#0a0022', '#150044', '#200066'], // Purple - void
+      '#ffff00': ['#222200', '#333300', '#444400'], // Yellow - star
+    };
+    const colors = bgColors[variant.color] || bgColors['#00ffff'];
+    
+    gradient.addColorStop(0, colors[0]);
+    gradient.addColorStop(0.5, colors[1]);
+    gradient.addColorStop(1, colors[2]);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, arenaWidth, arenaHeight);
     
@@ -2080,21 +2096,25 @@ function renderHyperspaceOverlay(ctx: CanvasRenderingContext2D, state: VectorSta
   
   // Show timer during hyperspace
   if (state.phase === 'hyperspace') {
+    // Get hyperspace variant for visual variety
+    const variantIndex = (state.currentMap - 1) % VM_CONFIG.hyperspaceVariants.length;
+    const variant = VM_CONFIG.hyperspaceVariants[variantIndex];
+    
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
     const secondsLeft = Math.ceil(state.hyperspaceTimer / 60);
-    ctx.fillStyle = '#00ffff';
+    ctx.fillStyle = variant.color;
     ctx.font = 'bold 24px monospace';
-    ctx.shadowColor = '#00ffff';
+    ctx.shadowColor = variant.color;
     ctx.shadowBlur = 10;
     ctx.globalAlpha = 0.7;
     ctx.fillText(`${secondsLeft}s`, arenaWidth / 2, 80);
     
-    // Show "HYPERSPACE" label at top during the mode
-    ctx.globalAlpha = 0.5;
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText('HYPERSPACE MODE', arenaWidth / 2, 110);
+    // Show variant name at top during the mode
+    ctx.globalAlpha = 0.6;
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText(variant.name, arenaWidth / 2, 110);
   }
   
   ctx.restore();

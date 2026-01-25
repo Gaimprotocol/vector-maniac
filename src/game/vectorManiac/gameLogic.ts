@@ -486,8 +486,10 @@ function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorSt
     newState.soundQueue = [...newState.soundQueue, 'hyperspaceLoop'];
   }
   
-  // Scroll background
-  newState.hyperspaceScrollOffset += VM_CONFIG.hyperspaceScrollSpeed;
+  // Scroll background with variant speed multiplier
+  const variantIndex = (state.currentMap - 1) % VM_CONFIG.hyperspaceVariants.length;
+  const variant = VM_CONFIG.hyperspaceVariants[variantIndex];
+  newState.hyperspaceScrollOffset += VM_CONFIG.hyperspaceScrollSpeed * variant.speedMult;
   
   // Update player position - horizontal movement is free, vertical is limited
   if (input.isTouching) {
@@ -681,11 +683,20 @@ function updateHyperspaceExitPhase(state: VectorState, input: VectorInput): Vect
 function spawnHyperspaceFormation(state: VectorState): VectorState {
   let newState = { ...state };
   
+  // Get hyperspace variant for this map
+  const variantIndex = (state.currentMap - 1) % VM_CONFIG.hyperspaceVariants.length;
+  const variant = VM_CONFIG.hyperspaceVariants[variantIndex];
+  
+  // Apply variant enemy multiplier - sometimes skip spawning entirely
+  if (Math.random() > variant.enemyMult) {
+    return newState; // Skip this spawn wave
+  }
+  
   // Formation types
   const formationTypes = ['v', 'line', 'diamond', 'wave'];
   const formationType = formationTypes[Math.floor(Math.random() * formationTypes.length)];
   
-  const formationSize = 3 + Math.floor(Math.random() * 4); // 3-6 enemies
+  const formationSize = 2 + Math.floor(Math.random() * 3); // 2-4 enemies (reduced)
   const centerX = VM_CONFIG.arenaWidth / 2 + (Math.random() - 0.5) * 300;
   const startY = -50;
   

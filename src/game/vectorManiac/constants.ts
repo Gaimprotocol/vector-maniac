@@ -112,13 +112,22 @@ export const VM_CONFIG = {
   },
   
   // Hyperspace mode configuration
-  hyperspaceDurationMin: 1200, // 20 seconds at 60fps
-  hyperspaceDurationMax: 3000, // 50 seconds at 60fps
-  hyperspaceScrollSpeed: 4,    // Background scroll speed
+  hyperspaceDurationMin: 900, // 15 seconds at 60fps (shorter, more intense)
+  hyperspaceDurationMax: 2100, // 35 seconds at 60fps
+  hyperspaceScrollSpeed: 7,    // Faster background scroll for speed feeling
   hyperspacePlayerYMin: 1200,  // Player can move back to here (250px from bottom)
   hyperspacePlayerYMax: 950,   // Player can move forward to here (250px range)
-  hyperspaceFormationInterval: 90, // Spawn formation every 1.5 seconds
+  hyperspaceFormationInterval: 140, // Slower spawning (2.3s) - fewer enemies
   hyperspaceTransitionDuration: 60, // 1 second transition
+  
+  // Hyperspace variation per map
+  hyperspaceVariants: [
+    { name: 'WARP TUNNEL', speedMult: 1.0, enemyMult: 1.0, color: '#00ffff' },
+    { name: 'NEBULA RUSH', speedMult: 1.2, enemyMult: 0.8, color: '#ff00ff' },
+    { name: 'ASTEROID FIELD', speedMult: 0.9, enemyMult: 1.2, color: '#ffaa00' },
+    { name: 'VOID CORRIDOR', speedMult: 1.4, enemyMult: 0.7, color: '#8800ff' },
+    { name: 'STAR STREAM', speedMult: 1.1, enemyMult: 0.9, color: '#ffff00' },
+  ] as const,
   
   // Visual
   bgColor1: '#050510',
