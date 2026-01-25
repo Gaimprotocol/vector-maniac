@@ -18,43 +18,43 @@ export interface MegaShip {
 export const MEGA_SHIPS: MegaShip[] = [
   {
     id: 'original',
-    name: 'FALCON',
-    description: 'Standard mothership',
+    name: 'GRID CORE',
+    description: 'Standard vector fighter',
     ability: 'Balanced stats',
     colors: { primary: '#ffffff', secondary: '#cccccc', accent: '#ffaa00', glow: '#00ddff', cockpit: '#00ddff' }
   },
   {
     id: 'blue_hawk',
-    name: 'BLUE HAWK',
-    description: 'Laser precision craft',
+    name: 'PHOTON EDGE',
+    description: 'Precision beam cutter',
     ability: 'Shoots laser beams instead of bullets',
     colors: { primary: '#2255cc', secondary: '#1144aa', accent: '#00ffff', glow: '#44aaff', cockpit: '#88ddff' }
   },
   {
     id: 'arctic_wolf',
-    name: 'T.E.R.J.E',
-    description: 'Heavy bomber craft',
+    name: 'CRYO BLAST',
+    description: 'Heavy payload bomber',
     ability: 'Blinking wing lights, drops double bombs',
     colors: { primary: '#aaddee', secondary: '#88bbcc', accent: '#ffffff', glow: '#ccffff', cockpit: '#ffffff' }
   },
   {
     id: 'delta_prime',
-    name: 'DELTA',
-    description: 'Speed interceptor',
+    name: 'HYPER SYNC',
+    description: 'Overclocked interceptor',
     ability: 'Flies, shoots and bombs 30% faster',
     colors: { primary: '#33aa55', secondary: '#228844', accent: '#88ff88', glow: '#44ff66', cockpit: '#aaffaa' }
   },
   {
     id: 'crimson_hawk',
-    name: 'CRIMSON HAWK',
-    description: 'Multi-directional assault',
+    name: 'MULTI VECTOR',
+    description: 'Omni-directional assault',
     ability: 'Extra shots: up, down and backward',
     colors: { primary: '#cc2222', secondary: '#991111', accent: '#ff6644', glow: '#ff4444', cockpit: '#ffaa88' }
   },
   {
     id: 'valkyrie_prime',
-    name: 'VALKYRIE',
-    description: 'Phantom striker',
+    name: 'NULL PHASE',
+    description: 'Phantom stealth striker',
     ability: '50% faster, blue projectiles, stealth mode',
     colors: { primary: '#3344aa', secondary: '#222288', accent: '#88aaff', glow: '#6688ff', cockpit: '#aaccff' }
   }
