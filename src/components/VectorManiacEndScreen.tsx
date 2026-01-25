@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRewardedAds } from '@/hooks/useRewardedAds';
 import { RewardedAdOverlay } from './RewardedAdOverlay';
 import { addStoredScraps, getStoredScraps } from '@/hooks/useScrapCurrency';
+import { ShipIcon, TargetIcon, ScrapIcon } from './VectorIcons';
 
 interface VectorManiacEndScreenProps {
   isVictory: boolean;
@@ -37,6 +38,7 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
       setTotalScraps(getStoredScraps() + salvageCount);
     }
   }, [salvageCount]);
+
   const { 
     isShowingAd, 
     adProgress, 
@@ -77,28 +79,58 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
   const continueButtonDisabled = isWatchingAd || isAdLoading || isAdButtonDisabled();
   const displayError = localError || adError;
 
+  // Colors based on victory/defeat
+  const primaryColor = isVictory ? '#facc15' : '#ff6666';
+  const bgGradient = isVictory 
+    ? 'radial-gradient(ellipse at center, #151005 0%, #0a0802 70%, #050401 100%)'
+    : 'radial-gradient(ellipse at center, #100505 0%, #0a0202 70%, #050101 100%)';
+  const particleColor = isVictory ? '#facc15' : '#ff4444';
+  const gridColor = isVictory ? '#facc15' : '#ff4444';
+
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 z-50">
       <div 
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{
-          background: 'linear-gradient(180deg, rgba(0, 5, 16, 0.95) 0%, rgba(5, 0, 21, 0.95) 50%, rgba(16, 5, 32, 0.95) 100%)',
-        }}
+        className="absolute inset-0"
+        style={{ background: bgGradient }}
       />
       
-      {/* Glowing orbs background */}
-      <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full opacity-10 blur-3xl pointer-events-none"
-           style={{ background: 'radial-gradient(circle, #ff00ff 0%, transparent 70%)' }} />
-      <div className="absolute bottom-1/4 right-1/4 w-32 h-32 rounded-full opacity-10 blur-3xl pointer-events-none"
-           style={{ background: 'radial-gradient(circle, #00ffff 0%, transparent 70%)' }} />
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: Math.random() * 2 + 1 + 'px',
+              height: Math.random() * 2 + 1 + 'px',
+              left: Math.random() * 100 + '%',
+              top: Math.random() * 100 + '%',
+              background: particleColor,
+              opacity: Math.random() * 0.3 + 0.1,
+              animation: `float ${Math.random() * 10 + 10}s ease-in-out infinite`,
+              animationDelay: `-${Math.random() * 10}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Grid overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+        }}
+      />
 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
         {/* Victory/Game Over Title */}
         <h2
-          className={`font-vector font-bold text-3xl mb-2 ${isVictory ? 'text-yellow-400' : 'text-red-400'}`}
+          className="text-2xl mb-2 tracking-widest"
           style={{ 
-            textShadow: isVictory ? '0 0 40px #facc15, 0 0 80px #facc1560' : '0 0 40px #f87171, 0 0 80px #f8717160',
-            letterSpacing: '0.1em',
+            fontFamily: 'Orbitron, monospace',
+            color: primaryColor,
+            textShadow: `0 0 20px ${primaryColor}, 0 0 40px ${primaryColor}50`,
           }}
         >
           {isVictory ? '🏆 VICTORY!' : '💀 GAME OVER'}
@@ -106,8 +138,12 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
 
         {isVictory && (
           <p 
-            className="font-vector text-sm text-magenta mb-4 animate-pulse"
-            style={{ textShadow: '0 0 20px #ff00ff' }}
+            className="text-[10px] mb-4 animate-pulse tracking-wider"
+            style={{ 
+              fontFamily: 'Orbitron, monospace',
+              color: '#ff00ff',
+              textShadow: '0 0 20px #ff00ff' 
+            }}
           >
             ALL 9 WAVES COMPLETED!
           </p>
@@ -115,8 +151,12 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
 
         {isNewHighScore && !isVictory && (
           <div 
-            className="font-vector text-sm text-yellow-400 mb-4 animate-pulse"
-            style={{ textShadow: '0 0 20px #facc15' }}
+            className="text-xs mb-4 animate-pulse tracking-wider"
+            style={{ 
+              fontFamily: 'Orbitron, monospace',
+              color: '#facc15',
+              textShadow: '0 0 20px #facc15' 
+            }}
           >
             ⭐ NEW HIGH SCORE! ⭐
           </div>
@@ -124,17 +164,27 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
 
         {/* Stats */}
         <div 
-          className="text-center space-y-3 mb-6 rounded-lg p-4 border border-white/10"
+          className="text-center space-y-3 mb-6 rounded-lg p-5 border"
           style={{
-            background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%)',
-            boxShadow: '0 0 30px rgba(0, 255, 255, 0.1)',
+            borderColor: 'rgba(0, 255, 136, 0.2)',
+            background: 'rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 0 30px rgba(0, 255, 136, 0.1)',
           }}
         >
           <div>
-            <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Final Score</div>
             <div 
-              className="font-vector font-bold text-cyan-400 text-2xl"
-              style={{ textShadow: '0 0 20px #00ffff' }}
+              className="text-[9px] tracking-widest uppercase mb-1"
+              style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(0, 255, 136, 0.5)' }}
+            >
+              Final Score
+            </div>
+            <div 
+              className="text-xl font-bold"
+              style={{ 
+                fontFamily: 'Orbitron, monospace',
+                color: '#00ff88',
+                textShadow: '0 0 20px #00ff88' 
+              }}
             >
               {Math.floor(score).toString().padStart(8, '0')}
             </div>
@@ -142,35 +192,69 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
 
           <div className="flex gap-6 justify-center">
             <div>
-              <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Collected</div>
-              <div className="font-tech text-yellow-400 text-base" style={{ textShadow: '0 0 10px #facc15' }}>
-                +{salvageCount} ⚙️
+              <div 
+                className="text-[9px] tracking-widest uppercase mb-1"
+                style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(0, 255, 136, 0.5)' }}
+              >
+                Collected
+              </div>
+              <div 
+                className="text-sm flex items-center justify-center gap-1"
+                style={{ fontFamily: 'Rajdhani, sans-serif', color: '#facc15', textShadow: '0 0 10px #facc15' }}
+              >
+                +{salvageCount} <ScrapIcon size={14} />
               </div>
             </div>
 
             <div>
-              <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Wave</div>
-              <div className="font-tech text-white text-base">{wave}/9</div>
+              <div 
+                className="text-[9px] tracking-widest uppercase mb-1"
+                style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(0, 255, 136, 0.5)' }}
+              >
+                Wave
+              </div>
+              <div 
+                className="text-sm"
+                style={{ fontFamily: 'Rajdhani, sans-serif', color: '#00ff88' }}
+              >
+                {wave}/9
+              </div>
             </div>
           </div>
 
           <div>
-            <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Total Scraps</div>
-            <div className="font-tech text-yellow-400 text-lg font-bold" style={{ textShadow: '0 0 15px #facc15' }}>
-              ⚙️ {totalScraps.toLocaleString()}
+            <div 
+              className="text-[9px] tracking-widest uppercase mb-1"
+              style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(0, 255, 136, 0.5)' }}
+            >
+              Total Scraps
+            </div>
+            <div 
+              className="text-base font-bold flex items-center justify-center gap-1"
+              style={{ fontFamily: 'Orbitron, monospace', color: '#facc15', textShadow: '0 0 15px #facc15' }}
+            >
+              <ScrapIcon size={16} /> {totalScraps.toLocaleString()}
             </div>
           </div>
 
           <div>
-            <div className="font-tech text-gray-400 text-[10px] tracking-widest uppercase">Hi-Score</div>
-            <div className="font-tech text-white/80 text-sm">
+            <div 
+              className="text-[9px] tracking-widest uppercase mb-1"
+              style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(0, 255, 136, 0.5)' }}
+            >
+              Hi-Score
+            </div>
+            <div 
+              className="text-sm"
+              style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(0, 255, 136, 0.7)' }}
+            >
               {Math.floor(Math.max(highScore, score)).toString().padStart(8, '0')}
             </div>
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="space-y-2 w-full max-w-xs">
+        <div className="space-y-2 w-full max-w-xs relative z-10">
           {!isVictory && canContinueWithAd && onContinue && (
             <div className="flex flex-col items-center">
               <button
@@ -180,18 +264,24 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
                   handleWatchAdToContinue();
                 }}
                 disabled={continueButtonDisabled}
-                className="font-vector font-semibold text-sm text-yellow-400 border-2 border-yellow-400/60 w-full px-6 py-3
-                           transition-all duration-300 hover:border-yellow-400 hover:bg-yellow-400/10 active:scale-95 uppercase tracking-wider
-                           disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-sm border-2 rounded w-full px-6 py-3
+                           transition-all duration-300 hover:bg-[#facc15]/10 active:scale-95 uppercase tracking-wider
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           flex items-center justify-center gap-2"
                 style={{ 
-                  boxShadow: '0 0 25px rgba(250, 204, 21, 0.25)',
-                  clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+                  fontFamily: 'Orbitron, monospace',
+                  color: '#facc15',
+                  borderColor: 'rgba(250, 204, 21, 0.5)',
+                  boxShadow: '0 0 20px rgba(250, 204, 21, 0.2)',
                 }}
               >
                 {isAdLoading ? '⏳ Loading...' : '🎬 Watch Ad → Revive'}
               </button>
               {displayError && (
-                <p className="font-tech text-xs text-gray-400 mt-1 text-center animate-pulse">
+                <p 
+                  className="text-[9px] mt-1 text-center animate-pulse"
+                  style={{ fontFamily: 'Rajdhani, sans-serif', color: 'rgba(0, 255, 136, 0.5)' }}
+                >
                   {displayError}
                 </p>
               )}
@@ -204,14 +294,17 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
               e.preventDefault();
               onRestart();
             }}
-            className="font-vector font-semibold text-sm text-cyan-400 border-2 border-cyan-400/60 w-full px-6 py-3
-                       transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-400/10 active:scale-95 uppercase tracking-wider"
+            className="text-sm border-2 rounded w-full px-6 py-3
+                       transition-all duration-300 hover:bg-[#00ff88]/10 active:scale-95 uppercase tracking-wider
+                       flex items-center justify-center gap-2"
             style={{ 
-              boxShadow: '0 0 25px rgba(0, 255, 255, 0.25)',
-              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+              fontFamily: 'Orbitron, monospace',
+              color: '#00ff88',
+              borderColor: 'rgba(0, 255, 136, 0.5)',
+              boxShadow: '0 0 20px rgba(0, 255, 136, 0.2)',
             }}
           >
-            {isVictory ? '🔄 Play Again' : '🔄 Try Again'}
+            <ShipIcon size={16} /> {isVictory ? 'Play Again' : 'Try Again'}
           </button>
 
           <button
@@ -220,20 +313,32 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
               e.preventDefault();
               onQuit();
             }}
-            className="font-vector font-semibold text-sm text-red-400 border-2 border-red-400/60 w-full px-6 py-3
-                       transition-all duration-300 hover:border-red-400 hover:bg-red-400/10 active:scale-95 uppercase tracking-wider"
+            className="text-[11px] border rounded w-full px-6 py-3
+                       transition-all duration-300 hover:bg-[#ff4444]/10 active:scale-95 uppercase tracking-wider
+                       flex items-center justify-center gap-2"
             style={{ 
-              boxShadow: '0 0 25px rgba(248, 113, 113, 0.25)',
-              clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)',
+              fontFamily: 'Orbitron, monospace',
+              color: '#ff6666',
+              borderColor: 'rgba(255, 68, 68, 0.4)',
+              boxShadow: '0 0 15px rgba(255, 68, 68, 0.15)',
             }}
           >
-            🚪 Main Menu
+            <TargetIcon size={14} /> Main Menu
           </button>
         </div>
 
         {/* Ad overlay */}
         {isShowingAd && !isNative && <RewardedAdOverlay progress={adProgress} />}
       </div>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-20px) translateX(10px); }
+          50% { transform: translateY(-10px) translateX(-10px); }
+          75% { transform: translateY(-30px) translateX(5px); }
+        }
+      `}</style>
     </div>
   );
 };
