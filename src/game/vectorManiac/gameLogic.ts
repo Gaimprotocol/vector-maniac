@@ -700,6 +700,7 @@ function spawnHyperspaceFormation(state: VectorState): VectorState {
   for (let i = 0; i < formationSize; i++) {
     let offsetX = 0;
     let offsetY = 0;
+    let horizontalSpeed = 0; // For slight horizontal drift
     
     switch (formationType) {
       case 'v':
@@ -719,9 +720,11 @@ function spawnHyperspaceFormation(state: VectorState): VectorState {
         else { offsetX = 40 * (i - formationSize / 2); offsetY = (i - formationSize / 2) * 25; }
         break;
       case 'wave':
-        // Wave pattern
+        // Wave pattern - enemies move in a sine wave pattern
         offsetX = (i - formationSize / 2) * 55;
         offsetY = Math.sin(i * 0.8) * 40;
+        // Add horizontal oscillation for wave pattern
+        horizontalSpeed = Math.sin(i * 1.2) * 0.8;
         break;
     }
     
@@ -737,10 +740,10 @@ function spawnHyperspaceFormation(state: VectorState): VectorState {
       enemy = createDrone(centerX + offsetX, startY + offsetY);
     }
     
-    // Override position and velocity for hyperspace (move downward)
+    // Override position and velocity for hyperspace (move downward, maintain horizontal spread)
     enemy.x = centerX + offsetX;
     enemy.y = startY + offsetY;
-    enemy.vx = 0;
+    enemy.vx = horizontalSpeed; // Slight horizontal movement for variety
     enemy.vy = 2 + Math.random() * 1.5; // Move downward
     
     // Apply scaling
@@ -755,7 +758,7 @@ function spawnHyperspaceFormation(state: VectorState): VectorState {
   return newState;
 }
 
-// Update enemies specifically for hyperspace (move downward)
+// Update enemies specifically for hyperspace (move downward in formation)
 function updateHyperspaceEnemies(state: VectorState): VectorState {
   let newState = { ...state };
   const updatedEnemies: VectorEnemy[] = [];
@@ -769,25 +772,33 @@ function updateHyperspaceEnemies(state: VectorState): VectorState {
     // Move downward in hyperspace (affected by time warp)
     e.y += e.vy * timeWarpMultiplier;
     
-    // Slight horizontal tracking toward player
-    const dx = newState.playerX - e.x;
-    e.x += dx * 0.01 * timeWarpMultiplier;
+    // Keep horizontal position - NO tracking, stay spread in formation (Galaxian/Phoenix style)
+    // Only apply very slight drift to add some movement variety
+    e.x += e.vx * timeWarpMultiplier;
     
-    // Face downward (toward player)
+    // Face downward
     e.targetAngle = Math.PI / 2;
     
-    // Shooters fire at player (slower when time warped)
+    // Shooting behavior varies by enemy type (like Galaxian/Phoenix)
     if (e.type === 'shooter' || e.type === 'elite') {
       e.fireTimer -= timeWarpMultiplier;
       if (e.fireTimer <= 0 && e.y > 0 && e.y < VM_CONFIG.arenaHeight * 0.7) {
-        const proj = createEnemyProjectile(e.x, e.y, newState.playerX, newState.playerY);
+        // Elite enemies aim at player, shooters fire straight down
+        let proj;
+        if (e.type === 'elite') {
+          // Aimed shot at player
+          proj = createEnemyProjectile(e.x, e.y, newState.playerX, newState.playerY);
+        } else {
+          // Straight down shot (shooter type)
+          proj = createEnemyProjectile(e.x, e.y, e.x, e.y + 100);
+        }
         newState.projectiles = [...newState.projectiles, proj];
         e.fireTimer = VM_CONFIG.shooterFireRate * (e.type === 'elite' ? 0.7 : 1);
       }
     }
     
-    // Remove enemies that go off screen
-    if (e.y < VM_CONFIG.arenaHeight + 100) {
+    // Remove enemies that go off screen (bottom or sides)
+    if (e.y < VM_CONFIG.arenaHeight + 100 && e.x > -50 && e.x < VM_CONFIG.arenaWidth + 50) {
       updatedEnemies.push(e);
     }
   }
@@ -1409,9 +1420,17 @@ function updateSalvage(state: VectorState): VectorState {
       salvage.vx = lerp(salvage.vx, dir.x * 6, 0.2);
       salvage.vy = lerp(salvage.vy, dir.y * 6, 0.2);
     } else {
-      // Slow drift
-      salvage.vx *= 0.98;
-      salvage.vy *= 0.98;
+      // In hyperspace, salvage moves downward with the flow
+      const isHyperspace = newState.phase === 'hyperspace' || newState.phase === 'hyperspaceEnter' || newState.phase === 'hyperspaceExit';
+      if (isHyperspace) {
+        // Move down with hyperspace scroll
+        salvage.vy = 3; // Consistent downward movement
+        salvage.vx *= 0.98; // Slow horizontal drift
+      } else {
+        // Normal mode - slow drift
+        salvage.vx *= 0.98;
+        salvage.vy *= 0.98;
+      }
     }
     
     salvage.x += salvage.vx;
@@ -1473,14 +1492,27 @@ function updatePowerUps(state: VectorState): VectorState {
     p.y += p.vy;
     p.life--;
     
-    // Bounce off walls
+    // Bounce off horizontal walls
     if (p.x < VM_CONFIG.arenaPadding || p.x > VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding) {
       p.vx *= -1;
       p.x = clamp(p.x, VM_CONFIG.arenaPadding, VM_CONFIG.arenaWidth - VM_CONFIG.arenaPadding);
     }
-    if (p.y < VM_CONFIG.arenaPadding || p.y > VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding) {
-      p.vy *= -1;
-      p.y = clamp(p.y, VM_CONFIG.arenaPadding, VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding);
+    
+    // In hyperspace, power-ups should continue moving down and off-screen (no bounce at bottom)
+    // For normal mode, bounce at top/bottom
+    const isHyperspace = state.phase === 'hyperspace' || state.phase === 'hyperspaceEnter' || state.phase === 'hyperspaceExit';
+    
+    if (isHyperspace) {
+      // Remove power-ups that go off the bottom of the screen
+      if (p.y > VM_CONFIG.arenaHeight + 50) {
+        continue; // Don't add to updated list - it's gone
+      }
+    } else {
+      // Normal mode - bounce at top and bottom
+      if (p.y < VM_CONFIG.arenaPadding || p.y > VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding) {
+        p.vy *= -1;
+        p.y = clamp(p.y, VM_CONFIG.arenaPadding, VM_CONFIG.arenaHeight - VM_CONFIG.arenaPadding);
+      }
     }
     
     // Keep if still alive
