@@ -4,6 +4,7 @@ import { usePurchases, getVisibleProducts, ShopProduct } from '@/hooks/usePurcha
 import { useScrapCurrency } from '@/hooks/useScrapCurrency';
 import { useShipUpgrades, SHIP_UPGRADES } from '@/hooks/useShipUpgrades';
 import { PurchasePopup } from './PurchasePopup';
+import { LegendaryUnlockAnimation } from './LegendaryUnlockAnimation';
 import { useMusicContext } from '@/contexts/MusicContext';
 import { ShipPreview } from './ShipPreview';
 import { UpgradeStatPreview } from './UpgradeStatPreview';
@@ -38,6 +39,7 @@ export const ShopScreen: React.FC = () => {
   const [hoveredUpgrade, setHoveredUpgrade] = useState<string | null>(null);
   const [upgradeVersion, setUpgradeVersion] = useState(0);
   const [purchaseFlash, setPurchaseFlash] = useState<string | null>(null);
+  const [showLegendaryAnimation, setShowLegendaryAnimation] = useState(false);
   
   const { purchaseProduct, isOwned, isLoading: purchasesLoading, shouldShowAds } = usePurchases();
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
@@ -118,9 +120,13 @@ export const ShopScreen: React.FC = () => {
         if (item.type === 'scraps' && item.scrapAmount) {
           addScraps(item.scrapAmount);
         }
-        // Omega pack gives 5000 scraps bonus
+        // Omega pack gives 5000 scraps bonus + legendary animation
         if (item.id === 'omega_pack') {
           addScraps(5000);
+          playPurchaseSound();
+          triggerHapticFeedback('success');
+          setShowLegendaryAnimation(true);
+          return; // Don't show regular popup
         }
         setPopup({ type: 'success', productName: item.name });
       }
@@ -475,6 +481,16 @@ export const ShopScreen: React.FC = () => {
           100% { opacity: 0; }
         }
       `}</style>
+      
+      {/* Legendary unlock animation for Omega Pack */}
+      {showLegendaryAnimation && (
+        <LegendaryUnlockAnimation 
+          onComplete={() => {
+            setShowLegendaryAnimation(false);
+            setPurchasing(null);
+          }} 
+        />
+      )}
     </div>
   );
 };
