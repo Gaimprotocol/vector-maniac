@@ -10,14 +10,12 @@ export const ShipSelector: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const { hasSecretShip } = usePurchases();
+  
+  const isOmegaUnlocked = hasSecretShip();
 
-  // Filter ships - omega_prime only visible if owned
-  const availableShips = SHIP_MODELS.filter(model => {
-    if (model.id === 'omega_prime') {
-      return hasSecretShip();
-    }
-    return true;
-  });
+  // All ships except omega_prime (handled separately)
+  const standardShips = SHIP_MODELS.filter(model => model.id !== 'omega_prime');
+  const omegaShip = SHIP_MODELS.find(model => model.id === 'omega_prime');
 
   // Draw preview ship
   useEffect(() => {
@@ -135,7 +133,7 @@ export const ShipSelector: React.FC = () => {
           className="text-[9px] text-[#00ff88]/50 text-center mb-4 uppercase tracking-[0.3em]"
           style={{ fontFamily: 'Orbitron, monospace' }}
         >
-          {availableShips.length} AVAILABLE MODELS
+          {isOmegaUnlocked ? SHIP_MODELS.length : SHIP_MODELS.length - 1} AVAILABLE MODELS
         </p>
 
         {/* Preview */}
@@ -185,22 +183,178 @@ export const ShipSelector: React.FC = () => {
           </div>
         </div>
 
-        {/* Ship grid */}
-        <div className="grid grid-cols-4 gap-2 max-h-[45vh] overflow-y-auto pr-1">
-          {availableShips.map((model) => (
-            <ShipCard
-              key={model.id}
-              model={model}
-              isActive={activeId === model.id}
-              isPreview={previewId === model.id}
-              isLegendary={model.id === 'omega_prime'}
-              onPreview={() => setPreviewId(model.id)}
-              onSelect={() => handleSelect(model.id)}
+        {/* Ship grid - standard ships */}
+        <div className="space-y-2">
+          <div className="grid grid-cols-4 gap-2 max-h-[45vh] overflow-y-auto pr-1">
+            {standardShips.map((model) => (
+              <ShipCard
+                key={model.id}
+                model={model}
+                isActive={activeId === model.id}
+                isPreview={previewId === model.id}
+                isLegendary={false}
+                onPreview={() => setPreviewId(model.id)}
+                onSelect={() => handleSelect(model.id)}
+              />
+            ))}
+          </div>
+          
+          {/* Omega Prime - 3x wide card (separate row) */}
+          {omegaShip && (
+            <OmegaPrimeCard
+              model={omegaShip}
+              isActive={activeId === 'omega_prime'}
+              isPreview={previewId === 'omega_prime'}
+              isUnlocked={isOmegaUnlocked}
+              onPreview={() => setPreviewId('omega_prime')}
+              onSelect={() => handleSelect('omega_prime')}
             />
-          ))}
+          )}
         </div>
       </div>
     </div>
+  );
+};
+
+// Omega Prime Premium Card - 3x width with locked state
+const OmegaPrimeCard: React.FC<{
+  model: ShipModel;
+  isActive: boolean;
+  isPreview: boolean;
+  isUnlocked: boolean;
+  onPreview: () => void;
+  onSelect: () => void;
+}> = ({ model, isActive, isPreview, isUnlocked, onPreview, onSelect }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Dark background with gold accents
+    const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    bgGrad.addColorStop(0, '#0a0a12');
+    bgGrad.addColorStop(0.5, '#1a1a2e');
+    bgGrad.addColorStop(1, '#0a0a12');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Gold radial glow
+    const glow = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 10, canvas.width / 2, canvas.height / 2, 120);
+    glow.addColorStop(0, 'rgba(255, 215, 0, 0.15)');
+    glow.addColorStop(0.6, 'rgba(255, 170, 0, 0.05)');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    if (isUnlocked) {
+      // Show the actual ship - 35% larger (legendary)
+      const baseScale = 1.2;
+      const shipScale = baseScale * 1.35;
+      
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.scale(shipScale, shipScale);
+      drawShipModel(ctx, 'omega_prime', 60, 30, Date.now());
+      ctx.restore();
+    } else {
+      // Show locked silhouette
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      
+      // Draw ship silhouette (blurred/hidden)
+      ctx.globalAlpha = 0.15;
+      ctx.filter = 'blur(8px)';
+      ctx.scale(1.2 * 1.35, 1.2 * 1.35);
+      drawShipModel(ctx, 'omega_prime', 60, 30, Date.now());
+      ctx.restore();
+      
+      // Lock icon
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.fillStyle = '#ffd700';
+      ctx.globalAlpha = 0.8;
+      ctx.font = '48px Orbitron';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🔒', 0, 0);
+      ctx.restore();
+    }
+  }, [isUnlocked]);
+
+  return (
+    <button
+      onMouseEnter={isUnlocked ? onPreview : undefined}
+      onClick={isUnlocked ? onSelect : undefined}
+      disabled={!isUnlocked}
+      className="relative rounded-lg border-2 p-2 transition-all"
+      style={{
+        borderColor: isActive ? '#ffd700' : isPreview ? '#ffaa00' : '#ffd70060',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #0a0a12 100%)',
+        boxShadow: isActive || isPreview
+          ? '0 0 20px rgba(255, 215, 0, 0.4)'
+          : '0 0 10px rgba(255, 215, 0, 0.1)',
+        cursor: isUnlocked ? 'pointer' : 'not-allowed',
+        opacity: isUnlocked ? 1 : 0.7,
+        ...(isUnlocked && (isActive || isPreview) ? { transform: 'scale(1.02)' } : {})
+      }}
+    >
+      {/* Legendary badge */}
+      <span 
+        className="absolute -top-2 left-4 text-[10px] px-3 py-0.5 rounded-full z-10"
+        style={{ 
+          fontFamily: 'Orbitron, monospace',
+          background: 'linear-gradient(90deg, #ffd700, #ffaa00)',
+          color: '#000',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em'
+        }}
+      >
+        ◆ LEGENDARY
+      </span>
+      
+      <canvas ref={canvasRef} width={340} height={80} className="w-full rounded mb-2" />
+      
+      <div className="text-center">
+        <p 
+          className="text-sm font-bold mb-1"
+          style={{ 
+            fontFamily: 'Orbitron, monospace',
+            color: '#ffd700',
+            textShadow: '0 0 15px #ffd700',
+            letterSpacing: '0.15em'
+          }}
+        >
+          {isUnlocked ? model.name : '??? LOCKED ???'}
+        </p>
+        <p 
+          className="text-[9px]"
+          style={{ 
+            fontFamily: 'Rajdhani, sans-serif',
+            color: isUnlocked ? '#ffd700aa' : '#ffd70060',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }}
+        >
+          {isUnlocked ? model.description : 'Unlock with Omega Pack'}
+        </p>
+      </div>
+      
+      {isActive && isUnlocked && (
+        <span 
+          className="absolute top-3 right-3 text-[12px]"
+          style={{ 
+            color: '#ffd700',
+            textShadow: '0 0 10px #ffd700'
+          }}
+        >
+          ◆
+        </span>
+      )}
+    </button>
   );
 };
 
