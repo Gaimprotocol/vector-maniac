@@ -155,10 +155,10 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
             style={{ 
               fontFamily: 'Orbitron, monospace',
               color: '#facc15',
-              textShadow: '0 0 20px #facc15' 
+              textShadow: '0 0 20px #facc15, 0 0 40px #facc1550' 
             }}
           >
-            ⭐ NEW HIGH SCORE! ⭐
+            ◆ NEW HIGH SCORE ◆
           </div>
         )}
 
