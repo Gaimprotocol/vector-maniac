@@ -100,7 +100,13 @@ export const ShopScreen: React.FC = () => {
   };
 
   const handleStorePurchase = async (item: ShopProduct) => {
-    if (item.type !== 'scraps' && isOwned(item.id)) {
+    if (item.type !== 'scraps' && item.id !== 'omega_pack' && isOwned(item.id)) {
+      setPopup({ type: 'already_owned', productName: item.name });
+      return;
+    }
+    
+    // Check if omega pack already owned
+    if (item.id === 'omega_pack' && isOwned('omega')) {
       setPopup({ type: 'already_owned', productName: item.name });
       return;
     }
@@ -112,13 +118,9 @@ export const ShopScreen: React.FC = () => {
         if (item.type === 'scraps' && item.scrapAmount) {
           addScraps(item.scrapAmount);
         }
-        if (item.id === 'random_evolve') {
-          const randomUpgrades = [...SHIP_UPGRADES].sort(() => Math.random() - 0.5).slice(0, 2);
-          randomUpgrades.forEach(upgrade => {
-            if (!isUpgradeMaxed(upgrade.id)) {
-              purchaseUpgrade(upgrade.id);
-            }
-          });
+        // Omega pack gives 5000 scraps bonus
+        if (item.id === 'omega_pack') {
+          addScraps(5000);
         }
         setPopup({ type: 'success', productName: item.name });
       }
