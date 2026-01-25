@@ -1928,6 +1928,9 @@ function completeWave(state: VectorState): VectorState {
     if (shouldHyperspace) {
       newState.phase = 'hyperspaceEnter';
       newState.phaseTimer = VM_CONFIG.hyperspaceTransitionDuration;
+      // Clear map info text when entering hyperspace
+      newState.showMapName = false;
+      newState.mapNameTimer = 0;
       newState.hyperspaceActive = true;
       newState.hyperspaceDuration = VM_CONFIG.hyperspaceDurationMin + 
         Math.floor(Math.random() * (VM_CONFIG.hyperspaceDurationMax - VM_CONFIG.hyperspaceDurationMin));
