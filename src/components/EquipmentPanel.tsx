@@ -270,9 +270,13 @@ export const EquipmentPanel: React.FC = () => {
   const [previewingTrackId, setPreviewingTrackId] = useState<string | null>(null);
   
   const handleOmegaSelect = () => {
+    console.log('[EquipmentPanel] Selecting Omega Prime ship');
     setActiveShipModelId('omega_prime');
     setActiveShipModelIdState('omega_prime');
   };
+  
+  // Debug log for omega unlock status
+  console.log('[EquipmentPanel] isOmegaUnlocked:', isOmegaUnlocked);
 
   useEffect(() => {
     if (!hasEnteredGalaxy) {
