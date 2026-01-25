@@ -13,12 +13,25 @@ interface MenuScreenProps {
 export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onStartVectorManiac, startMusicRef }) => {
   const navigate = useNavigate();
   const { hasGoldenSkin } = usePurchases();
-  const [entered, setEntered] = useState(false);
-  const [showContent, setShowContent] = useState(false);
+  
+  // Persist "entered" state in sessionStorage so it survives navigation to shop/gear/info
+  const [entered, setEntered] = useState(() => {
+    return sessionStorage.getItem('menuEntered') === 'true';
+  });
+  const [showContent, setShowContent] = useState(() => {
+    return sessionStorage.getItem('menuEntered') === 'true';
+  });
   const [bonusMapsEnabled, setBonusMapsEnabled] = useState(() => {
     return localStorage.getItem('bonusMapsEnabled') !== 'false';
   });
   const fadeIntervalRef = useRef<number | null>(null);
+  
+  // Sync entered state to sessionStorage
+  useEffect(() => {
+    if (entered) {
+      sessionStorage.setItem('menuEntered', 'true');
+    }
+  }, [entered]);
 
   useEffect(() => {
     return () => {
