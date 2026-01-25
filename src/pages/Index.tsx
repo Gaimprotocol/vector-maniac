@@ -123,9 +123,12 @@ const Index = () => {
             className="text-5xl mt-4"
             style={{ 
               animation: 'rotate-phone 1.5s ease-in-out infinite',
+              color: '#00e5ff',
+              fontFamily: 'Orbitron, monospace',
+              textShadow: '0 0 20px #00e5ff',
             }}
           >
-            📱
+            ⊡
           </div>
           <p className="text-cyan-400 text-sm font-bold text-center px-4 mt-2">
             Rotate your phone to landscape

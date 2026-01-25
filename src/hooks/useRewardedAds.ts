@@ -10,12 +10,12 @@ export interface AdReward {
 
 // Rewards now give 20% improvements (max stacked 40%)
 const AD_REWARDS: AdReward[] = [
-  { id: 'double_bombs', name: 'DOUBLE BOMBS', description: 'Auto-fire double bombs for 45 sec', icon: '💣' },
-  { id: 'triple_shots', name: 'TRIPLE SHOTS', description: 'Triple laser shots for 30 sec', icon: '🔱' },
+  { id: 'double_bombs', name: 'DOUBLE BOMBS', description: 'Auto-fire double bombs for 45 sec', icon: '◉' },
+  { id: 'triple_shots', name: 'TRIPLE SHOTS', description: 'Triple laser shots for 30 sec', icon: '⫷' },
   { id: 'double_laser', name: 'DOUBLE LASER', description: 'Double laser shots for 40 sec', icon: '⚡' },
-  { id: 'shield_boost', name: 'SHIELD BOOST', description: 'Shield protection for 60 sec', icon: '🛡️' },
-  { id: 'double_points', name: 'DOUBLE POINTS', description: 'Double score for 40 sec', icon: '⭐' },
-  { id: 'speed_boost', name: 'SPEED BOOST', description: '+20% movement speed for 45 sec', icon: '💨' },
+  { id: 'shield_boost', name: 'SHIELD BOOST', description: 'Shield protection for 60 sec', icon: '⬡' },
+  { id: 'double_points', name: 'DOUBLE POINTS', description: 'Double score for 40 sec', icon: '◆' },
+  { id: 'speed_boost', name: 'SPEED BOOST', description: '+20% movement speed for 45 sec', icon: '▷' },
 ];
 
 export interface ActiveAdRewards {

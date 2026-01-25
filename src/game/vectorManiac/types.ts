@@ -104,35 +104,35 @@ export const VECTOR_UPGRADES: VectorUpgrade[] = [
     id: 'magnetRange',
     name: 'Magnet+',
     description: '+8% salvage magnet range',
-    icon: '🧲',
+    icon: '◎',
     apply: (stats) => ({ ...stats, magnetRange: stats.magnetRange * 1.08 }), // Was 10%
   },
   {
     id: 'fireRate',
     name: 'Rapid Fire',
     description: '+4% fire rate',
-    icon: '🔥',
+    icon: '◇',
     apply: (stats) => ({ ...stats, fireRate: stats.fireRate * 0.96 }), // Was 6%
   },
   {
     id: 'bulletSpeed',
     name: 'Velocity',
     description: '+5% bullet speed',
-    icon: '💨',
+    icon: '▷',
     apply: (stats) => ({ ...stats, bulletSpeed: stats.bulletSpeed * 1.05 }), // Was 8%
   },
   {
     id: 'damage',
     name: 'Power',
     description: '+3% damage',
-    icon: '💥',
+    icon: '◈',
     apply: (stats) => ({ ...stats, damage: stats.damage * 1.03 }), // Was 5%
   },
   {
     id: 'pierce',
     name: 'Pierce',
     description: '+1 bullet penetration',
-    icon: '🎯',
+    icon: '⊕',
     maxStack: 1, // Was 2 - only 1 pierce from boss now
     apply: (stats) => ({ ...stats, pierce: stats.pierce + 1 }),
   },
@@ -140,7 +140,7 @@ export const VECTOR_UPGRADES: VectorUpgrade[] = [
     id: 'shield',
     name: 'Shield',
     description: '+1 extra hit protection',
-    icon: '🛡️',
+    icon: '⬡',
     maxStack: 1, // Was 2 - only 1 shield from boss now
     apply: (stats) => ({ ...stats, shields: stats.shields + 1 }),
   },
@@ -148,14 +148,14 @@ export const VECTOR_UPGRADES: VectorUpgrade[] = [
     id: 'salvageBonus',
     name: 'Scavenger',
     description: '+8% salvage value',
-    icon: '💎',
+    icon: '◆',
     apply: (stats) => ({ ...stats, salvageBonus: stats.salvageBonus * 1.08 }), // Was 10%
   },
   {
     id: 'speed',
     name: 'Thrusters',
     description: '+3% movement speed',
-    icon: '🚀',
+    icon: '⊳',
     apply: (stats) => ({ ...stats, speed: stats.speed * 1.03 }), // Was 5%
   },
 ];

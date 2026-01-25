@@ -19,14 +19,14 @@ const STAT_LABELS: Record<string, string> = {
 };
 
 const STAT_ICONS: Record<string, string> = {
-  damage: '💥',
-  fireRate: '🔥',
-  health: '❤️',
-  speed: '🚀',
-  magnetRange: '🧲',
-  shields: '⚡',
-  pierce: '🎯',
-  extraCannons: '🔫',
+  damage: '◈',
+  fireRate: '◇',
+  health: '♦',
+  speed: '▷',
+  magnetRange: '◎',
+  shields: '⬡',
+  pierce: '⊕',
+  extraCannons: '⫸',
 };
 
 export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade, currentLevel, upgrades }) => {
@@ -128,7 +128,7 @@ export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade,
         
         {isMaxed && (
           <div className="mt-1 font-pixel text-[7px] text-green-400 text-center">
-            ✓ MAX REACHED
+            ◆ MAX REACHED
           </div>
         )}
       </div>
