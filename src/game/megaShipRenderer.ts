@@ -1058,18 +1058,15 @@ export function drawMegaShip(
       drawValkyrieShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
       break;
     case 'omega_prime':
-      // Omega Prime uses the custom renderer from shipModels
-      const omegaModel = SHIP_MODELS.find(m => m.id === 'omega_prime');
-      if (omegaModel) {
-        drawShipModel(ctx, 'omega_prime', 60, 30, time * 1000);
-      }
+      // Omega Prime uses the custom renderer from shipModels with quality param
+      drawShipModel(ctx, 'omega_prime', 60, 30, time * 1000, quality);
       break;
     case 'original':
     default:
       // Check if this is one of the 40 custom ship models
       const customShip = SHIP_MODELS.find(m => m.id === megaShipId);
       if (customShip) {
-        drawShipModel(ctx, megaShipId, 60, 30, time * 1000);
+        drawShipModel(ctx, megaShipId, 60, 30, time * 1000, quality);
       } else {
         drawFalconShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
       }

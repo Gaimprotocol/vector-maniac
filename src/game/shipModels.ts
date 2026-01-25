@@ -273,7 +273,8 @@ export function drawShipModel(
   modelId: string,
   width: number,
   height: number,
-  time: number
+  time: number,
+  quality: 'game' | 'preview' = 'preview'
 ): void {
   const model = SHIP_MODELS.find(m => m.id === modelId) || SHIP_MODELS[0];
   const colors = model.colors;
@@ -401,7 +402,7 @@ export function drawShipModel(
       drawTitanium(ctx, width, height, colors, time);
       break;
     case 'omega_prime':
-      drawOmegaPrime(ctx, width, height, colors, time);
+      drawOmegaPrime(ctx, width, height, colors, time, quality);
       break;
     default:
       drawFalcon(ctx, width, height, colors, time);
@@ -2515,31 +2516,35 @@ function drawTitanium(ctx: CanvasRenderingContext2D, w: number, h: number, color
 }
 
 // OMEGA PRIME - Legendary Omega Pack Exclusive Ship
-function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  // Animated pulse effect
-  const pulse = Math.sin(time * 0.003) * 0.15 + 1;
-  const goldPulse = Math.sin(time * 0.005) * 0.1 + 1;
+function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number, quality: 'game' | 'preview' = 'preview') {
+  // Animated pulse effect - simplified in game mode
+  const pulse = quality === 'preview' ? (Math.sin(time * 0.003) * 0.15 + 1) : 1;
+  const goldPulse = quality === 'preview' ? (Math.sin(time * 0.005) * 0.1 + 1) : 1;
   const rotateAngle = time * 0.001;
   
-  // --- OUTER ENERGY AURA ---
-  ctx.save();
-  ctx.globalAlpha = 0.15 + Math.sin(time * 0.002) * 0.08;
-  const auraGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, 45);
-  auraGrad.addColorStop(0, '#ffd700');
-  auraGrad.addColorStop(0.5, '#00ff88');
-  auraGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, 42 * pulse, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // --- OUTER ENERGY AURA --- (skip in game mode for performance)
+  if (quality === 'preview') {
+    ctx.save();
+    ctx.globalAlpha = 0.15 + Math.sin(time * 0.002) * 0.08;
+    const auraGrad = ctx.createRadialGradient(0, 0, 5, 0, 0, 45);
+    auraGrad.addColorStop(0, '#ffd700');
+    auraGrad.addColorStop(0.5, '#00ff88');
+    auraGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 42 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
   
-  // --- ROTATING HEXAGON RING ---
+  // --- ROTATING HEXAGON RING --- (simplified in game mode)
   ctx.save();
-  ctx.rotate(rotateAngle);
+  if (quality === 'preview') {
+    ctx.rotate(rotateAngle);
+  }
   ctx.strokeStyle = '#ffd700';
   ctx.lineWidth = 1.5;
-  ctx.globalAlpha = 0.6 + Math.sin(time * 0.004) * 0.2;
+  ctx.globalAlpha = quality === 'preview' ? (0.6 + Math.sin(time * 0.004) * 0.2) : 0.7;
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
@@ -2552,23 +2557,25 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.stroke();
   ctx.restore();
   
-  // --- INNER ROTATING TRIANGLE ---
-  ctx.save();
-  ctx.rotate(-rotateAngle * 1.5);
-  ctx.strokeStyle = colors.accent;
-  ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.5;
-  ctx.beginPath();
-  for (let i = 0; i < 3; i++) {
-    const angle = (i / 3) * Math.PI * 2 - Math.PI / 2;
-    const x = Math.cos(angle) * 22;
-    const y = Math.sin(angle) * 22;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  // --- INNER ROTATING TRIANGLE --- (skip in game mode)
+  if (quality === 'preview') {
+    ctx.save();
+    ctx.rotate(-rotateAngle * 1.5);
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2 - Math.PI / 2;
+      const x = Math.cos(angle) * 22;
+      const y = Math.sin(angle) * 22;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
   }
-  ctx.closePath();
-  ctx.stroke();
-  ctx.restore();
   
   // --- MAIN BODY - SLEEK ANGULAR DESIGN ---
   // Black core body with gold trim
@@ -2632,10 +2639,10 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.fill();
   ctx.stroke();
   
-  // --- WING TIP ENERGY NODES ---
+  // --- WING TIP ENERGY NODES --- (simplified in game mode)
   // Upper node
   ctx.fillStyle = colors.accent;
-  ctx.globalAlpha = 0.7 + Math.sin(time * 0.006) * 0.3;
+  ctx.globalAlpha = quality === 'preview' ? (0.7 + Math.sin(time * 0.006) * 0.3) : 0.8;
   ctx.beginPath();
   ctx.arc(-27, -17, 3 * goldPulse, 0, Math.PI * 2);
   ctx.fill();
@@ -2673,13 +2680,17 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.stroke();
   ctx.globalAlpha = 1;
   
-  // --- OMEGA SYMBOL COCKPIT ---
-  const cockpitGrad = ctx.createRadialGradient(25, 0, 0, 25, 0, 8);
-  cockpitGrad.addColorStop(0, '#ffffff');
-  cockpitGrad.addColorStop(0.3, '#ffd700');
-  cockpitGrad.addColorStop(0.7, '#ffaa00');
-  cockpitGrad.addColorStop(1, '#cc8800');
-  ctx.fillStyle = cockpitGrad;
+  // --- OMEGA SYMBOL COCKPIT --- (simplified gradient in game mode)
+  if (quality === 'preview') {
+    const cockpitGrad = ctx.createRadialGradient(25, 0, 0, 25, 0, 8);
+    cockpitGrad.addColorStop(0, '#ffffff');
+    cockpitGrad.addColorStop(0.3, '#ffd700');
+    cockpitGrad.addColorStop(0.7, '#ffaa00');
+    cockpitGrad.addColorStop(1, '#cc8800');
+    ctx.fillStyle = cockpitGrad;
+  } else {
+    ctx.fillStyle = '#ffd700';
+  }
   
   // Hexagonal cockpit shape
   ctx.beginPath();
@@ -2693,13 +2704,15 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.closePath();
   ctx.fill();
   
-  // Cockpit inner glow
-  ctx.fillStyle = '#ffffff';
-  ctx.globalAlpha = 0.6 + Math.sin(time * 0.008) * 0.3;
-  ctx.beginPath();
-  ctx.arc(25, 0, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
+  // Cockpit inner glow (only in preview mode)
+  if (quality === 'preview') {
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.6 + Math.sin(time * 0.008) * 0.3;
+    ctx.beginPath();
+    ctx.arc(25, 0, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
   
   // --- FORWARD WEAPON PRONGS ---
   ctx.fillStyle = '#1a1a2e';
@@ -2726,9 +2739,9 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.fill();
   ctx.stroke();
   
-  // Prong tips glow
+  // Prong tips glow (simplified in game mode)
   ctx.fillStyle = colors.accent;
-  ctx.globalAlpha = 0.8 + Math.sin(time * 0.007) * 0.2;
+  ctx.globalAlpha = quality === 'preview' ? (0.8 + Math.sin(time * 0.007) * 0.2) : 0.9;
   ctx.beginPath();
   ctx.arc(43, -4, 2, 0, Math.PI * 2);
   ctx.fill();
@@ -2737,20 +2750,24 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.fill();
   ctx.globalAlpha = 1;
   
-  // --- DUAL ENGINES ---
-  drawOmegaEngine(ctx, -26, -8, colors, time);
-  drawOmegaEngine(ctx, -26, 8, colors, time);
+  // --- DUAL ENGINES --- (use simplified version in game mode)
+  drawOmegaEngine(ctx, -26, -8, colors, time, quality);
+  drawOmegaEngine(ctx, -26, 8, colors, time, quality);
   
-  // --- CENTRAL REAR THRUSTER ---
-  const thrusterGrad = ctx.createLinearGradient(-28, 0, -45, 0);
-  thrusterGrad.addColorStop(0, '#ffffff');
-  thrusterGrad.addColorStop(0.15, '#ffd700');
-  thrusterGrad.addColorStop(0.4, colors.accent);
-  thrusterGrad.addColorStop(0.7, '#00aa55');
-  thrusterGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = thrusterGrad;
+  // --- CENTRAL REAR THRUSTER --- (simplified in game mode)
+  if (quality === 'preview') {
+    const thrusterGrad = ctx.createLinearGradient(-28, 0, -45, 0);
+    thrusterGrad.addColorStop(0, '#ffffff');
+    thrusterGrad.addColorStop(0.15, '#ffd700');
+    thrusterGrad.addColorStop(0.4, colors.accent);
+    thrusterGrad.addColorStop(0.7, '#00aa55');
+    thrusterGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = thrusterGrad;
+  } else {
+    ctx.fillStyle = colors.accent;
+  }
   
-  const exhaustLen = 20 + Math.sin(time * 0.01) * 5;
+  const exhaustLen = quality === 'preview' ? (20 + Math.sin(time * 0.01) * 5) : 22;
   ctx.beginPath();
   ctx.moveTo(-28, -2);
   ctx.quadraticCurveTo(-35, -3, -28 - exhaustLen, 0);
@@ -2758,23 +2775,25 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.closePath();
   ctx.fill();
   
-  // --- PARTICLE TRAIL SPARKS ---
-  ctx.globalAlpha = 0.6;
-  for (let i = 0; i < 5; i++) {
-    const sparkX = -30 - i * 6 - Math.random() * 4;
-    const sparkY = (Math.random() - 0.5) * 8;
-    const sparkSize = 1 + Math.random() * 1.5;
-    ctx.fillStyle = i % 2 === 0 ? '#ffd700' : colors.accent;
-    ctx.beginPath();
-    ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
-    ctx.fill();
+  // --- PARTICLE TRAIL SPARKS --- (only in preview mode)
+  if (quality === 'preview') {
+    ctx.globalAlpha = 0.6;
+    for (let i = 0; i < 5; i++) {
+      const sparkX = -30 - i * 6 - Math.random() * 4;
+      const sparkY = (Math.random() - 0.5) * 8;
+      const sparkSize = 1 + Math.random() * 1.5;
+      ctx.fillStyle = i % 2 === 0 ? '#ffd700' : colors.accent;
+      ctx.beginPath();
+      ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
 }
 
-// Helper: Omega Prime engine exhaust
-function drawOmegaEngine(ctx: CanvasRenderingContext2D, x: number, y: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  const exhaustLen = 12 + Math.sin(time * 0.012 + y) * 4;
+// Helper: Omega Prime engine exhaust (with quality param)
+function drawOmegaEngine(ctx: CanvasRenderingContext2D, x: number, y: number, colors: typeof SHIP_MODELS[0]['colors'], time: number, quality: 'game' | 'preview' = 'preview') {
+  const exhaustLen = quality === 'preview' ? (12 + Math.sin(time * 0.012 + y) * 4) : 14;
   
   // Engine housing
   ctx.fillStyle = '#0a0a12';
@@ -2785,13 +2804,17 @@ function drawOmegaEngine(ctx: CanvasRenderingContext2D, x: number, y: number, co
   ctx.fill();
   ctx.stroke();
   
-  // Exhaust flame
-  const flameGrad = ctx.createLinearGradient(x, y, x - exhaustLen, y);
-  flameGrad.addColorStop(0, '#ffffff');
-  flameGrad.addColorStop(0.2, '#ffd700');
-  flameGrad.addColorStop(0.5, colors.accent);
-  flameGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = flameGrad;
+  // Exhaust flame (simplified in game mode - no gradient)
+  if (quality === 'preview') {
+    const flameGrad = ctx.createLinearGradient(x, y, x - exhaustLen, y);
+    flameGrad.addColorStop(0, '#ffffff');
+    flameGrad.addColorStop(0.2, '#ffd700');
+    flameGrad.addColorStop(0.5, colors.accent);
+    flameGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = flameGrad;
+  } else {
+    ctx.fillStyle = colors.accent;
+  }
   
   ctx.beginPath();
   ctx.moveTo(x, y - 2);
@@ -2800,14 +2823,16 @@ function drawOmegaEngine(ctx: CanvasRenderingContext2D, x: number, y: number, co
   ctx.closePath();
   ctx.fill();
   
-  // Inner core
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-  ctx.beginPath();
-  ctx.moveTo(x, y - 1);
-  ctx.lineTo(x - exhaustLen * 0.35, y);
-  ctx.lineTo(x, y + 1);
-  ctx.closePath();
-  ctx.fill();
+  // Inner core (only in preview mode)
+  if (quality === 'preview') {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.moveTo(x, y - 1);
+    ctx.lineTo(x - exhaustLen * 0.35, y);
+    ctx.lineTo(x, y + 1);
+    ctx.closePath();
+    ctx.fill();
+  }
 }
 
 // Helper: Draw engine exhaust
