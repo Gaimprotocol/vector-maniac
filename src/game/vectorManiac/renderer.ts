@@ -1392,12 +1392,23 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   ctx.fillText(`⚙ ${state.salvageCount}`, arenaWidth - 10, 36);
   ctx.shadowBlur = 0;
   
-  // Health bar (moved to top, below main HUD text)
-  const healthBarWidth = 160;
+  // Health bar with HULL label (top, below main HUD text)
+  const healthBarWidth = 140;
   const healthBarHeight = 14;
-  const healthBarX = 10;
+  const healthLabelWidth = 50;
+  const healthBarX = 10 + healthLabelWidth + 6;
   const healthBarY = 68;
   
+  // HULL label
+  ctx.fillStyle = '#00ff00';
+  ctx.font = 'bold 16px monospace';
+  ctx.textAlign = 'left';
+  ctx.shadowColor = '#00ff00';
+  ctx.shadowBlur = 6;
+  ctx.fillText('HULL', 10, healthBarY + 10);
+  ctx.shadowBlur = 0;
+  
+  // Health bar background
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
   ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
   
