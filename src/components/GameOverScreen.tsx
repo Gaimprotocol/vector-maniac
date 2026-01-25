@@ -110,7 +110,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
             textShadow: '0 0 20px #ff4444, 0 0 40px #ff444450',
           }}
         >
-          💀 MISSION FAILED
+          MISSION FAILED
         </h2>
 
         {isNewHighScore && (
