@@ -138,6 +138,18 @@ export function getStoredMegaShipId(): string {
   return 'original';
 }
 
+// Set mega ship ID directly (for use outside of React hooks)
+export function setStoredMegaShipId(shipId: string): void {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const current = stored ? JSON.parse(stored) : { activeMegaShipId: 'original' };
+    current.activeMegaShipId = shipId;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  } catch (e) {
+    console.error('[MegaShips] Failed to save:', e);
+  }
+}
+
 export function getMegaShipById(id: string): MegaShip {
   return MEGA_SHIPS.find(s => s.id === id) || MEGA_SHIPS[0];
 }

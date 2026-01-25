@@ -2,6 +2,7 @@
 import { Player } from './types';
 import { getStoredMegaShipId, hasWingLights } from '@/hooks/useMegaShips';
 import { getStoredUpgrades, getComputedStats, type UpgradeState, type ComputedShipStats } from '@/hooks/useShipUpgrades';
+import { drawShipModel, SHIP_MODELS } from '@/game/shipModels';
 
 // Skin colors interface for color customization
 export interface ShipSkinColors {
@@ -1056,9 +1057,22 @@ export function drawMegaShip(
     case 'valkyrie_prime':
       drawValkyrieShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
       break;
+    case 'omega_prime':
+      // Omega Prime uses the custom renderer from shipModels
+      const omegaModel = SHIP_MODELS.find(m => m.id === 'omega_prime');
+      if (omegaModel) {
+        drawShipModel(ctx, 'omega_prime', 60, 30, time * 1000);
+      }
+      break;
     case 'original':
     default:
-      drawFalconShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
+      // Check if this is one of the 40 custom ship models
+      const customShip = SHIP_MODELS.find(m => m.id === megaShipId);
+      if (customShip) {
+        drawShipModel(ctx, megaShipId, 60, 30, time * 1000);
+      } else {
+        drawFalconShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
+      }
       break;
   }
   
