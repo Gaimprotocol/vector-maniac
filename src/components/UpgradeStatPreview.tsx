@@ -81,35 +81,64 @@ export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade,
 
   return (
     <div 
-      className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 min-w-[140px]"
+      className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 min-w-[160px]"
       style={{ pointerEvents: 'none' }}
     >
       <div 
-        className="bg-black/95 border-2 border-cyan-400/60 rounded-lg p-2 shadow-lg"
+        className="rounded-lg p-3"
         style={{
-          boxShadow: '0 0 20px rgba(0, 229, 255, 0.3), 0 0 40px rgba(0, 229, 255, 0.1)',
+          background: 'linear-gradient(135deg, rgba(0, 20, 15, 0.98) 0%, rgba(0, 10, 8, 0.98) 100%)',
+          border: '1px solid rgba(0, 255, 136, 0.4)',
+          boxShadow: '0 0 25px rgba(0, 255, 136, 0.2), 0 0 50px rgba(0, 255, 136, 0.1), inset 0 0 20px rgba(0, 255, 136, 0.05)',
         }}
       >
         {/* Header */}
-        <div className="font-pixel text-[8px] text-cyan-400/80 mb-1.5 text-center uppercase tracking-wider">
+        <div 
+          className="text-[9px] text-[#00ff88]/80 mb-2 text-center uppercase tracking-widest"
+          style={{ fontFamily: 'Orbitron, monospace' }}
+        >
           {STAT_ICONS[stat]} {STAT_LABELS[stat]}
         </div>
         
         {/* Current vs Next comparison */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3">
           <div className="text-center">
-            <div className="font-pixel text-[7px] text-gray-500">NOW</div>
-            <div className="font-pixel text-[11px] text-gray-300">
+            <div 
+              className="text-[7px] text-[#00ff88]/40 uppercase tracking-wider"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              NOW
+            </div>
+            <div 
+              className="text-[12px] text-[#00ff88]/70"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
               {getCurrentValue()}
             </div>
           </div>
           
           {!isMaxed && (
             <>
-              <div className="font-pixel text-[10px] text-cyan-400">→</div>
+              <div 
+                className="text-[11px] text-[#00ff88]"
+                style={{ textShadow: '0 0 10px #00ff88' }}
+              >
+                →
+              </div>
               <div className="text-center">
-                <div className="font-pixel text-[7px] text-green-400">NEXT</div>
-                <div className="font-pixel text-[11px] text-green-400" style={{ textShadow: '0 0 8px rgba(0, 255, 100, 0.5)' }}>
+                <div 
+                  className="text-[7px] text-[#00ff88] uppercase tracking-wider"
+                  style={{ fontFamily: 'Orbitron, monospace' }}
+                >
+                  NEXT
+                </div>
+                <div 
+                  className="text-[12px] text-[#00ff88]"
+                  style={{ 
+                    fontFamily: 'Rajdhani, sans-serif',
+                    textShadow: '0 0 10px rgba(0, 255, 136, 0.6)' 
+                  }}
+                >
                   {getNextValue()}
                 </div>
               </div>
@@ -119,15 +148,30 @@ export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade,
         
         {/* Bonus indicator */}
         {!isMaxed && (
-          <div className="mt-1.5 pt-1.5 border-t border-cyan-400/20">
-            <div className="font-pixel text-[8px] text-yellow-400 text-center" style={{ textShadow: '0 0 6px rgba(255, 255, 0, 0.4)' }}>
+          <div 
+            className="mt-2 pt-2"
+            style={{ borderTop: '1px solid rgba(0, 255, 136, 0.15)' }}
+          >
+            <div 
+              className="text-[8px] text-[#facc15] text-center tracking-wider"
+              style={{ 
+                fontFamily: 'Orbitron, monospace',
+                textShadow: '0 0 8px rgba(250, 204, 21, 0.5)' 
+              }}
+            >
               {getBonus()} PER LEVEL
             </div>
           </div>
         )}
         
         {isMaxed && (
-          <div className="mt-1 font-pixel text-[7px] text-green-400 text-center">
+          <div 
+            className="mt-2 text-[8px] text-[#00ff88] text-center tracking-wider"
+            style={{ 
+              fontFamily: 'Orbitron, monospace',
+              textShadow: '0 0 10px #00ff88' 
+            }}
+          >
             ◆ MAX REACHED
           </div>
         )}
@@ -137,9 +181,10 @@ export const UpgradeStatPreview: React.FC<UpgradeStatPreviewProps> = ({ upgrade,
       <div 
         className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0"
         style={{
-          borderLeft: '6px solid transparent',
-          borderRight: '6px solid transparent',
-          borderTop: '6px solid rgba(0, 229, 255, 0.6)',
+          borderLeft: '8px solid transparent',
+          borderRight: '8px solid transparent',
+          borderTop: '8px solid rgba(0, 255, 136, 0.4)',
+          filter: 'drop-shadow(0 0 5px rgba(0, 255, 136, 0.3))',
         }}
       />
     </div>
