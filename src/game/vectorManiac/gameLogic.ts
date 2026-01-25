@@ -379,6 +379,11 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   // Check game over
   if (newState.health <= 0) {
     newState.phase = 'gameOver';
+    // Save high score
+    const currentHighScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
+    if (newState.score > currentHighScore) {
+      localStorage.setItem('cyberRescueHighScore', Math.floor(newState.score).toString());
+    }
   }
   
   return newState;
@@ -621,6 +626,11 @@ function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorSt
   // Check game over
   if (newState.health <= 0) {
     newState.phase = 'gameOver';
+    // Save high score
+    const currentHighScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
+    if (newState.score > currentHighScore) {
+      localStorage.setItem('cyberRescueHighScore', Math.floor(newState.score).toString());
+    }
   }
   
   return newState;
