@@ -57,10 +57,14 @@ export const ShipSelector: React.FC = () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
 
-      // Draw ship
+      // Draw ship - Omega Prime is 35% larger (legendary premium)
+      const isOmegaPrime = currentShipId === 'omega_prime';
+      const baseScale = 2.5;
+      const shipScale = isOmegaPrime ? baseScale * 1.35 : baseScale;
+      
       ctx.save();
       ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.scale(2.5, 2.5);
+      ctx.scale(shipScale, shipScale);
       drawShipModel(ctx, currentShipId, 60, 30, time);
       ctx.restore();
 
@@ -228,9 +232,13 @@ const ShipCard: React.FC<{
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     
+    // Omega Prime is 35% larger in card view too
+    const baseScale = 0.8;
+    const cardScale = isLegendary ? baseScale * 1.35 : baseScale;
+    
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.scale(0.8, 0.8);
+    ctx.scale(cardScale, cardScale);
     drawShipModel(ctx, model.id, 60, 30, Date.now());
     ctx.restore();
   }, [model.id, isLegendary]);

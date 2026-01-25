@@ -46,10 +46,14 @@ export const ShipPreview: React.FC<ShipPreviewProps> = ({
       const centerY = height / 2;
 
       const megaShipId = getStoredMegaShipId();
+      
+      // Omega Prime is 35% larger (legendary premium ship)
+      const baseScale = 1.8;
+      const shipScale = megaShipId === 'omega_prime' ? baseScale * 1.35 : baseScale;
 
       ctx.save();
       ctx.translate(centerX, centerY);
-      ctx.scale(1.8, 1.8);
+      ctx.scale(shipScale, shipScale);
       // Pass upgrades state when available so visuals update instantly on purchase
       // Use 'preview' quality mode - disables expensive effects (shadowBlur, radialGradient) for smooth mobile performance
       drawMegaShip(ctx, 0, 0, megaShipId, time, undefined, upgrades, 'preview');

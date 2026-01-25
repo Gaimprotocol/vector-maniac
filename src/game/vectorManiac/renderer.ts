@@ -1205,6 +1205,9 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
   }
 }
 
+// Omega Prime is 35% larger than other ships (legendary premium)
+const OMEGA_PRIME_SCALE = 1.35;
+
 function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
   // Draw power-up auras BEFORE the player (so they appear behind)
   renderPowerUpAuras(ctx, state);
@@ -1233,6 +1236,12 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const megaShipId = getStoredMegaShipId();
   const skinColors = getStoredSkinColors();
   const upgradeState = getStoredUpgrades();
+  
+  // Apply 35% scale boost for Omega Prime (legendary ship)
+  if (megaShipId === 'omega_prime') {
+    ctx.scale(OMEGA_PRIME_SCALE, OMEGA_PRIME_SCALE);
+  }
+  
   drawMegaShip(ctx, 0, 0, megaShipId, state.gameTime * 0.003, skinColors, upgradeState);
 
   ctx.restore();
