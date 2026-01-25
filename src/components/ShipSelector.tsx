@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SHIP_MODELS, drawShipModel, getActiveShipModelId, setActiveShipModelId, ShipModel } from '@/game/shipModels';
 import { usePurchases } from '@/hooks/usePurchases';
+import { setStoredMegaShipId } from '@/hooks/useMegaShips';
 
 export const ShipSelector: React.FC = () => {
   const navigate = useNavigate();
@@ -77,7 +78,9 @@ export const ShipSelector: React.FC = () => {
   }, [activeId, previewId]);
 
   const handleSelect = (id: string) => {
+    // Sync with BOTH storage systems so game renderer uses correct ship
     setActiveShipModelId(id);
+    setStoredMegaShipId(id); // This is what the game renderer uses
     setActiveId(id);
     setPreviewId(null);
   };

@@ -271,12 +271,19 @@ export const EquipmentPanel: React.FC = () => {
   
   const handleOmegaSelect = () => {
     console.log('[EquipmentPanel] Selecting Omega Prime ship');
+    // Sync with BOTH ship systems so game renders correct ship
     setActiveShipModelId('omega_prime');
     setActiveShipModelIdState('omega_prime');
+    setActiveMegaShip('omega_prime'); // This is what the game renderer uses
   };
   
-  // Debug log for omega unlock status
-  console.log('[EquipmentPanel] isOmegaUnlocked:', isOmegaUnlocked);
+  // Handle Mega Ship selection (also sync to shipModels system)
+  const handleMegaShipSelect = (shipId: string) => {
+    console.log('[EquipmentPanel] Selecting Mega Ship:', shipId);
+    setActiveMegaShip(shipId);
+    setActiveShipModelId(shipId);
+    setActiveShipModelIdState(shipId);
+  };
 
   useEffect(() => {
     if (!hasEnteredGalaxy) {
@@ -405,7 +412,7 @@ export const EquipmentPanel: React.FC = () => {
                 isActive={isActive}
                 isLocked={isLocked}
                 skinColors={skinColors}
-                onSelect={() => setActiveMegaShip(ship.id)}
+                onSelect={() => handleMegaShipSelect(ship.id)}
               />
             );
           })}
