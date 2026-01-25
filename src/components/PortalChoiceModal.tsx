@@ -43,7 +43,7 @@ export const PortalChoiceModal: React.FC<PortalChoiceModalProps> = ({
           onClick={onChooseSafe}
           onTouchEnd={(e) => { e.preventDefault(); onChooseSafe(); }}
         >
-          <span className="font-pixel text-lg text-cyan-400 mb-2">🛡️ SAFE PORTAL</span>
+          <span className="font-pixel text-lg text-cyan-400 mb-2">⬡ SAFE PORTAL</span>
           <span className="font-pixel text-[10px] text-cyan-300">+1 Upgrade Pick</span>
           <span className="font-pixel text-[9px] text-gray-400 mt-1">
             Enemies: +5% HP, +5% Speed
@@ -62,7 +62,7 @@ export const PortalChoiceModal: React.FC<PortalChoiceModalProps> = ({
           onClick={onChooseRisk}
           onTouchEnd={(e) => { e.preventDefault(); onChooseRisk(); }}
         >
-          <span className="font-pixel text-lg text-magenta mb-2">⚡ RISK PORTAL</span>
+          <span className="font-pixel text-lg text-magenta mb-2">◈ RISK PORTAL</span>
           <span className="font-pixel text-[10px] text-pink-300">+2 Upgrade Picks</span>
           <span className="font-pixel text-[9px] text-gray-400 mt-1">
             Enemies: +15% HP, +10% Speed

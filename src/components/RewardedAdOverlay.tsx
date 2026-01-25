@@ -35,9 +35,13 @@ export const RewardedAdOverlay: React.FC<RewardedAdOverlayProps> = ({ progress }
         {/* Ad icon */}
         <div 
           className="text-6xl mb-6"
-          style={{ filter: 'drop-shadow(0 0 20px rgba(0, 229, 255, 0.8))' }}
+          style={{ 
+            filter: 'drop-shadow(0 0 20px rgba(0, 229, 255, 0.8))',
+            color: '#00e5ff',
+            fontFamily: 'Orbitron, monospace',
+          }}
         >
-          📺
+          ▶▶
         </div>
         
         {/* Title */}

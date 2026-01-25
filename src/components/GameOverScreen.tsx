@@ -166,7 +166,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
                 className="text-sm"
                 style={{ fontFamily: 'Rajdhani, sans-serif', color: '#00ff88' }}
               >
-                🚁 {rescuedCount} Civilians
+                ▷ {rescuedCount} Civilians
               </div>
             </div>
           )}

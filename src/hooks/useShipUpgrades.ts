@@ -21,7 +21,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'cannon_power',
     name: 'CANNON POWER',
     description: 'Increases weapon damage',
-    icon: '💥',
+    icon: '◈',
     maxLevel: 8,         // Reduced from 10
     baseCost: 100,       // Increased from 75
     costMultiplier: 1.8, // Increased from 1.6
@@ -31,7 +31,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'rapid_fire',
     name: 'RAPID FIRE',
     description: 'Increases fire rate',
-    icon: '🔥',
+    icon: '◇',
     maxLevel: 8,         // Reduced from 10
     baseCost: 100,       // Increased from 80
     costMultiplier: 1.8,
@@ -41,7 +41,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'hull_armor',
     name: 'HULL ARMOR',
     description: 'Increases max health',
-    icon: '🛡️',
+    icon: '⬡',
     maxLevel: 8,         // Reduced from 10
     baseCost: 120,       // Increased from 100
     costMultiplier: 1.8,
@@ -51,7 +51,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'thrusters',
     name: 'THRUSTERS',
     description: 'Increases movement speed',
-    icon: '🚀',
+    icon: '▷',
     maxLevel: 5,         // Reduced from 6
     baseCost: 80,        // Increased from 60
     costMultiplier: 1.6,
@@ -61,7 +61,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'magnet_range',
     name: 'SALVAGE MAGNET',
     description: 'Increases scrap pickup range',
-    icon: '🧲',
+    icon: '◎',
     maxLevel: 5,         // Reduced from 6
     baseCost: 60,        // Increased from 50
     costMultiplier: 1.5,
@@ -71,7 +71,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'energy_shields',
     name: 'ENERGY SHIELDS',
     description: 'Adds protective shields',
-    icon: '⚡',
+    icon: '⬢',
     maxLevel: 2,         // Reduced from 3
     baseCost: 400,       // Increased from 300
     costMultiplier: 3.0, // Increased from 2.5
@@ -81,7 +81,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'piercing_rounds',
     name: 'PIERCING ROUNDS',
     description: 'Bullets penetrate enemies',
-    icon: '🎯',
+    icon: '⊕',
     maxLevel: 2,         // Same as before
     baseCost: 350,       // Increased from 250
     costMultiplier: 3.5, // Increased from 3.0
@@ -91,7 +91,7 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     id: 'extra_cannons',
     name: 'EXTRA CANNONS',
     description: 'Adds side-mounted guns',
-    icon: '🔫',
+    icon: '⫸',
     maxLevel: 1,         // Reduced from 2 - only 1 extra pair now
     baseCost: 600,       // Increased from 500
     costMultiplier: 1,

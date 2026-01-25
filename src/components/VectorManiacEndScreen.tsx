@@ -133,7 +133,7 @@ export const VectorManiacEndScreen: React.FC<VectorManiacEndScreenProps> = ({
             textShadow: `0 0 20px ${primaryColor}, 0 0 40px ${primaryColor}50`,
           }}
         >
-          {isVictory ? '🏆 VICTORY!' : 'GAME OVER'}
+          {isVictory ? '◆ VICTORY! ◆' : 'GAME OVER'}
         </h2>
 
         {isVictory && (
