@@ -7,6 +7,8 @@ export interface PurchaseState {
   sound: boolean;
   survival: boolean;
   ultimate: boolean;
+  omega: boolean;
+  secretShip: boolean;
 }
 
 const STORAGE_KEY = 'galactic_overdrive_purchases';
@@ -17,6 +19,8 @@ const defaultPurchaseState: PurchaseState = {
   sound: false,
   survival: false,
   ultimate: false,
+  omega: false,
+  secretShip: false,
 };
 
 export interface ShopProduct {
@@ -39,7 +43,7 @@ const DEFAULT_PRICES: Record<string, string> = {
   scraps_small: '$0.99',
   scraps_medium: '$2.99',
   scraps_large: '$4.99',
-  random_evolve: '$1.99',
+  omega_pack: '$9.99',
 };
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
@@ -79,11 +83,11 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     scrapAmount: 7000,
   },
   {
-    id: 'random_evolve',
-    name: 'MYSTERY UPGRADE',
-    description: 'Random upgrade boost (+1-3 levels)',
-    price: DEFAULT_PRICES.random_evolve,
-    icon: '◎',
+    id: 'omega_pack',
+    name: 'OMEGA PACK',
+    description: 'Unlock ALL content + 5000 scraps + secret ship',
+    price: DEFAULT_PRICES.omega_pack,
+    icon: '◆',
     type: 'bundle',
   },
 ];
@@ -134,6 +138,8 @@ export function usePurchases() {
             sound: !!entitlements[PRODUCT_IDS.SOUND],
             survival: !!entitlements[PRODUCT_IDS.SURVIVAL],
             ultimate: !!entitlements[PRODUCT_IDS.ULTIMATE],
+            omega: false,
+            secretShip: false,
           };
           
           // If ultimate edition, unlock everything
@@ -260,8 +266,18 @@ export function usePurchases() {
       case 'scraps_small':
       case 'scraps_medium':
       case 'scraps_large':
-      case 'random_evolve':
         // Consumable products - always allow purchase
+        success = true;
+        break;
+      case 'omega_pack':
+        // Omega pack unlocks everything + secret ship + scraps handled in ShopScreen
+        newPurchases.omega = true;
+        newPurchases.skins = true;
+        newPurchases.ships = true;
+        newPurchases.sound = true;
+        newPurchases.survival = true;
+        newPurchases.ultimate = true;
+        newPurchases.secretShip = true;
         success = true;
         break;
       default:
@@ -290,6 +306,8 @@ export function usePurchases() {
         sound: !!restored[PRODUCT_IDS.SOUND],
         survival: !!restored[PRODUCT_IDS.SURVIVAL],
         ultimate: !!restored[PRODUCT_IDS.ULTIMATE],
+        omega: false,
+        secretShip: false,
       };
       
       // If ultimate edition, unlock everything
@@ -323,8 +341,8 @@ export function usePurchases() {
 
   // Check if a specific product is owned
   const isOwned = useCallback((productId: string): boolean => {
-    // Ultimate edition unlocks everything
-    if (purchases.ultimate && productId !== 'ultimate') {
+    // Omega or Ultimate edition unlocks everything
+    if ((purchases.ultimate || purchases.omega) && productId !== 'ultimate' && productId !== 'omega') {
       return true;
     }
     
@@ -339,6 +357,10 @@ export function usePurchases() {
         return purchases.survival;
       case 'ultimate':
         return purchases.ultimate;
+      case 'omega':
+        return purchases.omega;
+      case 'secretShip':
+        return purchases.secretShip;
       default:
         return false;
     }
@@ -346,32 +368,37 @@ export function usePurchases() {
 
   // Check if ads should be shown (always show since no remove_ads product)
   const shouldShowAds = useCallback((): boolean => {
-    return !purchases.ultimate;
+    return !purchases.ultimate && !purchases.omega;
   }, [purchases]);
 
   // Check if survival mode is available
   const hasSurvivalMode = useCallback((): boolean => {
-    return purchases.survival || purchases.ultimate;
+    return purchases.survival || purchases.ultimate || purchases.omega;
   }, [purchases]);
 
   // Check if ships mega pack is available
   const hasShipsMegaPack = useCallback((): boolean => {
-    return purchases.ships || purchases.ultimate;
+    return purchases.ships || purchases.ultimate || purchases.omega;
   }, [purchases]);
 
   // Check if golden skin is available (only with ultimate edition)
   const hasGoldenSkin = useCallback((): boolean => {
-    return purchases.ultimate;
+    return purchases.ultimate || purchases.omega;
   }, [purchases]);
 
   // Check if soundtrack pack is available
   const hasSoundtrackPack = useCallback((): boolean => {
-    return purchases.sound || purchases.ultimate;
+    return purchases.sound || purchases.ultimate || purchases.omega;
   }, [purchases]);
 
   // Check if mothership skins are available
   const hasMothershipSkins = useCallback((): boolean => {
-    return purchases.skins || purchases.ultimate;
+    return purchases.skins || purchases.ultimate || purchases.omega;
+  }, [purchases]);
+
+  // Check if secret ship is available (only with omega pack)
+  const hasSecretShip = useCallback((): boolean => {
+    return purchases.secretShip || purchases.omega;
   }, [purchases]);
 
   return {
@@ -388,5 +415,6 @@ export function usePurchases() {
     hasGoldenSkin,
     hasSoundtrackPack,
     hasMothershipSkins,
+    hasSecretShip,
   };
 }
