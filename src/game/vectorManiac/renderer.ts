@@ -1351,52 +1351,52 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   // Get high score from localStorage
   const highScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
   
-  // Top bar background
+  // Top bar background - taller to accommodate larger text and health bar
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.fillRect(0, 0, arenaWidth, 44);
+  ctx.fillRect(0, 0, arenaWidth, 85);
   
   ctx.textBaseline = 'middle';
   
-  // Left side: Score + Hi-Score
+  // Left side: Score + Hi-Score (doubled font sizes)
   ctx.textAlign = 'left';
   ctx.fillStyle = '#00ffff';
-  ctx.font = 'bold 13px monospace';
+  ctx.font = 'bold 26px monospace';
   ctx.shadowColor = '#00ffff';
-  ctx.shadowBlur = 8;
-  ctx.fillText(`SCORE: ${Math.floor(state.score).toString().padStart(8, '0')}`, 10, 14);
+  ctx.shadowBlur = 10;
+  ctx.fillText(`SCORE: ${Math.floor(state.score).toString().padStart(8, '0')}`, 10, 22);
   ctx.shadowBlur = 0;
   
   ctx.fillStyle = '#888888';
-  ctx.font = 'bold 10px monospace';
-  ctx.fillText(`HI: ${highScore.toString().padStart(8, '0')}`, 10, 32);
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(`HI: ${highScore.toString().padStart(8, '0')}`, 10, 50);
   
-  // Center: Map & Level
+  // Center: Map & Level (doubled font sizes)
   ctx.textAlign = 'center';
   ctx.fillStyle = theme.accentColor;
-  ctx.font = 'bold 12px monospace';
+  ctx.font = 'bold 24px monospace';
   ctx.shadowColor = theme.accentColor;
-  ctx.shadowBlur = 10;
-  ctx.fillText(`MAP ${state.currentMap}/${VM_CONFIG.totalMaps}`, arenaWidth / 2, 14);
+  ctx.shadowBlur = 12;
+  ctx.fillText(`MAP ${state.currentMap}/${VM_CONFIG.totalMaps}`, arenaWidth / 2, 22);
   ctx.shadowBlur = 0;
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 10px monospace';
-  ctx.fillText(`LEVEL ${state.currentLevel}`, arenaWidth / 2, 32);
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(`LEVEL ${state.currentLevel}`, arenaWidth / 2, 50);
   
-  // Right side: Scraps
+  // Right side: Scraps (doubled font size)
   ctx.textAlign = 'right';
   ctx.fillStyle = '#ffcc00';
-  ctx.font = 'bold 13px monospace';
+  ctx.font = 'bold 26px monospace';
   ctx.shadowColor = '#ffcc00';
-  ctx.shadowBlur = 8;
-  ctx.fillText(`⚙ ${state.salvageCount}`, arenaWidth - 10, 22);
+  ctx.shadowBlur = 10;
+  ctx.fillText(`⚙ ${state.salvageCount}`, arenaWidth - 10, 36);
   ctx.shadowBlur = 0;
   
-  // Health bar (bottom left)
-  const healthBarWidth = 100;
-  const healthBarHeight = 8;
+  // Health bar (moved to top, below main HUD text)
+  const healthBarWidth = 160;
+  const healthBarHeight = 14;
   const healthBarX = 10;
-  const healthBarY = VM_CONFIG.arenaHeight - 20;
+  const healthBarY = 68;
   
   ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
   ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
@@ -1407,25 +1407,28 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   ctx.fillRect(healthBarX, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
   
   ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 2;
   ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight);
   
-  // Shields indicator
+  // Shields indicator (next to health bar)
   if (state.shields > 0) {
     ctx.fillStyle = '#00aaff';
     for (let i = 0; i < state.shields; i++) {
       ctx.beginPath();
-      ctx.arc(healthBarX + healthBarWidth + 15 + i * 15, healthBarY + 4, 5, 0, Math.PI * 2);
+      ctx.arc(healthBarX + healthBarWidth + 20 + i * 20, healthBarY + 7, 7, 0, Math.PI * 2);
       ctx.fill();
     }
   }
   
-  // Combo indicator
+  // Combo indicator (top right, below scraps)
   if (state.combo > 1) {
     ctx.fillStyle = '#ffff00';
-    ctx.font = 'bold 16px monospace';
+    ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, healthBarY + 4);
+    ctx.shadowColor = '#ffff00';
+    ctx.shadowBlur = 8;
+    ctx.fillText(`${state.combo}x COMBO`, arenaWidth - 10, 68);
+    ctx.shadowBlur = 0;
   }
   
   // Map name display (when starting a new map)
@@ -1447,28 +1450,28 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.shadowColor = theme.accentColor;
     ctx.shadowBlur = 30;
     
-    // "MAP X" label
+    // "MAP X" label (doubled)
     ctx.fillStyle = theme.accentColor;
-    ctx.font = 'bold 18px monospace';
+    ctx.font = 'bold 36px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(`— MAP ${state.currentMap} —`, arenaWidth / 2, centerY - 10);
     
-    // Map name (large)
+    // Map name (large, doubled)
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px monospace';
+    ctx.font = 'bold 64px monospace';
     ctx.shadowBlur = 25;
-    ctx.fillText(theme.name.toUpperCase(), arenaWidth / 2, centerY + 30);
+    ctx.fillText(theme.name.toUpperCase(), arenaWidth / 2, centerY + 40);
     
-    // Level indicator
+    // Level indicator (doubled)
     ctx.shadowBlur = 10;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText(`LEVEL ${state.currentLevel} • ${state.wavesInMap} WAVE${state.wavesInMap > 1 ? 'S' : ''}`, arenaWidth / 2, centerY + 60);
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText(`LEVEL ${state.currentLevel} • ${state.wavesInMap} WAVE${state.wavesInMap > 1 ? 'S' : ''}`, arenaWidth / 2, centerY + 90);
     
     ctx.restore();
   }
   
-  // Active power-ups indicator (top right area)
+  // Active power-ups indicator (below top bar)
   const activePowerUps: { name: string; color: string; remaining: number }[] = [];
   
   if (state.activePowerUps.doublePoints > 0) {
@@ -1494,29 +1497,29 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
   }
   
   if (activePowerUps.length > 0) {
-    ctx.font = 'bold 12px monospace';
+    ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'right';
     
     activePowerUps.forEach((powerUp, index) => {
-      const y = 50 + index * 20;
-      const barWidth = 60;
-      const barHeight = 12;
+      const y = 110 + index * 30;
+      const barWidth = 90;
+      const barHeight = 18;
       const barX = arenaWidth - 15 - barWidth;
       
       // Background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.fillRect(barX, y - 6, barWidth, barHeight);
+      ctx.fillRect(barX, y - 8, barWidth, barHeight);
       
       // Progress bar
       const progress = powerUp.remaining / VM_CONFIG.powerUpDuration;
       ctx.fillStyle = powerUp.color;
       ctx.globalAlpha = 0.7;
-      ctx.fillRect(barX, y - 6, barWidth * progress, barHeight);
+      ctx.fillRect(barX, y - 8, barWidth * progress, barHeight);
       ctx.globalAlpha = 1;
       
       // Text
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(powerUp.name, arenaWidth - 20 - barWidth, y);
+      ctx.fillText(powerUp.name, arenaWidth - 20 - barWidth, y + 2);
     });
   }
 }
