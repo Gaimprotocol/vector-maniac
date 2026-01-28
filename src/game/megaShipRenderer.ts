@@ -981,11 +981,15 @@ export function drawValkyrieShip(ctx: CanvasRenderingContext2D, centerX: number,
   ctx.closePath();
   ctx.fill();
   
-  // Gold trim
+  // Gold trim (no shadow in game mode for performance)
   ctx.strokeStyle = accent;
   ctx.lineWidth = 2;
-  ctx.shadowColor = accent;
-  ctx.shadowBlur = 6;
+  if (quality === 'game') {
+    // Skip shadow in game mode
+  } else {
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 6;
+  }
   ctx.beginPath();
   ctx.moveTo(centerX + 24, centerY);
   ctx.lineTo(centerX + 14, centerY - 4);
@@ -996,20 +1000,28 @@ export function drawValkyrieShip(ctx: CanvasRenderingContext2D, centerX: number,
   ctx.stroke();
   ctx.shadowBlur = 0;
   
-  // Royal cockpit
-  const cockpitGrad = ctx.createRadialGradient(centerX + 16, centerY, 0, centerX + 16, centerY, 5);
-  cockpitGrad.addColorStop(0, '#ffddff');
-  cockpitGrad.addColorStop(0.4, '#bb66ff');
-  cockpitGrad.addColorStop(1, '#663399');
-  ctx.fillStyle = cockpitGrad;
+  // Royal cockpit (solid color in game mode for performance)
+  if (quality === 'game') {
+    ctx.fillStyle = '#bb66ff';
+  } else {
+    const cockpitGrad = ctx.createRadialGradient(centerX + 16, centerY, 0, centerX + 16, centerY, 5);
+    cockpitGrad.addColorStop(0, '#ffddff');
+    cockpitGrad.addColorStop(0.4, '#bb66ff');
+    cockpitGrad.addColorStop(1, '#663399');
+    ctx.fillStyle = cockpitGrad;
+  }
   ctx.beginPath();
   ctx.ellipse(centerX + 16, centerY, 5, 3.5, 0, 0, Math.PI * 2);
   ctx.fill();
   
-  // Wing orbs
+  // Wing orbs (no shadow in game mode for performance)
   ctx.fillStyle = glow;
-  ctx.shadowColor = glow;
-  ctx.shadowBlur = 8;
+  if (quality === 'game') {
+    // Skip shadow in game mode
+  } else {
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 8;
+  }
   ctx.beginPath();
   ctx.arc(centerX - 10, centerY - 16 * wingScale, 4, 0, Math.PI * 2);
   ctx.fill();

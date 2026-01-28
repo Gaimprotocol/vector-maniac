@@ -2578,13 +2578,17 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   }
   
   // --- MAIN BODY - SLEEK ANGULAR DESIGN ---
-  // Black core body with gold trim
-  const bodyGrad = ctx.createLinearGradient(-25, 0, 40, 0);
-  bodyGrad.addColorStop(0, '#0a0a12');
-  bodyGrad.addColorStop(0.3, '#1a1a2e');
-  bodyGrad.addColorStop(0.7, '#0f0f1a');
-  bodyGrad.addColorStop(1, '#1a1a2e');
-  ctx.fillStyle = bodyGrad;
+  // Black core body with gold trim (solid color in game mode for performance)
+  if (quality === 'preview') {
+    const bodyGrad = ctx.createLinearGradient(-25, 0, 40, 0);
+    bodyGrad.addColorStop(0, '#0a0a12');
+    bodyGrad.addColorStop(0.3, '#1a1a2e');
+    bodyGrad.addColorStop(0.7, '#0f0f1a');
+    bodyGrad.addColorStop(1, '#1a1a2e');
+    ctx.fillStyle = bodyGrad;
+  } else {
+    ctx.fillStyle = '#1a1a2e';
+  }
   
   // Central fuselage - sharp angular shape
   ctx.beginPath();
@@ -2608,13 +2612,17 @@ function drawOmegaPrime(ctx: CanvasRenderingContext2D, w: number, h: number, col
   ctx.stroke();
   ctx.globalAlpha = 1;
   
-  // --- SWEPT WINGS ---
+  // --- SWEPT WINGS --- (solid color in game mode)
   // Upper wing
-  const wingGrad = ctx.createLinearGradient(-15, -8, -15, -20);
-  wingGrad.addColorStop(0, '#1a1a2e');
-  wingGrad.addColorStop(0.5, '#0a0a12');
-  wingGrad.addColorStop(1, '#1a1a2e');
-  ctx.fillStyle = wingGrad;
+  if (quality === 'preview') {
+    const wingGrad = ctx.createLinearGradient(-15, -8, -15, -20);
+    wingGrad.addColorStop(0, '#1a1a2e');
+    wingGrad.addColorStop(0.5, '#0a0a12');
+    wingGrad.addColorStop(1, '#1a1a2e');
+    ctx.fillStyle = wingGrad;
+  } else {
+    ctx.fillStyle = '#0f0f1a';
+  }
   
   ctx.beginPath();
   ctx.moveTo(10, -6);
