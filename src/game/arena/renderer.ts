@@ -62,12 +62,117 @@ function renderBackground(ctx: CanvasRenderingContext2D, state: ArenaState): voi
     ctx.fillRect(0, 0, w, h);
   }
   
+  // Pulsing glow effect
+  renderPulsingGlow(ctx, state);
+  
+  // Scanlines overlay
+  renderScanlines(ctx, state);
+  
   // Subtle vignette overlay
   const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, h * 0.7);
   vignette.addColorStop(0, 'transparent');
-  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, w, h);
+}
+
+function renderPulsingGlow(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth: w, arenaHeight: h } = state;
+  
+  // Slow pulsing center glow
+  const pulse1 = Math.sin(animTime * 0.02) * 0.5 + 0.5;
+  const pulse2 = Math.sin(animTime * 0.015 + 1) * 0.5 + 0.5;
+  
+  // Center glow - cyan tint
+  const glow1 = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, h * 0.5);
+  glow1.addColorStop(0, `rgba(0, 255, 170, ${0.03 * pulse1})`);
+  glow1.addColorStop(0.5, `rgba(0, 200, 150, ${0.02 * pulse1})`);
+  glow1.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow1;
+  ctx.fillRect(0, 0, w, h);
+  
+  // Top edge glow
+  const glow2 = ctx.createLinearGradient(0, 0, 0, h * 0.3);
+  glow2.addColorStop(0, `rgba(0, 255, 200, ${0.08 * pulse2})`);
+  glow2.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow2;
+  ctx.fillRect(0, 0, w, h * 0.3);
+  
+  // Bottom edge glow
+  const glow3 = ctx.createLinearGradient(0, h, 0, h * 0.7);
+  glow3.addColorStop(0, `rgba(0, 255, 200, ${0.08 * pulse2})`);
+  glow3.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow3;
+  ctx.fillRect(0, h * 0.7, w, h * 0.3);
+  
+  // Corner accents - pulsing
+  const cornerPulse = Math.sin(animTime * 0.03) * 0.3 + 0.7;
+  const cornerSize = 80;
+  
+  // Top-left corner
+  const tlGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, cornerSize);
+  tlGrad.addColorStop(0, `rgba(0, 255, 170, ${0.15 * cornerPulse})`);
+  tlGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = tlGrad;
+  ctx.fillRect(0, 0, cornerSize, cornerSize);
+  
+  // Top-right corner
+  const trGrad = ctx.createRadialGradient(w, 0, 0, w, 0, cornerSize);
+  trGrad.addColorStop(0, `rgba(0, 255, 170, ${0.15 * cornerPulse})`);
+  trGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = trGrad;
+  ctx.fillRect(w - cornerSize, 0, cornerSize, cornerSize);
+  
+  // Bottom-left corner
+  const blGrad = ctx.createRadialGradient(0, h, 0, 0, h, cornerSize);
+  blGrad.addColorStop(0, `rgba(0, 255, 170, ${0.15 * cornerPulse})`);
+  blGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = blGrad;
+  ctx.fillRect(0, h - cornerSize, cornerSize, cornerSize);
+  
+  // Bottom-right corner
+  const brGrad = ctx.createRadialGradient(w, h, 0, w, h, cornerSize);
+  brGrad.addColorStop(0, `rgba(0, 255, 170, ${0.15 * cornerPulse})`);
+  brGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = brGrad;
+  ctx.fillRect(w - cornerSize, h - cornerSize, cornerSize, cornerSize);
+}
+
+function renderScanlines(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth: w, arenaHeight: h } = state;
+  
+  // Subtle moving scanlines
+  const scanlineSpacing = 3;
+  const scanlineOffset = (animTime * 0.5) % scanlineSpacing;
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+  
+  for (let y = scanlineOffset; y < h; y += scanlineSpacing) {
+    ctx.fillRect(0, y, w, 1);
+  }
+  
+  // Occasional bright scanline sweep
+  const sweepY = ((animTime * 2) % (h + 100)) - 50;
+  if (sweepY >= 0 && sweepY < h) {
+    const sweepGrad = ctx.createLinearGradient(0, sweepY - 20, 0, sweepY + 20);
+    sweepGrad.addColorStop(0, 'transparent');
+    sweepGrad.addColorStop(0.5, 'rgba(0, 255, 200, 0.03)');
+    sweepGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sweepGrad;
+    ctx.fillRect(0, sweepY - 20, w, 40);
+  }
+  
+  // Subtle noise/static effect (very light)
+  if (Math.random() < 0.3) {
+    const noiseCount = 5;
+    ctx.fillStyle = 'rgba(0, 255, 170, 0.02)';
+    for (let i = 0; i < noiseCount; i++) {
+      const nx = Math.random() * w;
+      const ny = Math.random() * h;
+      const nw = 2 + Math.random() * 10;
+      ctx.fillRect(nx, ny, nw, 1);
+    }
+  }
 }
 
 function renderProjectiles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
