@@ -910,6 +910,114 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         ctx.fill();
         break;
         
+      case 'dasher':
+        // Fast arrow shape pointing toward movement direction
+        ctx.rotate(Math.atan2(enemy.vy, enemy.vx));
+        ctx.beginPath();
+        ctx.moveTo(enemy.size * 1.2, 0);
+        ctx.lineTo(-enemy.size * 0.4, enemy.size * 0.5);
+        ctx.lineTo(-enemy.size * 0.2, 0);
+        ctx.lineTo(-enemy.size * 0.4, -enemy.size * 0.5);
+        ctx.closePath();
+        ctx.stroke();
+        
+        // Speed trail effect
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(-enemy.size * 0.2, 0);
+        ctx.lineTo(-enemy.size * 1.2, 0);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        break;
+        
+      case 'splitter':
+        // Blob-like shape that looks like it could split
+        const pulse = 1 + Math.sin(state.gameTime * 0.1) * 0.1;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, enemy.size * pulse, enemy.size * 0.7 * pulse, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Inner split line
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(0, -enemy.size * 0.5);
+        ctx.lineTo(0, enemy.size * 0.5);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        
+        // Two "eyes" suggesting the split
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(-enemy.size * 0.3, 0, 2, 0, Math.PI * 2);
+        ctx.arc(enemy.size * 0.3, 0, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'orbiter':
+        // Circular with orbit ring
+        ctx.beginPath();
+        ctx.arc(0, 0, enemy.size * 0.6, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Orbiting ring
+        ctx.save();
+        ctx.rotate(state.gameTime * 0.05);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, enemy.size, enemy.size * 0.4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Core dot
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'sniper':
+        // Crosshair-like design with scope
+        ctx.beginPath();
+        ctx.arc(0, 0, enemy.size * 0.8, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Crosshairs
+        ctx.beginPath();
+        ctx.moveTo(-enemy.size, 0);
+        ctx.lineTo(enemy.size, 0);
+        ctx.moveTo(0, -enemy.size);
+        ctx.lineTo(0, enemy.size);
+        ctx.stroke();
+        
+        // Aiming indicator - glows when aiming
+        const isAiming = enemy.behaviorTimer > 0;
+        if (isAiming) {
+          const aimProgress = Math.min(1, enemy.behaviorTimer / 60);
+          ctx.globalAlpha = 0.3 + aimProgress * 0.7;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(0, 0, enemy.size * 0.4 * aimProgress, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          
+          // Draw aim line toward player
+          if (aimProgress > 0.5) {
+            ctx.save();
+            ctx.rotate(enemy.targetAngle);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = (aimProgress - 0.5) * 2;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(enemy.size, 0);
+            ctx.lineTo(enemy.size * 4, 0);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+        break;
+        
       case 'elite':
         // Hexagon
         ctx.beginPath();
@@ -1156,8 +1264,8 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
     
     ctx.restore();
     
-    // Health bar (for elites, bounty, miniboss, and boss)
-    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss' || enemy.type === 'miniboss') && healthPercent < 1) {
+    // Health bar (for elites, bounty, miniboss, boss, splitter, and sniper)
+    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss' || enemy.type === 'miniboss' || enemy.type === 'splitter' || enemy.type === 'sniper') && healthPercent < 1) {
       const barWidth = enemy.type === 'boss' ? enemy.size * 3 : 
                        enemy.type === 'miniboss' ? enemy.size * 2.5 : enemy.size * 2;
       const barHeight = enemy.type === 'boss' ? 6 : 

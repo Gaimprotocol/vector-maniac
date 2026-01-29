@@ -9,6 +9,10 @@ import {
   createBounty,
   createBoss,
   createMiniBoss,
+  createDasher,
+  createSplitter,
+  createOrbiter,
+  createSniper,
   createPlayerProjectile, 
   createEnemyProjectile,
   createParticle,
@@ -832,17 +836,39 @@ function spawnEnemy(state: VectorState): VectorState {
   };
 
   // Determine enemy type based on map progression - more variety and elites as game progresses
+  // New enemy types unlock at specific maps for progressive variety
   const roll = Math.random();
   let enemy: VectorEnemy;
 
-  // Elite chance increases faster, shooters become more common
-  const eliteChance = Math.min(0.35, 0.08 + state.currentMap * 0.006);
-  const shooterChance = Math.min(0.65, 0.35 + state.currentMap * 0.006);
+  // Calculate unlock status for new enemy types
+  const dasherUnlocked = state.currentMap >= VM_CONFIG.dasherUnlockMap;
+  const splitterUnlocked = state.currentMap >= VM_CONFIG.splitterUnlockMap;
+  const orbiterUnlocked = state.currentMap >= VM_CONFIG.orbiterUnlockMap;
+  const sniperUnlocked = state.currentMap >= VM_CONFIG.sniperUnlockMap;
 
+  // Elite chance increases faster, new enemy types get added to the pool
+  const eliteChance = Math.min(0.30, 0.08 + state.currentMap * 0.005);
+  const shooterChance = Math.min(0.50, 0.30 + state.currentMap * 0.004);
+  
+  // New enemy type chances (only if unlocked)
+  const sniperChance = sniperUnlocked ? 0.10 : 0;
+  const orbiterChance = orbiterUnlocked ? 0.10 : 0;
+  const splitterChance = splitterUnlocked ? 0.10 : 0;
+  const dasherChance = dasherUnlocked ? 0.12 : 0;
+
+  // Roll for enemy type - priority order: elite > sniper > orbiter > splitter > shooter > dasher > drone
   if (roll < eliteChance) {
     enemy = createElite(state.playerX, state.playerY);
-  } else if (roll < shooterChance) {
+  } else if (roll < eliteChance + sniperChance) {
+    enemy = createSniper(state.playerX, state.playerY);
+  } else if (roll < eliteChance + sniperChance + orbiterChance) {
+    enemy = createOrbiter(state.playerX, state.playerY);
+  } else if (roll < eliteChance + sniperChance + orbiterChance + splitterChance) {
+    enemy = createSplitter(state.playerX, state.playerY);
+  } else if (roll < eliteChance + sniperChance + orbiterChance + splitterChance + shooterChance) {
     enemy = createShooter(state.playerX, state.playerY);
+  } else if (roll < eliteChance + sniperChance + orbiterChance + splitterChance + shooterChance + dasherChance) {
+    enemy = createDasher(state.playerX, state.playerY);
   } else {
     enemy = createDrone(state.playerX, state.playerY);
   }
@@ -865,12 +891,27 @@ function spawnEnemy(state: VectorState): VectorState {
     for (let i = 0; i < formationSize && newState.enemiesSpawned < newState.enemiesInWave; i++) {
       // Formation enemies are usually the same type
       let formationEnemy: VectorEnemy;
-      if (enemy.type === 'elite') {
-        formationEnemy = createElite(state.playerX, state.playerY);
-      } else if (enemy.type === 'shooter') {
-        formationEnemy = createShooter(state.playerX, state.playerY);
-      } else {
-        formationEnemy = createDrone(state.playerX, state.playerY);
+      switch (enemy.type) {
+        case 'elite':
+          formationEnemy = createElite(state.playerX, state.playerY);
+          break;
+        case 'shooter':
+          formationEnemy = createShooter(state.playerX, state.playerY);
+          break;
+        case 'dasher':
+          formationEnemy = createDasher(state.playerX, state.playerY);
+          break;
+        case 'splitter':
+          formationEnemy = createSplitter(state.playerX, state.playerY);
+          break;
+        case 'orbiter':
+          formationEnemy = createOrbiter(state.playerX, state.playerY);
+          break;
+        case 'sniper':
+          formationEnemy = createSniper(state.playerX, state.playerY);
+          break;
+        default:
+          formationEnemy = createDrone(state.playerX, state.playerY);
       }
       
       formationEnemy.health *= state.difficultyMultiplier * levelScaling * mapScaling.health;
@@ -1010,6 +1051,117 @@ function updateEnemies(state: VectorState): VectorState {
             newState.projectiles = [...newState.projectiles, proj];
           }
           e.fireTimer = VM_CONFIG.minibossFireRate;
+        }
+        break;
+      }
+      
+      case 'dasher': {
+        // Dasher - fast, rushes directly at player with bursts of speed
+        const dasherSpeed = VM_CONFIG.dasherSpeed * speedScaling;
+        const dir = normalize(dx, dy);
+        
+        // Dash behavior - accelerate towards player
+        e.vx = lerp(e.vx, dir.x * dasherSpeed, 0.1);
+        e.vy = lerp(e.vy, dir.y * dasherSpeed, 0.1);
+        
+        // Add erratic zigzag movement
+        const zigzag = Math.sin(state.gameTime * 0.15 + e.id.charCodeAt(0)) * 1.5;
+        e.vx += dir.y * zigzag * 0.1;
+        e.vy += -dir.x * zigzag * 0.1;
+        break;
+      }
+      
+      case 'splitter': {
+        // Splitter - moves toward player, splits into 2 on death (handled in collision)
+        const splitterSpeed = VM_CONFIG.splitterSpeed * speedScaling;
+        const isSplitVersion = e.fireTimer === 1; // fireTimer=1 means this is a split version
+        const speedMult = isSplitVersion ? 1.5 : 1;
+        
+        if (dist > 30) {
+          const dir = normalize(dx, dy);
+          e.vx = lerp(e.vx, dir.x * splitterSpeed * speedMult, 0.04);
+          e.vy = lerp(e.vy, dir.y * splitterSpeed * speedMult, 0.04);
+        }
+        break;
+      }
+      
+      case 'orbiter': {
+        // Orbiter - circles around player at fixed distance, shoots periodically
+        const orbiterSpeed = VM_CONFIG.orbiterSpeed * speedScaling;
+        const orbitRadius = VM_CONFIG.orbiterOrbitRadius;
+        
+        // Increment orbit angle stored in behaviorTimer
+        e.behaviorTimer += 0.03;
+        
+        // Calculate target position on orbit circle
+        const targetOrbitX = newState.playerX + Math.cos(e.behaviorTimer) * orbitRadius;
+        const targetOrbitY = newState.playerY + Math.sin(e.behaviorTimer) * orbitRadius;
+        
+        // Move towards orbit position
+        const toOrbit = normalize(targetOrbitX - e.x, targetOrbitY - e.y);
+        const distToOrbit = distance(e.x, e.y, targetOrbitX, targetOrbitY);
+        
+        if (distToOrbit > 10) {
+          e.vx = lerp(e.vx, toOrbit.x * orbiterSpeed, 0.08);
+          e.vy = lerp(e.vy, toOrbit.y * orbiterSpeed, 0.08);
+        } else {
+          // On orbit, slow down
+          e.vx *= 0.92;
+          e.vy *= 0.92;
+        }
+        
+        // Fire at player while on orbit
+        e.fireTimer--;
+        if (e.fireTimer <= 0 && distToOrbit < 30) {
+          const proj = createEnemyProjectile(e.x, e.y, newState.playerX, newState.playerY);
+          newState.projectiles = [...newState.projectiles, proj];
+          e.fireTimer = VM_CONFIG.orbiterFireRate;
+        }
+        break;
+      }
+      
+      case 'sniper': {
+        // Sniper - stops at distance, aims carefully, then fires accurate shot
+        const sniperSpeed = VM_CONFIG.sniperSpeed * speedScaling;
+        const preferredDist = 200;
+        const aimTime = VM_CONFIG.sniperAimTime;
+        
+        if (dist > preferredDist + 30) {
+          // Move closer
+          const dir = normalize(dx, dy);
+          e.vx = lerp(e.vx, dir.x * sniperSpeed, 0.04);
+          e.vy = lerp(e.vy, dir.y * sniperSpeed, 0.04);
+          e.behaviorTimer = 0; // Reset aim timer while moving
+        } else if (dist < preferredDist - 50) {
+          // Too close, back off
+          const dir = normalize(-dx, -dy);
+          e.vx = lerp(e.vx, dir.x * sniperSpeed * 1.5, 0.05);
+          e.vy = lerp(e.vy, dir.y * sniperSpeed * 1.5, 0.05);
+          e.behaviorTimer = 0;
+        } else {
+          // In range - stop and aim
+          e.vx *= 0.9;
+          e.vy *= 0.9;
+          
+          // Track player angle for aiming
+          e.targetAngle = Math.atan2(dy, dx);
+          
+          // Count up aim timer
+          e.behaviorTimer++;
+          
+          // Fire when aim time reached
+          if (e.behaviorTimer >= aimTime) {
+            // Accurate shot at player
+            const proj = createEnemyProjectile(
+              e.x, e.y,
+              newState.playerX, newState.playerY,
+              undefined, undefined,
+              1.5 // Faster projectile
+            );
+            newState.projectiles = [...newState.projectiles, proj];
+            e.behaviorTimer = 0;
+            e.fireTimer = VM_CONFIG.sniperFireRate;
+          }
         }
         break;
       }
@@ -1776,11 +1928,35 @@ function checkCollisions(state: VectorState): VectorState {
         }
       }
       
+      // Splitter special: spawn 2 smaller splitters when killed (unless it's already a split version)
+      if (enemy.type === 'splitter' && enemy.fireTimer !== 1) {
+        // fireTimer !== 1 means this is not a split version
+        for (let i = 0; i < 2; i++) {
+          const angle = (i / 2) * Math.PI + Math.random() * 0.5;
+          const spawnDist = 15;
+          const splitEnemy = createSplitter(
+            enemy.x + Math.cos(angle) * spawnDist,
+            enemy.y + Math.sin(angle) * spawnDist,
+            true // This is a split version
+          );
+          // Apply scaling
+          const mapScaling = 1 + (newState.currentMap - 1) * VM_CONFIG.enemyHealthPerMap;
+          const levelScaling = 1 + (newState.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
+          splitEnemy.health *= newState.difficultyMultiplier * levelScaling * mapScaling;
+          splitEnemy.maxHealth = splitEnemy.health;
+          aliveEnemies.push(splitEnemy);
+        }
+      }
+      
       // Score with combo bonus (doubled if power-up active)
       const baseScore = enemy.type === 'boss' ? 2000 :
                         enemy.type === 'miniboss' ? 500 :
                         enemy.type === 'bounty' ? 1000 : 
                         enemy.type === 'elite' ? 200 :
+                        enemy.type === 'sniper' ? 150 :
+                        enemy.type === 'orbiter' ? 120 :
+                        enemy.type === 'splitter' ? 80 :
+                        enemy.type === 'dasher' ? 60 :
                         enemy.type === 'shooter' ? 100 : 50;
       const pointMultiplier = newState.activePowerUps.doublePoints > 0 ? 2 : 1;
       newState.score += baseScore * (1 + newState.combo * 0.1) * pointMultiplier;

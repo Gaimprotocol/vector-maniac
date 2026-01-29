@@ -42,6 +42,35 @@ export const VM_CONFIG = {
   minibossSpeed: 1.2,
   minibossFireRate: 80,
   
+  // New enemy types - unlock progressively
+  // Dasher: fast enemy that rushes toward player (unlocks map 5)
+  dasherSpeed: 4.5,
+  dasherHealth: 15,
+  dasherSize: 14,
+  dasherUnlockMap: 5,
+  
+  // Splitter: splits into 2 smaller enemies on death (unlocks map 10)
+  splitterSpeed: 1.2,
+  splitterHealth: 40,
+  splitterSize: 22,
+  splitterUnlockMap: 10,
+  
+  // Orbiter: circles around player at fixed distance (unlocks map 15)
+  orbiterSpeed: 2.5,
+  orbiterHealth: 25,
+  orbiterSize: 16,
+  orbiterOrbitRadius: 150,
+  orbiterFireRate: 120,
+  orbiterUnlockMap: 15,
+  
+  // Sniper: stops and aims carefully before shooting (unlocks map 20)
+  sniperSpeed: 0.6,
+  sniperHealth: 20,
+  sniperSize: 18,
+  sniperFireRate: 180, // Slow but accurate
+  sniperAimTime: 60, // Frames to aim before shooting
+  sniperUnlockMap: 20,
+  
   // Boss config
   bossHealth: 400,
   bossSize: 60,
@@ -75,6 +104,10 @@ export const VM_CONFIG = {
     bounty: 1.0,
     boss: 1.0,
     miniboss: 1.0,              // Always drops salvage
+    dasher: 0.15,               // Fast but weak
+    splitter: 0.30,             // Medium reward
+    orbiter: 0.25,              // Annoying to kill
+    sniper: 0.35,               // Dangerous
   },
   salvageValue: {
     drone: 8,                   // Reduced from 10
@@ -83,6 +116,10 @@ export const VM_CONFIG = {
     bounty: 80,                 // Reduced from 100
     boss: 150,                  // Reduced from 200
     miniboss: 50,               // Decent mid-map reward
+    dasher: 6,                  // Quick kill
+    splitter: 18,               // Worth more due to difficulty
+    orbiter: 14,                // Moderate reward
+    sniper: 16,                 // Dangerous enemy
   },
   salvageDriftSpeed: 0.3,
   
@@ -136,6 +173,10 @@ export const VM_CONFIG = {
   playerColor: '#00ffff',
   enemyColors: {
     drone: '#ff6600',
+    dasher: '#ff3366',    // Hot pink - fast and aggressive
+    splitter: '#66ff66',  // Green - splits into more
+    orbiter: '#6699ff',   // Light blue - circling
+    sniper: '#ffcc00',    // Gold - precision
     shooter: '#ff0066',
     elite: '#aa00ff',
     bounty: '#ffff00',
