@@ -27,22 +27,22 @@ function generateObstacles(): ArenaObstacle[] {
   const obstacles: ArenaObstacle[] = [];
   const baseCount = Math.floor(Math.random() * (ARENA_CONFIG.maxObstacles - ARENA_CONFIG.minObstacles + 1)) + ARENA_CONFIG.minObstacles;
   
-  const padding = 100;
+  const padding = 50; // Scaled down
   const centerX = ARENA_CONFIG.arenaWidth / 2;
   const centerY = ARENA_CONFIG.arenaHeight / 2;
   
-  // Define safe zones for spawns - larger for the bigger arena
-  const playerSpawnZone = 300; // Bottom area
-  const opponentSpawnZone = 300; // Top area
+  // Define safe zones for spawns - scaled for smaller arena
+  const playerSpawnZone = 150;
+  const opponentSpawnZone = 150;
   
-  const isValidPosition = (x: number, y: number, minDist: number = 100): boolean => {
+  const isValidPosition = (x: number, y: number, minDist: number = 50): boolean => {
     if (y > ARENA_CONFIG.arenaHeight - playerSpawnZone) return false;
     if (y < opponentSpawnZone) return false;
-    if (Math.abs(x - centerX) < 120 && Math.abs(y - centerY) < 120) return false;
+    if (Math.abs(x - centerX) < 60 && Math.abs(y - centerY) < 60) return false;
     return !obstacles.some(o => Math.abs(o.x - x) < minDist && Math.abs(o.y - y) < minDist);
   };
   
-  // Regular obstacles (pillars and walls)
+  // Regular obstacles (pillars and walls) - scaled
   for (let i = 0; i < baseCount; i++) {
     const type = Math.random() < 0.6 ? 'pillar' : 'wall';
     
@@ -69,57 +69,57 @@ function generateObstacles(): ArenaObstacle[] {
     }
   }
   
-  // Add 1-2 rotating laser grids
-  const laserCount = 1 + Math.floor(Math.random() * 2);
+  // Add 1 rotating laser grid (scaled)
+  const laserCount = 1;
   for (let i = 0; i < laserCount; i++) {
     let x: number, y: number;
     let attempts = 0;
     
     do {
-      x = padding + 100 + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2 - 200);
-      y = padding + 150 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 300);
+      x = padding + 50 + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2 - 100);
+      y = padding + 75 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 150);
       attempts++;
-    } while (attempts < 50 && !isValidPosition(x, y, 180));
+    } while (attempts < 50 && !isValidPosition(x, y, 90));
     
     if (attempts < 50) {
       obstacles.push({
         id: `laser_${i}`,
         x,
         y,
-        width: 20,
-        height: 20,
+        width: 10,
+        height: 10,
         type: 'laserGrid',
         destructible: false,
         rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (0.015 + Math.random() * 0.01) * (Math.random() < 0.5 ? 1 : -1),
-        laserLength: 120 + Math.random() * 60,
+        rotationSpeed: (0.012 + Math.random() * 0.008) * (Math.random() < 0.5 ? 1 : -1),
+        laserLength: 60 + Math.random() * 30,
       });
     }
   }
   
-  // Add 2-3 phase platforms
-  const phaseCount = 2 + Math.floor(Math.random() * 2);
+  // Add 1-2 phase platforms (scaled)
+  const phaseCount = 1 + Math.floor(Math.random() * 2);
   for (let i = 0; i < phaseCount; i++) {
     let x: number, y: number;
     let attempts = 0;
     
     do {
       x = padding + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2);
-      y = padding + 150 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 300);
+      y = padding + 75 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 150);
       attempts++;
-    } while (attempts < 50 && !isValidPosition(x, y, 120));
+    } while (attempts < 50 && !isValidPosition(x, y, 60));
     
     if (attempts < 50) {
       obstacles.push({
         id: `phase_${i}`,
         x,
         y,
-        width: 70 + Math.random() * 40,
-        height: 70 + Math.random() * 40,
+        width: 35 + Math.random() * 20,
+        height: 35 + Math.random() * 20,
         type: 'phasePlatform',
         destructible: false,
-        phaseTimer: Math.floor(Math.random() * 180), // Stagger start times
-        phaseDuration: 120 + Math.floor(Math.random() * 60), // 2-3 seconds
+        phaseTimer: Math.floor(Math.random() * 180),
+        phaseDuration: 120 + Math.floor(Math.random() * 60),
         isVisible: Math.random() < 0.5,
       });
     }
@@ -139,7 +139,7 @@ function createAIOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   const shipId = shipIds[Math.floor(Math.random() * shipIds.length)];
   
   const spawnX = ARENA_CONFIG.arenaWidth / 2;
-  const spawnY = 200;
+  const spawnY = 100; // Scaled down
   
   return {
     id: 'opponent_1',
@@ -185,7 +185,7 @@ function createHumanOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     : shipIds[Math.floor(Math.random() * shipIds.length)];
   
   const spawnX = ARENA_CONFIG.arenaWidth / 2;
-  const spawnY = 200;
+  const spawnY = 100; // Scaled down
   
   // Get behavior weights for this playstyle
   const behaviorWeights = profile.playStyle 
@@ -286,7 +286,7 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
 
 export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 'ai'): ArenaState {
   const centerX = ARENA_CONFIG.arenaWidth / 2;
-  const playerY = ARENA_CONFIG.arenaHeight - 250;
+  const playerY = ARENA_CONFIG.arenaHeight - 125; // Scaled down
   
   const upgrades = getComputedStats();
   const playerMaxHealth = Math.floor(ARENA_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
