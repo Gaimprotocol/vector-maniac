@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePurchases } from '@/hooks/usePurchases';
 import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, CheckIcon, BestiaryIcon } from './VectorIcons';
+import { DailyBonusButton } from './DailyBonusButton';
 
 interface MenuScreenProps {
   highScore: number;
@@ -277,6 +278,11 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
           )}
         </button>
 
+        {/* Daily Bonus */}
+        <div className="mb-4">
+          <DailyBonusButton />
+        </div>
+
         {highScore > 0 && (
           <p 
             className="text-[8px] text-[#00ff88]/50 mb-4"
@@ -286,7 +292,7 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
           </p>
         )}
 
-        <div 
+        <div
           className="text-[7px] text-[#00ff88]/30 text-center space-y-1"
           style={{ fontFamily: 'Rajdhani, sans-serif' }}
         >
