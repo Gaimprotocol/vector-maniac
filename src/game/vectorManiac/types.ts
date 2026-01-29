@@ -256,4 +256,8 @@ export interface VectorState {
   nextHyperspaceMap: number;         // Map number when next hyperspace triggers
   hyperspaceFormationTimer: number;  // Timer for spawning enemy formations
   hyperspacePlayerBaseY: number;     // Player's base Y position during hyperspace
+  
+  // Visual anomaly system
+  backgroundAnomalySeed: number | null;   // Seed for procedural background (null = use normal theme)
+  hyperspaceAnomalySeed: number | null;   // Seed for procedural hyperspace (null = use normal variant)
 }

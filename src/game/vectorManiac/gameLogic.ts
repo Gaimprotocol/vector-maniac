@@ -2287,6 +2287,14 @@ function completeWave(state: VectorState): VectorState {
     // Show new map name
     newState.showMapName = true;
     newState.mapNameTimer = 156; // ~2.6 seconds (same as wave complete)
+    
+    // Visual anomaly chance - procedurally generated backgrounds (starts map 5+, increases with progression)
+    const bgAnomalyChance = newState.currentMap >= 5 ? Math.min(0.25, 0.05 + newState.currentMap * 0.004) : 0;
+    if (Math.random() < bgAnomalyChance) {
+      newState.backgroundAnomalySeed = Math.floor(Math.random() * 1000000);
+    } else {
+      newState.backgroundAnomalySeed = null;
+    }
 
     // Hyperspace is a BETWEEN-MAPS transition. That means we check after advancing currentMap.
     // (Also keep a legacy check on the pre-advanced state so existing runs created before
@@ -2317,6 +2325,14 @@ function completeWave(state: VectorState): VectorState {
       newState.soundQueue = [...newState.soundQueue, 'hyperspaceEnter'];
       // Set next hyperspace target for after this one
       newState.nextHyperspaceMap = getNextHyperspaceMapTarget(newState.currentMap);
+      
+      // Hyperspace visual anomaly chance - procedurally generated hyperspace visuals (25% base, increases)
+      const hsAnomalyChance = Math.min(0.40, 0.20 + newState.currentMap * 0.005);
+      if (Math.random() < hsAnomalyChance) {
+        newState.hyperspaceAnomalySeed = Math.floor(Math.random() * 1000000);
+      } else {
+        newState.hyperspaceAnomalySeed = null;
+      }
     } else {
       // Upgrade pick after every boss (map completion)
       newState.upgradesPending = 1;
