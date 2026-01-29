@@ -10,6 +10,7 @@ import { ShopScreen } from "./components/ShopScreen";
 import { InfoScreen } from "./components/InfoScreen";
 import { EquipmentPanel } from "./components/EquipmentPanel";
 import { ShipSelector } from "./components/ShipSelector";
+import { BestiaryScreen } from "./components/BestiaryScreen";
 import { MusicProvider } from "./contexts/MusicContext";
 import { initializeNativeServices } from "./services/nativeServices";
 
@@ -34,6 +35,7 @@ const App = () => {
               <Route path="/info" element={<InfoScreen />} />
               <Route path="/equipment" element={<EquipmentPanel />} />
               <Route path="/ships" element={<ShipSelector />} />
+              <Route path="/bestiary" element={<BestiaryScreen />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePurchases } from '@/hooks/usePurchases';
-import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, CheckIcon } from './VectorIcons';
+import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, CheckIcon, BestiaryIcon } from './VectorIcons';
 
 interface MenuScreenProps {
   highScore: number;
@@ -235,6 +235,20 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
             <InfoIcon size={14} /> INFO
           </button>
         </div>
+
+        {/* Bestiary button */}
+        <button
+          className="text-[9px] border rounded px-5 py-2 mb-4
+                     transition-all duration-300 flex items-center gap-2
+                     text-[#aa88ff]/70 border-[#aa88ff]/30 hover:border-[#aa88ff]/60 hover:text-[#aa88ff] hover:bg-[#aa88ff]/10"
+          style={{ 
+            fontFamily: 'Orbitron, monospace',
+            boxShadow: '0 0 10px rgba(170, 136, 255, 0.1)',
+          }}
+          onClick={() => navigate('/bestiary')}
+        >
+          <BestiaryIcon size={12} /> BESTIARY
+        </button>
 
         {/* Bonus Maps Toggle */}
         <button

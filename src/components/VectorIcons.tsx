@@ -347,3 +347,21 @@ export const PauseIcon: React.FC<VectorIconProps> = ({ size = 24, className = ''
     </g>
   </svg>
 );
+
+// Bestiary icon - mysterious creature silhouette with question mark
+export const BestiaryIcon: React.FC<VectorIconProps> = ({ size = 24, className = '', glow = true }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+    <defs>
+      {glow && <filter id="glow-bestiary" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>}
+    </defs>
+    <g filter={glow ? "url(#glow-bestiary)" : undefined} stroke="#aa88ff" strokeWidth="1.5" fill="none">
+      {/* Hexagonal shape representing anomaly */}
+      <polygon points="12 3 19 7 19 15 12 19 5 15 5 7 12 3" />
+      {/* Question mark in center */}
+      <text x="12" y="14" textAnchor="middle" fill="#aa88ff" fontSize="8" fontFamily="Orbitron, monospace" stroke="none">?</text>
+    </g>
+  </svg>
+);
