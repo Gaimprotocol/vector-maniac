@@ -21,45 +21,45 @@ export interface Companion {
   mergedFrom?: number[]; // Seeds of companions merged to create this
 }
 
-// Bounty values based on ability rarity
+// Bounty values based on ability rarity - ECONOMY v3: Reduced rewards
 export function getBountyValue(ability: string, behavior: string): number {
   const abilityBonus: Record<string, number> = {
-    none: 10,
-    shooter: 25,
-    splitter: 30,
-    shield: 35,
-    phaser: 40,
-    leech: 50,
+    none: 5,       // Was 10
+    shooter: 10,   // Was 25
+    splitter: 12,  // Was 30
+    shield: 15,    // Was 35
+    phaser: 18,    // Was 40
+    leech: 25,     // Was 50
   };
   
   const behaviorBonus: Record<string, number> = {
-    chase: 5,
-    orbit: 10,
-    zigzag: 15,
-    teleport: 25,
-    spiral: 15,
-    strafe: 10,
-    pounce: 20,
-    mirror: 30,
+    chase: 2,      // Was 5
+    orbit: 4,      // Was 10
+    zigzag: 6,     // Was 15
+    teleport: 10,  // Was 25
+    spiral: 6,     // Was 15
+    strafe: 4,     // Was 10
+    pounce: 8,     // Was 20
+    mirror: 12,    // Was 30
   };
   
-  return (abilityBonus[ability] || 10) + (behaviorBonus[behavior] || 5);
+  return (abilityBonus[ability] || 5) + (behaviorBonus[behavior] || 2);
 }
 
-// Companion purchase cost (higher for rarer/more powerful)
+// Companion purchase cost - ECONOMY v3: Increased costs
 export function getCompanionCost(ability: string, timesDefeated: number): number {
   const baseCost: Record<string, number> = {
-    none: 100,
-    shooter: 200,
-    splitter: 250,
-    shield: 300,
-    phaser: 350,
-    leech: 400,
+    none: 200,     // Was 100
+    shooter: 350,  // Was 200
+    splitter: 450, // Was 250
+    shield: 550,   // Was 300
+    phaser: 650,   // Was 350
+    leech: 800,    // Was 400
   };
   
-  // Discount based on how many times defeated (max 50% off)
-  const discount = Math.min(0.5, timesDefeated * 0.05);
-  const base = baseCost[ability] || 100;
+  // Discount based on how many times defeated (max 30% off, was 50%)
+  const discount = Math.min(0.3, timesDefeated * 0.03);
+  const base = baseCost[ability] || 200;
   
   return Math.floor(base * (1 - discount));
 }
@@ -159,15 +159,15 @@ export function useBestiaryRewards() {
     });
   }, []);
 
-  // Calculate evolution cost based on the companions being merged
+  // Calculate evolution cost - ECONOMY v3: Increased costs
   const getEvolutionCost = useCallback((seeds: number[]): number => {
     if (seeds.length !== 2) return 0;
     const comps = seeds.map(s => companions.find(c => c.seed === s)).filter(Boolean) as Companion[];
     if (comps.length !== 2) return 0;
     
-    // Base cost + bonus for evolution levels
-    const baseCost = 150;
-    const levelBonus = comps.reduce((sum, c) => sum + (c.evolutionLevel || 1) * 50, 0);
+    // Base cost + bonus for evolution levels (was 150 + 50/level)
+    const baseCost = 300;
+    const levelBonus = comps.reduce((sum, c) => sum + (c.evolutionLevel || 1) * 100, 0);
     return baseCost + levelBonus;
   }, [companions]);
 

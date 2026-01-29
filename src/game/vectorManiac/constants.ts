@@ -96,32 +96,32 @@ export const VM_CONFIG = {
   waveTransitionTime: 156,      // ~2.6 seconds for wave complete text
   mapTransitionTime: 15,
   
-  // Salvage
+  // Salvage - ECONOMY REBALANCE v3: Reduced rewards to encourage IAP
   salvageDropChance: {
-    drone: 0.20,                // Reduced from 0.25
-    shooter: 0.20,              // Reduced from 0.25
-    elite: 0.40,                // Reduced from 0.50
-    bounty: 1.0,
+    drone: 0.12,                // Was 0.20 - rare drops
+    shooter: 0.12,              // Was 0.20
+    elite: 0.25,                // Was 0.40
+    bounty: 0.80,               // Was 1.0 - not guaranteed
     boss: 1.0,
-    miniboss: 1.0,              // Always drops salvage
-    dasher: 0.15,               // Fast but weak
-    splitter: 0.30,             // Medium reward
-    orbiter: 0.25,              // Annoying to kill
-    sniper: 0.35,               // Dangerous
-    anomaly: 0.60,              // Mystery enemies drop more often
+    miniboss: 0.80,             // Was 1.0
+    dasher: 0.08,               // Was 0.15 - fast but weak
+    splitter: 0.18,             // Was 0.30
+    orbiter: 0.15,              // Was 0.25
+    sniper: 0.20,               // Was 0.35
+    anomaly: 0.35,              // Was 0.60 - still best drop rate
   },
   salvageValue: {
-    drone: 8,                   // Reduced from 10
-    shooter: 12,                // Reduced from 15
-    elite: 25,                  // Reduced from 30
-    bounty: 80,                 // Reduced from 100
-    boss: 150,                  // Reduced from 200
-    miniboss: 50,               // Decent mid-map reward
-    dasher: 6,                  // Quick kill
-    splitter: 18,               // Worth more due to difficulty
-    orbiter: 14,                // Moderate reward
-    sniper: 16,                 // Dangerous enemy
-    anomaly: 30,                // Good reward for unknown threat
+    drone: 3,                   // Was 8
+    shooter: 4,                 // Was 12
+    elite: 8,                   // Was 25
+    bounty: 25,                 // Was 80
+    boss: 40,                   // Was 150 - major nerf
+    miniboss: 15,               // Was 50
+    dasher: 2,                  // Was 6
+    splitter: 6,                // Was 18
+    orbiter: 5,                 // Was 14
+    sniper: 6,                  // Was 16
+    anomaly: 12,                // Was 30 - still best value
   },
   salvageDriftSpeed: 0.3,
   

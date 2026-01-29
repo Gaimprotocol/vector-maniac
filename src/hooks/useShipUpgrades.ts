@@ -15,66 +15,66 @@ export interface ShipUpgrade {
   };
 }
 
-// REBALANCED v2: Further reduced bonuses for challenging late-game
+// REBALANCED v3: Increased costs to encourage scrap purchases
 export const SHIP_UPGRADES: ShipUpgrade[] = [
   {
     id: 'cannon_power',
     name: 'CANNON POWER',
     description: 'Increases weapon damage',
     icon: '◈',
-    maxLevel: 8,         // Reduced from 10
-    baseCost: 100,       // Increased from 75
-    costMultiplier: 1.8, // Increased from 1.6
-    effect: { stat: 'damage', valuePerLevel: 0.06 }, // Was 8%, now 6% (max +48%)
+    maxLevel: 8,
+    baseCost: 150,       // Was 100
+    costMultiplier: 2.0, // Was 1.8
+    effect: { stat: 'damage', valuePerLevel: 0.06 },
   },
   {
     id: 'rapid_fire',
     name: 'RAPID FIRE',
     description: 'Increases fire rate',
     icon: '◇',
-    maxLevel: 8,         // Reduced from 10
-    baseCost: 100,       // Increased from 80
-    costMultiplier: 1.8,
-    effect: { stat: 'fireRate', valuePerLevel: 0.05 }, // Was 6%, now 5% (max +40%)
+    maxLevel: 8,
+    baseCost: 150,       // Was 100
+    costMultiplier: 2.0, // Was 1.8
+    effect: { stat: 'fireRate', valuePerLevel: 0.05 },
   },
   {
     id: 'hull_armor',
     name: 'HULL ARMOR',
     description: 'Increases max health',
     icon: '⬡',
-    maxLevel: 8,         // Reduced from 10
-    baseCost: 120,       // Increased from 100
-    costMultiplier: 1.8,
-    effect: { stat: 'health', valuePerLevel: 0.06 }, // Was 8%, now 6% (max +48%)
+    maxLevel: 8,
+    baseCost: 180,       // Was 120
+    costMultiplier: 2.0, // Was 1.8
+    effect: { stat: 'health', valuePerLevel: 0.06 },
   },
   {
     id: 'thrusters',
     name: 'THRUSTERS',
     description: 'Increases movement speed',
     icon: '▷',
-    maxLevel: 5,         // Reduced from 6
-    baseCost: 80,        // Increased from 60
-    costMultiplier: 1.6,
-    effect: { stat: 'speed', valuePerLevel: 0.04 }, // Was 5%, now 4% (max +20%)
+    maxLevel: 5,
+    baseCost: 120,       // Was 80
+    costMultiplier: 1.8, // Was 1.6
+    effect: { stat: 'speed', valuePerLevel: 0.04 },
   },
   {
     id: 'magnet_range',
     name: 'SALVAGE MAGNET',
     description: 'Increases scrap pickup range',
     icon: '◎',
-    maxLevel: 5,         // Reduced from 6
-    baseCost: 60,        // Increased from 50
-    costMultiplier: 1.5,
-    effect: { stat: 'magnetRange', valuePerLevel: 0.08 }, // Was 10%, now 8% (max +40%)
+    maxLevel: 5,
+    baseCost: 100,       // Was 60
+    costMultiplier: 1.7, // Was 1.5
+    effect: { stat: 'magnetRange', valuePerLevel: 0.08 },
   },
   {
     id: 'energy_shields',
     name: 'ENERGY SHIELDS',
     description: 'Adds protective shields',
     icon: '⬢',
-    maxLevel: 2,         // Reduced from 3
-    baseCost: 400,       // Increased from 300
-    costMultiplier: 3.0, // Increased from 2.5
+    maxLevel: 2,
+    baseCost: 600,       // Was 400
+    costMultiplier: 3.5, // Was 3.0
     effect: { stat: 'shields', valuePerLevel: 1 },
   },
   {
@@ -82,9 +82,9 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     name: 'PIERCING ROUNDS',
     description: 'Bullets penetrate enemies',
     icon: '⊕',
-    maxLevel: 2,         // Same as before
-    baseCost: 350,       // Increased from 250
-    costMultiplier: 3.5, // Increased from 3.0
+    maxLevel: 2,
+    baseCost: 500,       // Was 350
+    costMultiplier: 4.0, // Was 3.5
     effect: { stat: 'pierce', valuePerLevel: 1 },
   },
   {
@@ -92,8 +92,8 @@ export const SHIP_UPGRADES: ShipUpgrade[] = [
     name: 'EXTRA CANNONS',
     description: 'Adds side-mounted guns',
     icon: '⫸',
-    maxLevel: 1,         // Reduced from 2 - only 1 extra pair now
-    baseCost: 600,       // Increased from 500
+    maxLevel: 1,
+    baseCost: 800,       // Was 600
     costMultiplier: 1,
     effect: { stat: 'extraCannons', valuePerLevel: 1 },
   },
