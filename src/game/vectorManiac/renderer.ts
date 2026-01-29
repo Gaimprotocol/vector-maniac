@@ -1264,7 +1264,9 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
     
     switch (enemy.type) {
       case 'drone':
-        // Triangle drone
+        // Triangle drone - rotate to face player (tip pointing toward player)
+        const angleToPlayer = Math.atan2(state.playerY - enemy.y, state.playerX - enemy.x);
+        ctx.rotate(angleToPlayer);
         ctx.beginPath();
         ctx.moveTo(enemy.size, 0);
         ctx.lineTo(-enemy.size * 0.6, enemy.size * 0.7);
