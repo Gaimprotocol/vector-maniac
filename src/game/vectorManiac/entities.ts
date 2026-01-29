@@ -329,6 +329,99 @@ export function createParticle(
   return particles;
 }
 
+// Create a dramatic multi-layered explosion effect for player death
+export function createPlayerDeathExplosion(x: number, y: number): VectorParticle[] {
+  const particles: VectorParticle[] = [];
+  
+  // Layer 1: Core white flash (fast, large)
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const speed = 6 + Math.random() * 4;
+    particles.push({
+      id: generateId(),
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 8 + Math.random() * 6,
+      color: '#ffffff',
+      life: 15 + Math.random() * 10,
+      maxLife: 25,
+    });
+  }
+  
+  // Layer 2: Cyan energy burst
+  for (let i = 0; i < 20; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 4 + Math.random() * 5;
+    particles.push({
+      id: generateId(),
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 5 + Math.random() * 4,
+      color: '#00ffff',
+      life: 25 + Math.random() * 15,
+      maxLife: 40,
+    });
+  }
+  
+  // Layer 3: Orange/yellow fire
+  for (let i = 0; i < 25; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 4;
+    const fireColors = ['#ff8800', '#ffaa00', '#ffcc00', '#ff6600'];
+    particles.push({
+      id: generateId(),
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 4 + Math.random() * 5,
+      color: fireColors[Math.floor(Math.random() * fireColors.length)],
+      life: 30 + Math.random() * 20,
+      maxLife: 50,
+    });
+  }
+  
+  // Layer 4: Red debris
+  for (let i = 0; i < 15; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 3;
+    particles.push({
+      id: generateId(),
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 3 + Math.random() * 3,
+      color: '#ff4444',
+      life: 40 + Math.random() * 25,
+      maxLife: 65,
+    });
+  }
+  
+  // Layer 5: Slow-moving smoke/debris (long-lasting)
+  for (let i = 0; i < 10; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.5 + Math.random() * 1.5;
+    particles.push({
+      id: generateId(),
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 6 + Math.random() * 4,
+      color: '#888888',
+      life: 50 + Math.random() * 30,
+      maxLife: 80,
+    });
+  }
+  
+  return particles;
+}
+
 export function createSalvage(x: number, y: number, value: number, forceRare?: boolean): VectorSalvage {
   const angle = Math.random() * Math.PI * 2;
   const speed = VM_CONFIG.salvageDriftSpeed;

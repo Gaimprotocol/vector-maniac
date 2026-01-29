@@ -16,6 +16,7 @@ import {
   createPlayerProjectile, 
   createEnemyProjectile,
   createParticle,
+  createPlayerDeathExplosion,
   createSalvage,
   createPowerUp,
   createHyperspacePowerUp
@@ -389,6 +390,17 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
   // Check game over
   if (newState.health <= 0) {
     newState.phase = 'gameOver';
+    
+    // Create dramatic death explosion
+    const deathParticles = createPlayerDeathExplosion(newState.playerX, newState.playerY);
+    newState.particles = [...newState.particles, ...deathParticles];
+    
+    // Play death explosion sound
+    newState.soundQueue = [...newState.soundQueue, 'playerDeath'];
+    
+    // Screen shake for impact
+    newState.screenShakeIntensity = 25;
+    
     // Save high score
     const currentHighScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
     if (newState.score > currentHighScore) {
@@ -638,6 +650,17 @@ function updateHyperspacePhase(state: VectorState, input: VectorInput): VectorSt
   // Check game over
   if (newState.health <= 0) {
     newState.phase = 'gameOver';
+    
+    // Create dramatic death explosion
+    const deathParticles = createPlayerDeathExplosion(newState.playerX, newState.playerY);
+    newState.particles = [...newState.particles, ...deathParticles];
+    
+    // Play death explosion sound
+    newState.soundQueue = [...newState.soundQueue, 'playerDeath'];
+    
+    // Screen shake for impact
+    newState.screenShakeIntensity = 25;
+    
     // Save high score
     const currentHighScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');
     if (newState.score > currentHighScore) {

@@ -82,7 +82,7 @@ export type VectorSoundType =
   | 'shoot' | 'shoot_shoot' | 'shoot_laser' | 'shoot_plasma' | 'shoot_energy' | 'shoot_pulse' | 'shoot_fire' | 'shoot_ice'
   | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged' | 'screenShakeHaptic'
   | 'hyperspaceEnter' | 'hyperspaceExit' | 'hyperspaceLoop' | 'warpShield' | 'formationBreaker' | 'timeWarp' | 'magnetPulse'
-  | 'anomalySpawn';
+  | 'anomalySpawn' | 'playerDeath';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -239,6 +239,109 @@ export function playVectorSound(type: VectorSoundType): void {
         boom2Gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.3);
         boom2.start(ctx.currentTime + delay);
         boom2.stop(ctx.currentTime + delay + 0.3);
+        break;
+      }
+      
+      case 'playerDeath': {
+        // Dramatic player death explosion - much bigger than regular explosion
+        // Trigger haptic feedback for mobile
+        triggerHapticFeedback('death');
+        
+        // Layer 1: Massive sub bass impact
+        const sub = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        sub.connect(subGain);
+        subGain.connect(ctx.destination);
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(40, ctx.currentTime);
+        sub.frequency.exponentialRampToValueAtTime(10, ctx.currentTime + 0.8);
+        subGain.gain.setValueAtTime(0.5, ctx.currentTime);
+        subGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        sub.start(ctx.currentTime);
+        sub.stop(ctx.currentTime + 0.8);
+        
+        // Layer 2: Heavy low rumble
+        const rumble = ctx.createOscillator();
+        const rumbleGain = ctx.createGain();
+        rumble.connect(rumbleGain);
+        rumbleGain.connect(ctx.destination);
+        rumble.type = 'sawtooth';
+        rumble.frequency.setValueAtTime(100, ctx.currentTime);
+        rumble.frequency.exponentialRampToValueAtTime(20, ctx.currentTime + 0.6);
+        rumbleGain.gain.setValueAtTime(0.35, ctx.currentTime);
+        rumbleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        rumble.start(ctx.currentTime);
+        rumble.stop(ctx.currentTime + 0.6);
+        
+        // Layer 3: Mid crunch
+        const mid = ctx.createOscillator();
+        const midGain = ctx.createGain();
+        mid.connect(midGain);
+        midGain.connect(ctx.destination);
+        mid.type = 'square';
+        mid.frequency.setValueAtTime(300, ctx.currentTime);
+        mid.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.35);
+        midGain.gain.setValueAtTime(0.25, ctx.currentTime);
+        midGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        mid.start(ctx.currentTime);
+        mid.stop(ctx.currentTime + 0.35);
+        
+        // Layer 4: High-frequency shatter
+        const shatter = ctx.createOscillator();
+        const shatterGain = ctx.createGain();
+        shatter.connect(shatterGain);
+        shatterGain.connect(ctx.destination);
+        shatter.type = 'sawtooth';
+        shatter.frequency.setValueAtTime(2000, ctx.currentTime);
+        shatter.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.2);
+        shatterGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        shatterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        shatter.start(ctx.currentTime);
+        shatter.stop(ctx.currentTime + 0.2);
+        
+        // Layer 5: Multiple debris crackles
+        for (let i = 0; i < 6; i++) {
+          const debris = ctx.createOscillator();
+          const debrisGain = ctx.createGain();
+          debris.connect(debrisGain);
+          debrisGain.connect(ctx.destination);
+          debris.type = 'sawtooth';
+          const startDelay = i * 0.04;
+          debris.frequency.setValueAtTime(1000 + Math.random() * 2000, ctx.currentTime + startDelay);
+          debris.frequency.exponentialRampToValueAtTime(30 + Math.random() * 80, ctx.currentTime + startDelay + 0.2);
+          debrisGain.gain.setValueAtTime(0.08, ctx.currentTime + startDelay);
+          debrisGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + 0.2 + Math.random() * 0.1);
+          debris.start(ctx.currentTime + startDelay);
+          debris.stop(ctx.currentTime + startDelay + 0.3);
+        }
+        
+        // Layer 6: Descending "death tone"
+        const deathTone = ctx.createOscillator();
+        const deathGain = ctx.createGain();
+        deathTone.connect(deathGain);
+        deathGain.connect(ctx.destination);
+        deathTone.type = 'sine';
+        deathTone.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
+        deathTone.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.7);
+        deathGain.gain.setValueAtTime(0, ctx.currentTime);
+        deathGain.gain.setValueAtTime(0.2, ctx.currentTime + 0.1);
+        deathGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+        deathTone.start(ctx.currentTime + 0.1);
+        deathTone.stop(ctx.currentTime + 0.7);
+        
+        // Layer 7: Delayed secondary boom
+        const boom2 = ctx.createOscillator();
+        const boom2Gain = ctx.createGain();
+        boom2.connect(boom2Gain);
+        boom2Gain.connect(ctx.destination);
+        boom2.type = 'sine';
+        boom2.frequency.setValueAtTime(70, ctx.currentTime + 0.15);
+        boom2.frequency.exponentialRampToValueAtTime(15, ctx.currentTime + 0.55);
+        boom2Gain.gain.setValueAtTime(0, ctx.currentTime);
+        boom2Gain.gain.setValueAtTime(0.35, ctx.currentTime + 0.15);
+        boom2Gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+        boom2.start(ctx.currentTime + 0.15);
+        boom2.stop(ctx.currentTime + 0.55);
         break;
       }
       
