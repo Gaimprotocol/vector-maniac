@@ -8,6 +8,7 @@ import { useScrapCurrency } from '@/hooks/useScrapCurrency';
 import { useBestiaryRewards, Companion } from '@/hooks/useBestiaryRewards';
 import { ArrowBackIcon } from './VectorIcons';
 import { AnomalyCard } from './bestiary/AnomalyCard';
+import { AnomalyShapeRenderer } from './bestiary/AnomalyShapeRenderer';
 
 type TabType = 'enemies' | 'companions' | 'backgrounds' | 'hyperspace';
 
@@ -77,30 +78,42 @@ const VisualCard: React.FC<{ entry: VisualBestiaryEntry; index: number }> = ({ e
   );
 };
 
-// Companion Card
-const CompanionCard: React.FC<{ companion: Companion; index: number; isActive: boolean; onSetActive: (seed: number) => void }> = ({ 
-  companion, index, isActive, onSetActive 
+// Companion Card with proper shape rendering
+const CompanionCard: React.FC<{ 
+  companion: Companion; 
+  index: number; 
+  isActive: boolean; 
+  onSetActive: (seed: number) => void;
+  isSelected?: boolean;
+  onSelect?: (seed: number) => void;
+  selectionMode?: boolean;
+}> = ({ 
+  companion, index, isActive, onSetActive, isSelected, onSelect, selectionMode 
 }) => {
   const color = `hsl(${companion.hue}, ${companion.saturation}%, 60%)`;
   
   return (
     <div 
-      className={`rounded-lg p-3 border opacity-0 animate-pop-in ${isActive ? 'ring-2 ring-[#00ffaa]' : ''}`}
+      className={`rounded-lg p-3 border opacity-0 animate-pop-in cursor-pointer transition-all ${
+        isActive ? 'ring-2 ring-[#00ffaa]' : ''
+      } ${isSelected ? 'ring-2 ring-[#ffaa00]' : ''}`}
       style={{ 
         borderColor: `hsl(${companion.hue}, ${companion.saturation}%, 40%)`,
         background: `linear-gradient(135deg, hsl(${companion.hue}, ${companion.saturation}%, 8%) 0%, transparent 100%)`,
         animationDelay: `${200 + index * 50}ms`,
       }}
+      onClick={() => selectionMode && onSelect?.(companion.seed)}
     >
       <div className="flex items-center gap-3">
-        <div 
-          className="w-12 h-12 rounded-full border-2 flex items-center justify-center"
-          style={{ 
-            borderColor: color,
-            background: `radial-gradient(circle, hsl(${companion.hue}, ${companion.saturation}%, 20%) 0%, transparent 100%)`,
-          }}
-        >
-          <span className="text-xl" style={{ color }}>⚔</span>
+        <div className="w-12 h-12 flex items-center justify-center">
+          <AnomalyShapeRenderer
+            shape={companion.shape as any}
+            hue={companion.hue}
+            saturation={companion.saturation}
+            size={48}
+            hasAura={true}
+            hasPulse={false}
+          />
         </div>
         
         <div className="flex-1 min-w-0">
@@ -110,15 +123,28 @@ const CompanionCard: React.FC<{ companion: Companion; index: number; isActive: b
           <div className="text-[8px] text-[#00ffaa]/50" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
             {companion.behavior.toUpperCase()} • {companion.ability.toUpperCase()}
           </div>
+          {companion.evolutionLevel && (
+            <div className="text-[7px] text-[#ffaa00]" style={{ fontFamily: 'Orbitron' }}>
+              ★ EVOLVED LV.{companion.evolutionLevel}
+            </div>
+          )}
         </div>
         
-        {isActive ? (
+        {selectionMode ? (
+          <div 
+            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+              isSelected ? 'bg-[#ffaa00] border-[#ffaa00]' : 'border-[#666]'
+            }`}
+          >
+            {isSelected && <span className="text-black text-xs">✓</span>}
+          </div>
+        ) : isActive ? (
           <span className="text-[8px] px-2 py-1 rounded bg-[#00ffaa]/20 text-[#00ffaa] border border-[#00ffaa]/50" style={{ fontFamily: 'Orbitron' }}>
             ACTIVE
           </span>
         ) : (
           <button
-            onClick={() => onSetActive(companion.seed)}
+            onClick={(e) => { e.stopPropagation(); onSetActive(companion.seed); }}
             className="text-[8px] px-2 py-1 rounded bg-[#666]/20 text-[#aaa] border border-[#666]/50 hover:bg-[#888]/20 hover:text-white transition-colors"
             style={{ fontFamily: 'Orbitron' }}
           >
@@ -143,9 +169,13 @@ export const BestiaryScreen: React.FC = () => {
     hasCompanion, 
     purchaseCompanion, 
     setActiveCompanion,
-    activeCompanion 
+    activeCompanion,
+    evolveCompanions,
+    getEvolutionCost,
   } = useBestiaryRewards();
   const [activeTab, setActiveTab] = useState<TabType>('enemies');
+  const [evolutionMode, setEvolutionMode] = useState(false);
+  const [selectedForEvolution, setSelectedForEvolution] = useState<number[]>([]);
   
   const sortedEnemyEntries = [...enemyEntries].sort((a, b) => b.discoveredAt - a.discoveredAt);
   const sortedBackgroundEntries = [...visualEntries].filter(e => e.type === 'background').sort((a, b) => b.discoveredAt - a.discoveredAt);
@@ -176,6 +206,33 @@ export const BestiaryScreen: React.FC = () => {
         ability: entry.ability,
       });
     }
+  };
+
+  const handleSelectForEvolution = (seed: number) => {
+    setSelectedForEvolution(prev => {
+      if (prev.includes(seed)) {
+        return prev.filter(s => s !== seed);
+      }
+      if (prev.length >= 2) {
+        return [prev[1], seed]; // Replace oldest selection
+      }
+      return [...prev, seed];
+    });
+  };
+
+  const handleEvolve = () => {
+    if (selectedForEvolution.length !== 2) return;
+    const cost = getEvolutionCost(selectedForEvolution);
+    if (spendScraps(cost)) {
+      evolveCompanions(selectedForEvolution[0], selectedForEvolution[1]);
+      setSelectedForEvolution([]);
+      setEvolutionMode(false);
+    }
+  };
+
+  const cancelEvolution = () => {
+    setEvolutionMode(false);
+    setSelectedForEvolution([]);
   };
 
   const tabs: { id: TabType; label: string; count: number }[] = [
@@ -325,15 +382,68 @@ export const BestiaryScreen: React.FC = () => {
               <p className="text-[10px] text-[#00ffaa]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>No allies recruited yet.</p>
               <p className="text-[9px] text-[#00ffaa]/30 mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Defeat anomalies and recruit them as companions!</p>
             </div>
-          ) : companions.map((companion, index) => (
-            <CompanionCard 
-              key={companion.seed} 
-              companion={companion} 
-              index={index}
-              isActive={activeCompanion?.seed === companion.seed}
-              onSetActive={setActiveCompanion}
-            />
-          ))
+          ) : (
+            <>
+              {/* Evolution Controls */}
+              <div className="mb-4 opacity-0 animate-pop-in" style={{ animationDelay: '180ms' }}>
+                {!evolutionMode ? (
+                  <button
+                    onClick={() => setEvolutionMode(true)}
+                    disabled={companions.length < 2}
+                    className={`w-full text-[9px] py-2 rounded border transition-all ${
+                      companions.length >= 2 
+                        ? 'border-[#ffaa00]/50 text-[#ffaa00] bg-[#ffaa00]/10 hover:bg-[#ffaa00]/20' 
+                        : 'border-[#666]/30 text-[#666] bg-transparent cursor-not-allowed'
+                    }`}
+                    style={{ fontFamily: 'Orbitron, monospace' }}
+                  >
+                    ⚡ EVOLVE ALLIES {companions.length < 2 && '(need 2+)'}
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-[8px] text-[#ffaa00] text-center" style={{ fontFamily: 'Orbitron' }}>
+                      SELECT 2 ALLIES TO MERGE ({selectedForEvolution.length}/2)
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={cancelEvolution}
+                        className="flex-1 text-[8px] py-2 rounded border border-[#ff4444]/50 text-[#ff4444] bg-[#ff4444]/10 hover:bg-[#ff4444]/20 transition-all"
+                        style={{ fontFamily: 'Orbitron' }}
+                      >
+                        CANCEL
+                      </button>
+                      <button
+                        onClick={handleEvolve}
+                        disabled={selectedForEvolution.length !== 2 || scraps < getEvolutionCost(selectedForEvolution)}
+                        className={`flex-1 text-[8px] py-2 rounded border transition-all ${
+                          selectedForEvolution.length === 2 && scraps >= getEvolutionCost(selectedForEvolution)
+                            ? 'border-[#00ffaa]/50 text-[#00ffaa] bg-[#00ffaa]/10 hover:bg-[#00ffaa]/20'
+                            : 'border-[#666]/30 text-[#666] bg-transparent cursor-not-allowed'
+                        }`}
+                        style={{ fontFamily: 'Orbitron' }}
+                      >
+                        EVOLVE (◈{selectedForEvolution.length === 2 ? getEvolutionCost(selectedForEvolution) : '?'})
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Companion List */}
+              {companions.map((companion, index) => (
+                <CompanionCard 
+                  key={companion.seed} 
+                  companion={companion} 
+                  index={index}
+                  isActive={activeCompanion?.seed === companion.seed}
+                  onSetActive={setActiveCompanion}
+                  selectionMode={evolutionMode}
+                  isSelected={selectedForEvolution.includes(companion.seed)}
+                  onSelect={handleSelectForEvolution}
+                />
+              ))}
+            </>
+          )
         )}
         
         {activeTab === 'backgrounds' && (
