@@ -192,10 +192,30 @@ function updateOpponentAI(state: ArenaState): ArenaState {
   // Update behavior timer
   opponent.behaviorTimer--;
   if (opponent.behaviorTimer <= 0) {
-    // Switch behavior randomly
-    const behaviors: ArenaOpponent['behaviorState'][] = ['chase', 'evade', 'strafe', 'cover'];
-    opponent.behaviorState = behaviors[Math.floor(Math.random() * behaviors.length)];
-    opponent.behaviorTimer = 60 + Math.floor(Math.random() * 120);
+    // Switch behavior based on weights (if human player) or randomly (if AI)
+    if (opponent.behaviorWeights && opponent.isHumanPlayer) {
+      // Weighted selection for more realistic "human" behavior
+      const weights = opponent.behaviorWeights;
+      const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+      let random = Math.random() * totalWeight;
+      
+      for (const [behavior, weight] of Object.entries(weights)) {
+        random -= weight;
+        if (random <= 0) {
+          opponent.behaviorState = behavior as ArenaOpponent['behaviorState'];
+          break;
+        }
+      }
+      
+      // "Human" players change tactics more variably
+      const adaptability = opponent.adaptability || 0.5;
+      opponent.behaviorTimer = Math.floor(40 + Math.random() * 100 * (1 - adaptability * 0.5));
+    } else {
+      // Standard AI behavior
+      const behaviors: ArenaOpponent['behaviorState'][] = ['chase', 'evade', 'strafe', 'cover'];
+      opponent.behaviorState = behaviors[Math.floor(Math.random() * behaviors.length)];
+      opponent.behaviorTimer = 60 + Math.floor(Math.random() * 120);
+    }
   }
   
   const playerX = state.playerX;

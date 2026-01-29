@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArenaDifficulty, 
   ArenaState,
+  ArenaMode,
   ARENA_ENTRY_COSTS,
   ARENA_DIFFICULTY_STATS,
 } from '@/game/arena/types';
@@ -21,9 +22,12 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<'lobby' | 'battle' | 'result'>('lobby');
   const [selectedDifficulty, setSelectedDifficulty] = useState<ArenaDifficulty>('bronze');
+  const [selectedMode, setSelectedMode] = useState<ArenaMode>('multiplayer');
   const [scraps, setScraps] = useState(getStoredScraps());
   const [arenaState, setArenaState] = useState<ArenaState | null>(null);
   const [battleResult, setBattleResult] = useState<'won' | 'lost' | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState(0);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<number>();
@@ -43,7 +47,8 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
     diamond: '#b9f2ff',
   };
   
-  const handleStartBattle = () => {
+  // Fake matchmaking animation
+  const startMatchmaking = () => {
     const cost = ARENA_ENTRY_COSTS[selectedDifficulty];
     
     if (scraps < cost) {
@@ -51,12 +56,42 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
       return;
     }
     
+    if (selectedMode === 'multiplayer') {
+      // Fake matchmaking delay
+      setIsSearching(true);
+      setSearchProgress(0);
+      
+      const searchDuration = 2000 + Math.random() * 2000; // 2-4 seconds
+      const startTime = Date.now();
+      
+      const updateProgress = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(100, (elapsed / searchDuration) * 100);
+        setSearchProgress(progress);
+        
+        if (progress < 100) {
+          requestAnimationFrame(updateProgress);
+        } else {
+          setIsSearching(false);
+          startBattle();
+        }
+      };
+      
+      requestAnimationFrame(updateProgress);
+    } else {
+      startBattle();
+    }
+  };
+  
+  const startBattle = () => {
+    const cost = ARENA_ENTRY_COSTS[selectedDifficulty];
+    
     // Deduct entry cost
     subtractStoredScraps(cost);
     setScraps(getStoredScraps());
     
-    // Create arena state
-    const newState = createArenaState(selectedDifficulty);
+    // Create arena state with selected mode
+    const newState = createArenaState(selectedDifficulty, selectedMode);
     setArenaState(newState);
     setScreen('battle');
     
@@ -246,13 +281,52 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           <span className="text-sm" style={{ color: '#facc15' }}>{scraps.toLocaleString()}</span>
         </div>
         
+        {/* Mode selection */}
+        <div className="flex gap-2 mb-4 w-full max-w-xs px-4">
+          <button
+            onClick={() => setSelectedMode('ai')}
+            className={`flex-1 px-3 py-2 rounded border-2 transition-all text-[10px] uppercase
+                       ${selectedMode === 'ai' ? 'scale-[1.02]' : 'opacity-60'}`}
+            style={{
+              fontFamily: 'Orbitron, monospace',
+              borderColor: selectedMode === 'ai' ? '#00ff88' : '#00ff8850',
+              background: selectedMode === 'ai' ? 'rgba(0, 255, 136, 0.1)' : 'transparent',
+              color: '#00ff88',
+            }}
+          >
+            ◇ VS AI
+          </button>
+          <button
+            onClick={() => setSelectedMode('multiplayer')}
+            className={`flex-1 px-3 py-2 rounded border-2 transition-all text-[10px] uppercase
+                       ${selectedMode === 'multiplayer' ? 'scale-[1.02]' : 'opacity-60'}`}
+            style={{
+              fontFamily: 'Orbitron, monospace',
+              borderColor: selectedMode === 'multiplayer' ? '#ff4466' : '#ff446650',
+              background: selectedMode === 'multiplayer' ? 'rgba(255, 68, 102, 0.1)' : 'transparent',
+              color: '#ff4466',
+            }}
+          >
+            ◆ VS PLAYERS
+          </button>
+        </div>
+        
+        {selectedMode === 'multiplayer' && (
+          <p 
+            className="text-[8px] text-center mb-3 px-4"
+            style={{ fontFamily: 'Rajdhani, sans-serif', color: 'rgba(255, 255, 255, 0.4)' }}
+          >
+            Matchmaking will find opponents at your skill level
+          </p>
+        )}
+        
         {/* Difficulty selection */}
         <div className="space-y-2 mb-6 w-full max-w-xs px-4">
           <p 
             className="text-[10px] text-center mb-3"
             style={{ fontFamily: 'Orbitron, monospace', color: 'rgba(255, 255, 255, 0.5)' }}
           >
-            SELECT DIFFICULTY
+            SELECT TIER
           </p>
           
           {difficulties.map((diff) => {
@@ -309,11 +383,54 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           </p>
         </div>
         
+        {/* Matchmaking overlay */}
+        {isSearching && (
+          <div 
+            className="absolute inset-0 flex flex-col items-center justify-center z-40"
+            style={{ background: 'rgba(0, 0, 0, 0.9)' }}
+          >
+            <div 
+              className="text-lg mb-4"
+              style={{ 
+                fontFamily: 'Orbitron, monospace',
+                color: '#ff4466',
+                textShadow: '0 0 20px #ff4466',
+              }}
+            >
+              SEARCHING FOR OPPONENT...
+            </div>
+            
+            <div 
+              className="w-48 h-2 rounded-full overflow-hidden mb-4"
+              style={{ background: 'rgba(255, 68, 102, 0.2)' }}
+            >
+              <div 
+                className="h-full rounded-full transition-all duration-100"
+                style={{ 
+                  width: `${searchProgress}%`,
+                  background: 'linear-gradient(90deg, #ff4466, #ff6688)',
+                  boxShadow: '0 0 10px #ff4466',
+                }}
+              />
+            </div>
+            
+            <p 
+              className="text-[10px]"
+              style={{ fontFamily: 'Rajdhani, sans-serif', color: 'rgba(255, 255, 255, 0.5)' }}
+            >
+              {searchProgress < 30 ? 'Connecting to servers...' :
+               searchProgress < 60 ? 'Finding players...' :
+               searchProgress < 90 ? 'Matching skill levels...' :
+               'Opponent found!'}
+            </p>
+          </div>
+        )}
+        
         {/* Buttons */}
         <div className="space-y-2 w-full max-w-xs px-4">
           <button
-            onClick={handleStartBattle}
-            disabled={!canAffordArena(selectedDifficulty, scraps)}
+            onClick={startMatchmaking}
+            disabled={!canAffordArena(selectedDifficulty, scraps) || isSearching}
             className="text-sm border-2 rounded w-full px-6 py-3
                        transition-all duration-300 hover:bg-[#ff4466]/10 active:scale-95 uppercase tracking-wider
                        disabled:opacity-50 disabled:cursor-not-allowed
@@ -325,7 +442,8 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
               boxShadow: '0 0 20px rgba(255, 68, 102, 0.2)',
             }}
           >
-            <TargetIcon size={16} /> ENTER ARENA
+            <TargetIcon size={16} /> 
+            {selectedMode === 'multiplayer' ? 'FIND MATCH' : 'ENTER ARENA'}
           </button>
           
           <button
