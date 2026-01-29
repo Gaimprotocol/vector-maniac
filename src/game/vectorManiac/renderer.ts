@@ -2317,49 +2317,7 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.stroke();
   ctx.restore();
   
-  // Glowing corner triangles (vector style)
-  const triangleSize = 50;
-  const cornerOffset = 30;
-  ctx.fillStyle = 'rgba(255, 0, 255, 0.3)';
-  ctx.shadowColor = '#ff00ff';
-  ctx.shadowBlur = 15;
-  
-  // Top-left triangle
-  ctx.beginPath();
-  ctx.moveTo(cornerOffset, cornerOffset);
-  ctx.lineTo(cornerOffset + triangleSize, cornerOffset);
-  ctx.lineTo(cornerOffset, cornerOffset + triangleSize);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Top-right triangle
-  ctx.beginPath();
-  ctx.moveTo(arenaWidth - cornerOffset, cornerOffset);
-  ctx.lineTo(arenaWidth - cornerOffset - triangleSize, cornerOffset);
-  ctx.lineTo(arenaWidth - cornerOffset, cornerOffset + triangleSize);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
-  ctx.shadowColor = '#00ffff';
-  
-  // Bottom-left triangle
-  ctx.beginPath();
-  ctx.moveTo(cornerOffset, arenaHeight - cornerOffset);
-  ctx.lineTo(cornerOffset + triangleSize, arenaHeight - cornerOffset);
-  ctx.lineTo(cornerOffset, arenaHeight - cornerOffset - triangleSize);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Bottom-right triangle
-  ctx.beginPath();
-  ctx.moveTo(arenaWidth - cornerOffset, arenaHeight - cornerOffset);
-  ctx.lineTo(arenaWidth - cornerOffset - triangleSize, arenaHeight - cornerOffset);
-  ctx.lineTo(arenaWidth - cornerOffset, arenaHeight - cornerOffset - triangleSize);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.shadowBlur = 0;
+  // Corner triangles removed for cleaner look
   
   // Title: "VECTOR" with hard-edge vector style
   ctx.save();
@@ -2428,19 +2386,7 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.textAlign = 'center';
   ctx.fillText('DRAG TO NAVIGATE // MOVEMENT = FIRE', centerX, barY + 18);
   
-  // Decorative data streams on sides
-  ctx.font = '8px monospace';
-  ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
-  ctx.textAlign = 'left';
-  const dataChars = '01';
-  for (let i = 0; i < 20; i++) {
-    const y = 100 + i * 30 + ((t * 2) % 30);
-    if (y < arenaHeight - 100) {
-      const char = dataChars[Math.floor(Math.random() * 2)];
-      ctx.fillText(char.repeat(8), 15, y);
-      ctx.fillText(char.repeat(8), arenaWidth - 55, y);
-    }
-  }
+  // Data streams removed for cleaner look
 }
 
 function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
