@@ -158,8 +158,8 @@ function createAIOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     behaviorTimer: 0,
     behaviorState: 'chase',
     damage: stats.damage,
-    fireRate: stats.fireRate,
-    speed: stats.speed,
+    fireRate: stats.fireRate * 1.5, // Slower fire rate
+    speed: stats.speed * 0.4, // Much slower AI movement
     accuracy: stats.accuracy,
   };
 }
@@ -192,10 +192,10 @@ function createHumanOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     ? getPlayStyleBehaviorWeights(profile.playStyle as any)
     : { chase: 0.25, evade: 0.25, strafe: 0.25, cover: 0.25 };
   
-  // Calculate modified stats based on player profile
+  // Calculate modified stats based on player profile - all slower
   const modifiedAccuracy = Math.min(1, stats.accuracy * 0.7 + profile.accuracy * 0.4);
-  const modifiedSpeed = stats.speed * (0.8 + profile.aggressiveness * 0.4);
-  const modifiedFireRate = Math.max(10, stats.fireRate * (0.7 + profile.patience * 0.5));
+  const modifiedSpeed = stats.speed * 0.4 * (0.8 + profile.aggressiveness * 0.3);
+  const modifiedFireRate = Math.max(15, stats.fireRate * 1.5 * (0.7 + profile.patience * 0.5));
   
   return {
     id: 'opponent_1',
