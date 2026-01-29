@@ -15,6 +15,7 @@ import { ARENA_CONFIG } from './constants';
 import { getComputedStats } from '@/hooks/useShipUpgrades';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { SHIP_MODELS } from '../shipModels';
+import { getRandomArena, loadArenaImage } from './arenas';
 import { 
   generatePlayerProfile, 
   getDisplayName, 
@@ -291,10 +292,17 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
   const upgrades = getComputedStats();
   const playerMaxHealth = Math.floor(ARENA_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
   
+  // Select random arena
+  const arena = getRandomArena();
+  loadArenaImage(arena); // Preload image
+  
   return {
     phase: 'entering',
     phaseTimer: ARENA_CONFIG.enteringDuration,
     gameTime: 0,
+    
+    arenaId: arena.id,
+    arenaName: arena.name,
     
     arenaWidth: ARENA_CONFIG.arenaWidth,
     arenaHeight: ARENA_CONFIG.arenaHeight,
@@ -314,8 +322,8 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
     opponent: createOpponent(difficulty, mode),
     opponentStunTimer: 0,
     
-    // Environment
-    obstacles: generateObstacles(),
+    // Environment (no obstacles anymore)
+    obstacles: [],
     projectiles: [],
     particles: [],
     powerUps: [],
