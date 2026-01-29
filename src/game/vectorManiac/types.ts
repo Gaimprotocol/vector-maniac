@@ -6,7 +6,8 @@ export type VectorPhase =
   | 'waveComplete'   // Wave transition
   | 'portalChoice'   // Safe vs Risk portal choice
   | 'upgradePick'    // Picking upgrades
-  | 'gameOver'       // Player died
+  | 'dying'          // Player death explosion (slow motion)
+  | 'gameOver'       // Player died - show end screen
   | 'victory'        // Beat the bounty boss
   | 'hyperspace'     // Vertical scrolling shooter mode
   | 'hyperspaceEnter' // Transition into hyperspace

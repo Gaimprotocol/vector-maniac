@@ -74,6 +74,9 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
       // These phases are handled by UI - just update particles
       newState.particles = updateParticles(newState.particles);
       break;
+    case 'dying':
+      newState = updateDyingPhase(newState);
+      break;
     case 'gameOver':
     case 'victory':
       // These phases are handled by UI overlays
@@ -387,9 +390,10 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     newState = completeWave(newState);
   }
   
-  // Check game over
+  // Check game over - trigger dying phase instead of immediate game over
   if (newState.health <= 0) {
-    newState.phase = 'gameOver';
+    newState.phase = 'dying';
+    newState.phaseTimer = 120; // ~2 seconds of slow motion death
     
     // Create dramatic death explosion
     const deathParticles = createPlayerDeathExplosion(newState.playerX, newState.playerY);
@@ -400,6 +404,31 @@ function updatePlayingPhase(state: VectorState, input: VectorInput): VectorState
     
     // Screen shake for impact
     newState.screenShakeIntensity = 25;
+  }
+  
+  return newState;
+}
+
+// Slow motion death sequence - particles continue, then transition to game over
+function updateDyingPhase(state: VectorState): VectorState {
+  let newState = { ...state };
+  
+  // Slow motion effect: update particles at reduced speed
+  // Only update every 3rd frame for dramatic slow-mo
+  if (newState.gameTime % 3 === 0) {
+    newState.particles = updateParticles(newState.particles);
+  }
+  
+  // Decay screen shake
+  if (newState.screenShakeIntensity > 0) {
+    newState.screenShakeIntensity = Math.max(0, newState.screenShakeIntensity - 0.3);
+  }
+  
+  newState.phaseTimer--;
+  
+  // Transition to game over after the death animation completes
+  if (newState.phaseTimer <= 0) {
+    newState.phase = 'gameOver';
     
     // Save high score
     const currentHighScore = parseInt(localStorage.getItem('cyberRescueHighScore') || '0');

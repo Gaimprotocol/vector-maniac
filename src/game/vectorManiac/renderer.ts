@@ -57,8 +57,10 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
     renderCompanion(ctx, state.companion, state.gameTime);
   }
   
-  // Draw player
-  renderPlayer(ctx, state);
+  // Draw player (hide during dying phase - ship has exploded)
+  if (state.phase !== 'dying' && state.phase !== 'gameOver') {
+    renderPlayer(ctx, state);
+  }
   
   // Draw particles
   renderParticles(ctx, state);
