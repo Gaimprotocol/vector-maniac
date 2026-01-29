@@ -26,6 +26,7 @@ import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './sounds';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getShipProjectileStyle } from './shipProjectiles';
+import { recordAnomalyEncounter, recordAnomalyDefeat } from '@/hooks/useBestiary';
 
 interface VectorInput {
   touchX: number;
@@ -864,6 +865,9 @@ function spawnEnemy(state: VectorState): VectorState {
   if (roll < anomalyChance) {
     // Spawn a procedurally generated anomaly!
     enemy = createAnomaly(state.playerX, state.playerY, state.currentMap);
+    // Record encounter in bestiary
+    const anomalyDNA = decodeDNA(enemy.behaviorTimer, state.currentMap);
+    recordAnomalyEncounter(anomalyDNA);
     newState.soundQueue = [...newState.soundQueue, 'anomalySpawn'];
   } else if (roll < anomalyChance + eliteChance) {
     enemy = createElite(state.playerX, state.playerY);
@@ -2085,9 +2089,12 @@ function checkCollisions(state: VectorState): VectorState {
       }
       
       // Anomaly splitter ability: spawn 2 smaller anomalies when killed
-      if (enemy.type === 'anomaly' && enemy.fireTimer !== 1) {
+      if (enemy.type === 'anomaly') {
         const parentDNA = decodeDNA(enemy.behaviorTimer, newState.currentMap);
-        if (parentDNA.ability === 'splitter') {
+        // Record defeat in bestiary
+        recordAnomalyDefeat(parentDNA.seed);
+        
+        if (enemy.fireTimer !== 1 && parentDNA.ability === 'splitter') {
           for (let i = 0; i < 2; i++) {
             const splitAnomaly = createSplitAnomaly(enemy.x, enemy.y, parentDNA, newState.currentMap);
             aliveEnemies.push(splitAnomaly);
