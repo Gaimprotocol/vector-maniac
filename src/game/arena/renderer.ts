@@ -31,7 +31,6 @@ export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): v
   
   // Render layers
   renderBackground(ctx, state);
-  renderObstacles(ctx, state);
   renderPowerUps(ctx, state);
   renderProjectiles(ctx, state);
   renderParticles(ctx, state);
@@ -66,16 +65,10 @@ function renderBackground(ctx: CanvasRenderingContext2D, state: ArenaState): voi
     ctx.fillRect(0, 0, w, h);
   }
   
-  // Pulsing glow effect
-  renderPulsingGlow(ctx, state);
-  
-  // Scanlines overlay
-  renderScanlines(ctx, state);
-  
-  // Subtle vignette overlay
-  const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, h * 0.7);
+  // Very subtle vignette - keeps background sharp
+  const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.5, w / 2, h / 2, h * 0.85);
   vignette.addColorStop(0, 'transparent');
-  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, w, h);
 }
