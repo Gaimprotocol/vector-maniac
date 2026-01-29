@@ -20,6 +20,7 @@ import {
   createPowerUp,
   createHyperspacePowerUp
 } from './entities';
+import { createAnomaly, createSplitAnomaly, decodeDNA, getAnomalyColor } from './anomalyGenerator';
 import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap, getNextHyperspaceMapTarget, shouldTriggerHyperspace } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './sounds';
@@ -855,19 +856,26 @@ function spawnEnemy(state: VectorState): VectorState {
   const orbiterChance = orbiterUnlocked ? 0.10 : 0;
   const splitterChance = splitterUnlocked ? 0.10 : 0;
   const dasherChance = dasherUnlocked ? 0.12 : 0;
+  
+  // ANOMALY CHANCE - random procedural enemies (starts at map 3, increases with progression)
+  const anomalyChance = state.currentMap >= 3 ? Math.min(0.12, 0.03 + state.currentMap * 0.002) : 0;
 
-  // Roll for enemy type - priority order: elite > sniper > orbiter > splitter > shooter > dasher > drone
-  if (roll < eliteChance) {
+  // Roll for enemy type - priority order: anomaly > elite > sniper > orbiter > splitter > shooter > dasher > drone
+  if (roll < anomalyChance) {
+    // Spawn a procedurally generated anomaly!
+    enemy = createAnomaly(state.playerX, state.playerY, state.currentMap);
+    newState.soundQueue = [...newState.soundQueue, 'anomalySpawn'];
+  } else if (roll < anomalyChance + eliteChance) {
     enemy = createElite(state.playerX, state.playerY);
-  } else if (roll < eliteChance + sniperChance) {
+  } else if (roll < anomalyChance + eliteChance + sniperChance) {
     enemy = createSniper(state.playerX, state.playerY);
-  } else if (roll < eliteChance + sniperChance + orbiterChance) {
+  } else if (roll < anomalyChance + eliteChance + sniperChance + orbiterChance) {
     enemy = createOrbiter(state.playerX, state.playerY);
-  } else if (roll < eliteChance + sniperChance + orbiterChance + splitterChance) {
+  } else if (roll < anomalyChance + eliteChance + sniperChance + orbiterChance + splitterChance) {
     enemy = createSplitter(state.playerX, state.playerY);
-  } else if (roll < eliteChance + sniperChance + orbiterChance + splitterChance + shooterChance) {
+  } else if (roll < anomalyChance + eliteChance + sniperChance + orbiterChance + splitterChance + shooterChance) {
     enemy = createShooter(state.playerX, state.playerY);
-  } else if (roll < eliteChance + sniperChance + orbiterChance + splitterChance + shooterChance + dasherChance) {
+  } else if (roll < anomalyChance + eliteChance + sniperChance + orbiterChance + splitterChance + shooterChance + dasherChance) {
     enemy = createDasher(state.playerX, state.playerY);
   } else {
     enemy = createDrone(state.playerX, state.playerY);
@@ -1161,6 +1169,134 @@ function updateEnemies(state: VectorState): VectorState {
             newState.projectiles = [...newState.projectiles, proj];
             e.behaviorTimer = 0;
             e.fireTimer = VM_CONFIG.sniperFireRate;
+          }
+        }
+        break;
+      }
+      
+      case 'anomaly': {
+        // PROCEDURALLY GENERATED ENEMY - behavior based on DNA
+        const dna = decodeDNA(e.behaviorTimer, state.currentMap);
+        const anomalySpeed = 1.8 * dna.speedMultiplier * speedScaling;
+        
+        switch (dna.behavior) {
+          case 'chase':
+            // Direct pursuit
+            if (dist > 20) {
+              const chaseDir = normalize(dx, dy);
+              e.vx = lerp(e.vx, chaseDir.x * anomalySpeed, 0.06);
+              e.vy = lerp(e.vy, chaseDir.y * anomalySpeed, 0.06);
+            }
+            break;
+            
+          case 'orbit':
+            // Circles around player
+            e.targetAngle += 0.04;
+            const orbitDist = 120 + Math.sin(state.gameTime * 0.03) * 30;
+            const orbitTargetX = newState.playerX + Math.cos(e.targetAngle) * orbitDist;
+            const orbitTargetY = newState.playerY + Math.sin(e.targetAngle) * orbitDist;
+            const toOrbitTarget = normalize(orbitTargetX - e.x, orbitTargetY - e.y);
+            e.vx = lerp(e.vx, toOrbitTarget.x * anomalySpeed, 0.08);
+            e.vy = lerp(e.vy, toOrbitTarget.y * anomalySpeed, 0.08);
+            break;
+            
+          case 'zigzag':
+            // Erratic side-to-side while approaching
+            const zigPhase = Math.sin(state.gameTime * 0.12 + e.id.charCodeAt(0));
+            const zigDir = normalize(dx, dy);
+            const perpDir = { x: -zigDir.y, y: zigDir.x };
+            e.vx = lerp(e.vx, (zigDir.x + perpDir.x * zigPhase) * anomalySpeed, 0.08);
+            e.vy = lerp(e.vy, (zigDir.y + perpDir.y * zigPhase) * anomalySpeed, 0.08);
+            break;
+            
+          case 'teleport':
+            // Short-range blinks every few seconds
+            if (state.gameTime % 120 < 5 && dist > 80) {
+              // Teleport closer to player
+              const teleportDist = Math.min(dist * 0.5, 100);
+              const teleportDir = normalize(dx, dy);
+              e.x += teleportDir.x * teleportDist;
+              e.y += teleportDir.y * teleportDist;
+            }
+            e.vx *= 0.9;
+            e.vy *= 0.9;
+            break;
+            
+          case 'spiral':
+            // Spirals inward toward player
+            e.targetAngle += 0.08;
+            const spiralSpeed = anomalySpeed * (dist / 200);
+            const spiralDir = normalize(dx, dy);
+            const spiralPerp = { x: -spiralDir.y, y: spiralDir.x };
+            e.vx = lerp(e.vx, spiralDir.x * spiralSpeed + spiralPerp.x * anomalySpeed * 0.7, 0.05);
+            e.vy = lerp(e.vy, spiralDir.y * spiralSpeed + spiralPerp.y * anomalySpeed * 0.7, 0.05);
+            break;
+            
+          case 'strafe':
+            // Moves perpendicular to player, keeping distance
+            const strafeDist = 150;
+            const strafeDir = normalize(dx, dy);
+            const strafePerp = { x: -strafeDir.y, y: strafeDir.x };
+            const strafeOsc = Math.sin(state.gameTime * 0.05);
+            if (dist < strafeDist - 30) {
+              e.vx = lerp(e.vx, -strafeDir.x * anomalySpeed, 0.05);
+              e.vy = lerp(e.vy, -strafeDir.y * anomalySpeed, 0.05);
+            } else if (dist > strafeDist + 30) {
+              e.vx = lerp(e.vx, strafeDir.x * anomalySpeed, 0.05);
+              e.vy = lerp(e.vy, strafeDir.y * anomalySpeed, 0.05);
+            } else {
+              e.vx = lerp(e.vx, strafePerp.x * anomalySpeed * strafeOsc, 0.06);
+              e.vy = lerp(e.vy, strafePerp.y * anomalySpeed * strafeOsc, 0.06);
+            }
+            break;
+            
+          case 'pounce':
+            // Waits, then lunges
+            const pounceInterval = 90;
+            const pouncePhase = state.gameTime % pounceInterval;
+            if (pouncePhase < 15) {
+              // Lunge!
+              const pounceDir = normalize(dx, dy);
+              e.vx = pounceDir.x * anomalySpeed * 2.5;
+              e.vy = pounceDir.y * anomalySpeed * 2.5;
+            } else {
+              // Slow down and wait
+              e.vx *= 0.92;
+              e.vy *= 0.92;
+            }
+            break;
+            
+          case 'mirror':
+            // Mirrors player movement (opposite position)
+            const centerX = VM_CONFIG.arenaWidth / 2;
+            const centerY = VM_CONFIG.arenaHeight / 2;
+            const mirrorX = centerX * 2 - newState.playerX;
+            const mirrorY = centerY * 2 - newState.playerY;
+            const toMirror = normalize(mirrorX - e.x, mirrorY - e.y);
+            e.vx = lerp(e.vx, toMirror.x * anomalySpeed * 0.8, 0.04);
+            e.vy = lerp(e.vy, toMirror.y * anomalySpeed * 0.8, 0.04);
+            break;
+        }
+        
+        // Shooter ability - fire projectiles
+        if (dna.ability === 'shooter') {
+          e.fireTimer--;
+          if (e.fireTimer <= 0) {
+            const color = getAnomalyColor(dna);
+            for (let i = 0; i < dna.projectileCount; i++) {
+              const spread = (i - (dna.projectileCount - 1) / 2) * 0.15;
+              const angle = Math.atan2(dy, dx) + spread;
+              const proj = createEnemyProjectile(
+                e.x, e.y,
+                e.x + Math.cos(angle) * 200,
+                e.y + Math.sin(angle) * 200,
+                'energy',
+                color,
+                1.2
+              );
+              newState.projectiles = [...newState.projectiles, proj];
+            }
+            e.fireTimer = dna.fireRate;
           }
         }
         break;
@@ -1948,6 +2084,17 @@ function checkCollisions(state: VectorState): VectorState {
         }
       }
       
+      // Anomaly splitter ability: spawn 2 smaller anomalies when killed
+      if (enemy.type === 'anomaly' && enemy.fireTimer !== 1) {
+        const parentDNA = decodeDNA(enemy.behaviorTimer, newState.currentMap);
+        if (parentDNA.ability === 'splitter') {
+          for (let i = 0; i < 2; i++) {
+            const splitAnomaly = createSplitAnomaly(enemy.x, enemy.y, parentDNA, newState.currentMap);
+            aliveEnemies.push(splitAnomaly);
+          }
+        }
+      }
+      
       // Score with combo bonus (doubled if power-up active)
       const baseScore = enemy.type === 'boss' ? 2000 :
                         enemy.type === 'miniboss' ? 500 :
@@ -1956,6 +2103,7 @@ function checkCollisions(state: VectorState): VectorState {
                         enemy.type === 'sniper' ? 150 :
                         enemy.type === 'orbiter' ? 120 :
                         enemy.type === 'splitter' ? 80 :
+                        enemy.type === 'anomaly' ? 180 :
                         enemy.type === 'dasher' ? 60 :
                         enemy.type === 'shooter' ? 100 : 50;
       const pointMultiplier = newState.activePowerUps.doublePoints > 0 ? 2 : 1;
