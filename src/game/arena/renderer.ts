@@ -1,22 +1,15 @@
-// Arena Battle Mode Renderer - Clean Minimalist Tron Style
+// Arena Battle Mode Renderer - Clean with image backgrounds
 
-import { ArenaState, ArenaObstacle, ArenaPowerUp, ARENA_POWERUP_INFO } from './types';
-import { ARENA_CONFIG } from './constants';
+import { ArenaState, ARENA_POWERUP_INFO } from './types';
 import { drawMegaShip } from '../megaShipRenderer';
-import { getShipProjectileStyle, ShipProjectileStyle } from '../vectorManiac/shipProjectiles';
+import { getShipProjectileStyle } from '../vectorManiac/shipProjectiles';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
+import { getArenaImage } from './arenas';
 
-// Clean minimalist color scheme
 const COLORS = {
-  bg: '#05080c',
-  grid: '#0f1822',
   player: '#00ffaa',
-  playerGlow: '#00cc88',
   opponent: '#ff5577',
-  opponentGlow: '#cc3355',
-  accent: '#3366ff',
   white: '#ffffff',
-  dim: '#334455',
 };
 
 let animTime = 0;
@@ -34,12 +27,8 @@ export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): v
     );
   }
   
-  // Layers
+  // Render layers
   renderBackground(ctx, state);
-  renderGrid(ctx, state);
-  renderBorder(ctx, state);
-  renderObstacles(ctx, state);
-  renderPowerUps(ctx, state);
   renderProjectiles(ctx, state);
   renderParticles(ctx, state);
   
@@ -61,332 +50,52 @@ export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): v
 function renderBackground(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   const { arenaWidth: w, arenaHeight: h } = state;
   
-  // Solid dark background
-  ctx.fillStyle = COLORS.bg;
+  // Get the arena background image
+  const bgImage = getArenaImage(state.arenaId);
+  
+  if (bgImage && bgImage.complete && bgImage.naturalWidth > 0) {
+    // Draw background image covering the whole arena
+    ctx.drawImage(bgImage, 0, 0, w, h);
+  } else {
+    // Fallback dark background
+    ctx.fillStyle = '#050a0f';
+    ctx.fillRect(0, 0, w, h);
+  }
+  
+  // Subtle vignette overlay
+  const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, h * 0.7);
+  vignette.addColorStop(0, 'transparent');
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+  ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, w, h);
-  
-  // Subtle radial gradient for depth
-  const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, h * 0.6);
-  grad.addColorStop(0, 'rgba(20, 30, 50, 0.3)');
-  grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
-}
-
-function renderGrid(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const { arenaWidth: w, arenaHeight: h } = state;
-  const cellSize = 40;
-  const offset = (animTime * 0.2) % cellSize;
-  
-  ctx.strokeStyle = 'rgba(30, 50, 70, 0.4)';
-  ctx.lineWidth = 0.5;
-  
-  // Vertical lines
-  for (let x = offset; x < w; x += cellSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, h);
-    ctx.stroke();
-  }
-  
-  // Horizontal lines
-  for (let y = offset; y < h; y += cellSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
-    ctx.stroke();
-  }
-  
-  // Center cross
-  ctx.strokeStyle = 'rgba(0, 204, 255, 0.1)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4, 8]);
-  
-  ctx.beginPath();
-  ctx.moveTo(w / 2, 0);
-  ctx.lineTo(w / 2, h);
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.moveTo(0, h / 2);
-  ctx.lineTo(w, h / 2);
-  ctx.stroke();
-  
-  ctx.setLineDash([]);
-}
-
-function renderBorder(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const { arenaWidth: w, arenaHeight: h } = state;
-  const p = ARENA_CONFIG.arenaPadding;
-  const pulse = Math.sin(animTime * 0.04) * 0.3 + 0.7;
-  
-  // Main border
-  ctx.strokeStyle = COLORS.opponent;
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.6 * pulse;
-  ctx.strokeRect(p, p, w - p * 2, h - p * 2);
-  ctx.globalAlpha = 1;
-  
-  // Corner brackets
-  const cornerLen = 15;
-  ctx.strokeStyle = COLORS.accent;
-  ctx.lineWidth = 2;
-  
-  const corners = [
-    [p, p, 1, 1],
-    [w - p, p, -1, 1],
-    [w - p, h - p, -1, -1],
-    [p, h - p, 1, -1]
-  ];
-  
-  for (const [x, y, dx, dy] of corners) {
-    ctx.beginPath();
-    ctx.moveTo(x as number, (y as number) + (dy as number) * cornerLen);
-    ctx.lineTo(x as number, y as number);
-    ctx.lineTo((x as number) + (dx as number) * cornerLen, y as number);
-    ctx.stroke();
-  }
-}
-
-function renderObstacles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  for (const obs of state.obstacles) {
-    if (obs.type === 'phasePlatform' && !obs.isVisible) {
-      if (obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
-        const timeLeft = obs.phaseDuration - obs.phaseTimer;
-        if (timeLeft < 40) renderGhostPlatform(ctx, obs, timeLeft / 40);
-      }
-      continue;
-    }
-    
-    if (obs.type === 'laserGrid') {
-      renderLaser(ctx, obs);
-    } else if (obs.type === 'phasePlatform') {
-      renderPlatform(ctx, obs);
-    } else if (obs.type === 'pillar') {
-      renderPillar(ctx, obs);
-    } else if (obs.type === 'wall') {
-      renderWall(ctx, obs);
-    }
-  }
-}
-
-function renderPillar(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
-  const r = obs.width / 2;
-  const pulse = Math.sin(animTime * 0.06 + obs.x * 0.02) * 0.2 + 0.8;
-  const color = obs.destructible ? '#ffaa00' : COLORS.accent;
-  
-  ctx.save();
-  ctx.translate(obs.x, obs.y);
-  
-  // Hexagon shape
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.globalAlpha = pulse;
-  
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
-    const x = Math.cos(angle) * r;
-    const y = Math.sin(angle) * r;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.stroke();
-  
-  // Inner fill
-  ctx.fillStyle = 'rgba(10, 15, 25, 0.9)';
-  ctx.fill();
-  
-  // Center dot
-  ctx.fillStyle = color;
-  ctx.globalAlpha = pulse;
-  ctx.beginPath();
-  ctx.arc(0, 0, 2, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.restore();
-}
-
-function renderWall(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
-  const hw = obs.width / 2;
-  const hh = obs.height / 2;
-  const color = obs.destructible ? '#ffaa00' : COLORS.accent;
-  
-  ctx.save();
-  ctx.translate(obs.x, obs.y);
-  
-  ctx.fillStyle = 'rgba(10, 15, 25, 0.9)';
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  
-  ctx.beginPath();
-  ctx.rect(-hw, -hh, obs.width, obs.height);
-  ctx.fill();
-  ctx.stroke();
-  
-  // Center line
-  ctx.strokeStyle = `${color}50`;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(-hw + 4, 0);
-  ctx.lineTo(hw - 4, 0);
-  ctx.stroke();
-  
-  ctx.restore();
-}
-
-function renderLaser(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
-  const rotation = obs.rotation || 0;
-  const len = (obs.laserLength || 60) * 0.5;
-  
-  ctx.save();
-  ctx.translate(obs.x, obs.y);
-  
-  // 4 laser beams
-  for (let i = 0; i < 4; i++) {
-    const angle = rotation + (i * Math.PI / 2);
-    const ex = Math.cos(angle) * len;
-    const ey = Math.sin(angle) * len;
-    
-    // Glow
-    ctx.strokeStyle = 'rgba(255, 50, 80, 0.3)';
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
-    
-    // Core
-    ctx.strokeStyle = '#ff3355';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
-    
-    // Inner
-    ctx.strokeStyle = '#ffaaaa';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
-  }
-  
-  // Hub
-  ctx.fillStyle = '#ff3355';
-  ctx.beginPath();
-  ctx.arc(0, 0, 6, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.fillStyle = '#220008';
-  ctx.beginPath();
-  ctx.arc(0, 0, 4, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.restore();
-}
-
-function renderPlatform(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
-  const hw = obs.width / 2;
-  const hh = obs.height / 2;
-  
-  let alpha = 1;
-  if (obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
-    const timeLeft = obs.phaseDuration - obs.phaseTimer;
-    if (timeLeft < 30) alpha = timeLeft / 30;
-  }
-  
-  ctx.save();
-  ctx.translate(obs.x, obs.y);
-  ctx.globalAlpha = alpha;
-  
-  ctx.fillStyle = 'rgba(0, 180, 120, 0.5)';
-  ctx.strokeStyle = '#00ffaa';
-  ctx.lineWidth = 1.5;
-  
-  ctx.beginPath();
-  ctx.rect(-hw, -hh, obs.width, obs.height);
-  ctx.fill();
-  ctx.stroke();
-  
-  // Grid pattern
-  ctx.strokeStyle = 'rgba(0, 255, 170, 0.3)';
-  ctx.lineWidth = 0.5;
-  const gs = 8;
-  for (let x = -hw + gs; x < hw; x += gs) {
-    ctx.beginPath();
-    ctx.moveTo(x, -hh + 2);
-    ctx.lineTo(x, hh - 2);
-    ctx.stroke();
-  }
-  
-  ctx.restore();
-}
-
-function renderGhostPlatform(ctx: CanvasRenderingContext2D, obs: ArenaObstacle, alpha: number): void {
-  const hw = obs.width / 2;
-  const hh = obs.height / 2;
-  
-  ctx.save();
-  ctx.translate(obs.x, obs.y);
-  ctx.globalAlpha = alpha * 0.3;
-  ctx.strokeStyle = '#00ffaa';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([3, 3]);
-  ctx.strokeRect(-hw, -hh, obs.width, obs.height);
-  ctx.setLineDash([]);
-  ctx.restore();
-}
-
-function renderPowerUps(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  for (const pu of state.powerUps) {
-    const info = ARENA_POWERUP_INFO[pu.type];
-    const bob = Math.sin(animTime * 0.08 + pu.bobOffset) * 3;
-    const pulse = Math.sin(animTime * 0.1) * 0.2 + 0.8;
-    
-    ctx.save();
-    ctx.translate(pu.x, pu.y + bob);
-    
-    // Outer ring
-    ctx.strokeStyle = info.glowColor;
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.5 * pulse;
-    ctx.beginPath();
-    ctx.arc(0, 0, 12, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    // Inner fill
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = info.color;
-    ctx.beginPath();
-    ctx.arc(0, 0, 8, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Icon
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 8px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const icons: Record<string, string> = { emp: '⚡', teleport: '◊', shield: '+', overdrive: '»' };
-    ctx.fillText(icons[pu.type] || '?', 0, 0);
-    
-    ctx.restore();
-  }
 }
 
 function renderProjectiles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   for (const p of state.projectiles) {
     if (p.isPlayer) {
       const style = getShipProjectileStyle(p.shipId || 'default');
+      
+      // Glow
       ctx.fillStyle = style.color;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Core
+      ctx.globalAlpha = 1;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
       ctx.fill();
     } else {
+      // Enemy projectile
       ctx.fillStyle = COLORS.opponent;
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.globalAlpha = 1;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
       ctx.fill();
@@ -400,7 +109,7 @@ function renderParticles(ctx: CanvasRenderingContext2D, state: ArenaState): void
     ctx.fillStyle = p.color;
     ctx.globalAlpha = alpha;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * alpha * 0.6, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -415,15 +124,6 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   if (state.playerInvulnerable > 0 && Math.floor(animTime / 4) % 2 === 0) {
     ctx.globalAlpha = 0.5;
   }
-  
-  // Simple glow ring
-  ctx.strokeStyle = COLORS.player;
-  ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.2;
-  ctx.beginPath();
-  ctx.arc(0, 0, 30, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
   
   drawMegaShip(ctx, 0, 0, getStoredMegaShipId(), animTime);
   
@@ -442,15 +142,6 @@ function renderOpponent(ctx: CanvasRenderingContext2D, state: ArenaState): void 
   ctx.translate(opp.x, opp.y);
   ctx.rotate(opp.angle);
   ctx.scale(0.45, 0.45);
-  
-  // Glow ring
-  ctx.strokeStyle = COLORS.opponent;
-  ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.2;
-  ctx.beginPath();
-  ctx.arc(0, 0, 30, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
   
   ctx.save();
   drawMegaShip(ctx, 0, 0, opp.shipId, animTime);
@@ -486,7 +177,7 @@ function renderHealthBar(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   const bx = x - w / 2;
   
   // Background
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
   ctx.fillRect(bx, y, w, h);
   
   // Health
@@ -494,7 +185,7 @@ function renderHealthBar(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   ctx.fillRect(bx, y, w * pct, h);
   
   // Border
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
   ctx.lineWidth = 0.5;
   ctx.strokeRect(bx, y, w, h);
 }
@@ -506,11 +197,16 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
     bronze: '#cd7f32', silver: '#c0c0c0', gold: '#ffd700', diamond: '#b9f2ff'
   };
   
-  // Difficulty
-  ctx.fillStyle = diffColors[state.difficulty] || '#fff';
+  // Arena name (top left)
+  ctx.fillStyle = '#00ffaa';
   ctx.font = 'bold 9px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText(`◆ ${state.difficulty.toUpperCase()}`, 10, 18);
+  ctx.fillText(state.arenaName, 10, 18);
+  
+  // Difficulty below name
+  ctx.fillStyle = diffColors[state.difficulty] || '#fff';
+  ctx.font = '7px sans-serif';
+  ctx.fillText(`◆ ${state.difficulty.toUpperCase()}`, 10, 30);
   
   // Timer
   if (state.phase === 'fighting') {
@@ -518,6 +214,7 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
     ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`${mins}:${s.toString().padStart(2, '0')}`, w / 2, 18);
   }
@@ -525,6 +222,7 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   // Health %
   ctx.textAlign = 'right';
   ctx.fillStyle = COLORS.player;
+  ctx.font = '8px sans-serif';
   ctx.fillText(`HULL ${Math.round((state.playerHealth / state.playerMaxHealth) * 100)}%`, w - 10, 18);
   
   if (state.opponent) {
@@ -554,11 +252,17 @@ function renderPhaseOverlay(ctx: CanvasRenderingContext2D, state: ArenaState): v
 }
 
 function renderVS(ctx: CanvasRenderingContext2D, state: ArenaState, cx: number, cy: number): void {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
   ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
   
   const opp = state.opponent;
   const scale = 1 + Math.sin(animTime * 0.1) * 0.05;
+  
+  // Arena name
+  ctx.fillStyle = '#00ffaa';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(state.arenaName, cx, cy - 70);
   
   ctx.save();
   ctx.translate(cx, cy);

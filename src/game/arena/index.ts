@@ -4,3 +4,4 @@ export * from './constants';
 export * from './state';
 export * from './gameLogic';
 export * from './renderer';
+export * from './arenas';

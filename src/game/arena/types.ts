@@ -160,6 +160,10 @@ export interface ArenaState {
   phaseTimer: number;
   gameTime: number;
   
+  // Current arena
+  arenaId: string;
+  arenaName: string;
+  
   // Arena dimensions (slightly smaller than main game)
   arenaWidth: number;
   arenaHeight: number;
