@@ -27,6 +27,7 @@ import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './soun
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getShipProjectileStyle } from './shipProjectiles';
 import { recordAnomalyEncounter, recordAnomalyDefeat } from '@/hooks/useBestiary';
+import { updateCompanion } from './companion';
 
 interface VectorInput {
   touchX: number;
@@ -359,6 +360,9 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
   newState = updateSalvage(newState);
   newState = updatePowerUps(newState);
   newState.particles = updateParticles(newState.particles);
+  
+  // Update companion
+  newState = updateCompanion(newState);
   
   // Check collisions
   newState = checkCollisions(newState);

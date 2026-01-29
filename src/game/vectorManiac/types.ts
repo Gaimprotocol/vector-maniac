@@ -172,6 +172,20 @@ export interface PlayerStats {
   extraCannons: number;    // Side-mounted guns from permanent upgrades
 }
 
+export interface CompanionState {
+  seed: number;
+  name: string;
+  shape: string;
+  hue: number;
+  saturation: number;
+  behavior: string;
+  ability: string;
+  x: number;
+  y: number;
+  angle: number;
+  fireTimer: number;
+}
+
 export interface VectorState {
   phase: VectorPhase;
   phaseTimer: number;
@@ -260,4 +274,7 @@ export interface VectorState {
   // Visual anomaly system
   backgroundAnomalySeed: number | null;   // Seed for procedural background (null = use normal theme)
   hyperspaceAnomalySeed: number | null;   // Seed for procedural hyperspace (null = use normal variant)
+  
+  // Companion system
+  companion: CompanionState | null;
 }

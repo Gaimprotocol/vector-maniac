@@ -4,195 +4,12 @@ import { useMusicContext } from '@/contexts/MusicContext';
 import { playPopSoundsWithDelays } from '@/utils/popSound';
 import { useBestiary, BestiaryEntry } from '@/hooks/useBestiary';
 import { useVisualBestiary, VisualBestiaryEntry } from '@/hooks/useVisualBestiary';
+import { useScrapCurrency } from '@/hooks/useScrapCurrency';
+import { useBestiaryRewards, Companion } from '@/hooks/useBestiaryRewards';
 import { ArrowBackIcon } from './VectorIcons';
+import { AnomalyCard } from './bestiary/AnomalyCard';
 
-type TabType = 'enemies' | 'backgrounds' | 'hyperspace';
-
-// Shape icons as simple SVG paths
-const ShapeIcon: React.FC<{ shape: string; hue: number; saturation: number; size?: number }> = ({ 
-  shape, hue, saturation, size = 40 
-}) => {
-  const color = `hsl(${hue}, ${saturation}%, 60%)`;
-  const glowColor = `hsl(${hue}, ${saturation}%, 70%)`;
-  
-  const renderShape = () => {
-    const cx = size / 2;
-    const cy = size / 2;
-    const r = size * 0.35;
-    
-    switch (shape) {
-      case 'triangle':
-        return (
-          <polygon 
-            points={`${cx},${cy - r} ${cx - r * 0.866},${cy + r * 0.5} ${cx + r * 0.866},${cy + r * 0.5}`}
-            fill="none"
-            stroke={color}
-            strokeWidth={2}
-          />
-        );
-      case 'square':
-        return (
-          <rect 
-            x={cx - r * 0.7} 
-            y={cy - r * 0.7} 
-            width={r * 1.4} 
-            height={r * 1.4}
-            fill="none"
-            stroke={color}
-            strokeWidth={2}
-          />
-        );
-      case 'pentagon':
-        const pentPoints = Array.from({ length: 5 }, (_, i) => {
-          const angle = (i * 2 * Math.PI / 5) - Math.PI / 2;
-          return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
-        }).join(' ');
-        return <polygon points={pentPoints} fill="none" stroke={color} strokeWidth={2} />;
-      case 'hexagon':
-        const hexPoints = Array.from({ length: 6 }, (_, i) => {
-          const angle = (i * 2 * Math.PI / 6) - Math.PI / 2;
-          return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
-        }).join(' ');
-        return <polygon points={hexPoints} fill="none" stroke={color} strokeWidth={2} />;
-      case 'star':
-        const starPoints = Array.from({ length: 10 }, (_, i) => {
-          const angle = (i * Math.PI / 5) - Math.PI / 2;
-          const rad = i % 2 === 0 ? r : r * 0.5;
-          return `${cx + rad * Math.cos(angle)},${cy + rad * Math.sin(angle)}`;
-        }).join(' ');
-        return <polygon points={starPoints} fill="none" stroke={color} strokeWidth={2} />;
-      case 'cross':
-        return (
-          <g stroke={color} strokeWidth={2}>
-            <line x1={cx - r} y1={cy} x2={cx + r} y2={cy} />
-            <line x1={cx} y1={cy - r} x2={cx} y2={cy + r} />
-          </g>
-        );
-      case 'crescent':
-        return (
-          <path 
-            d={`M ${cx + r * 0.3},${cy - r} 
-                A ${r},${r} 0 1,1 ${cx + r * 0.3},${cy + r}
-                A ${r * 0.7},${r * 0.7} 0 1,0 ${cx + r * 0.3},${cy - r}`}
-            fill="none"
-            stroke={color}
-            strokeWidth={2}
-          />
-        );
-      case 'spiral':
-        return (
-          <path 
-            d={`M ${cx},${cy} 
-                Q ${cx + r * 0.3},${cy - r * 0.3} ${cx + r * 0.5},${cy}
-                Q ${cx + r * 0.7},${cy + r * 0.5} ${cx},${cy + r * 0.6}
-                Q ${cx - r * 0.8},${cy + r * 0.4} ${cx - r * 0.7},${cy - r * 0.2}
-                Q ${cx - r * 0.5},${cy - r * 0.8} ${cx + r * 0.2},${cy - r * 0.9}`}
-            fill="none"
-            stroke={color}
-            strokeWidth={2}
-          />
-        );
-      default:
-        return <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={2} />;
-    }
-  };
-
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox={`0 0 ${size} ${size}`}
-      style={{ filter: `drop-shadow(0 0 4px ${glowColor})` }}
-    >
-      {renderShape()}
-      <text 
-        x={size / 2} 
-        y={size / 2 + 3} 
-        textAnchor="middle" 
-        fill={color}
-        fontSize={size * 0.25}
-        fontFamily="Orbitron, monospace"
-      >
-        ?
-      </text>
-    </svg>
-  );
-};
-
-const BehaviorLabel: React.FC<{ behavior: string }> = ({ behavior }) => {
-  const labels: Record<string, string> = {
-    chase: 'PURSUER',
-    orbit: 'ORBITER',
-    zigzag: 'ERRATIC',
-    teleport: 'BLINKER',
-    spiral: 'SPIRALER',
-    strafe: 'STRAFER',
-    pounce: 'AMBUSHER',
-    mirror: 'MIMIC',
-  };
-  return <span>{labels[behavior] || behavior.toUpperCase()}</span>;
-};
-
-const AbilityLabel: React.FC<{ ability: string }> = ({ ability }) => {
-  const labels: Record<string, { name: string; color: string }> = {
-    none: { name: 'NONE', color: '#666' },
-    shooter: { name: 'SHOOTER', color: '#ff4444' },
-    splitter: { name: 'SPLITTER', color: '#44ff44' },
-    shield: { name: 'SHIELDED', color: '#4488ff' },
-    phaser: { name: 'PHASER', color: '#aa44ff' },
-    leech: { name: 'LEECH', color: '#ff44aa' },
-  };
-  const info = labels[ability] || { name: ability.toUpperCase(), color: '#888' };
-  return <span style={{ color: info.color }}>{info.name}</span>;
-};
-
-const AnomalyCard: React.FC<{ entry: BestiaryEntry; index: number }> = ({ entry, index }) => {
-  const color = `hsl(${entry.hue}, ${entry.saturation}%, 60%)`;
-  
-  return (
-    <div 
-      className="rounded-lg p-3 border opacity-0 animate-pop-in"
-      style={{ 
-        borderColor: `hsl(${entry.hue}, ${entry.saturation}%, 40%)`,
-        background: `linear-gradient(135deg, hsl(${entry.hue}, ${entry.saturation}%, 5%) 0%, transparent 100%)`,
-        animationDelay: `${200 + index * 50}ms`,
-      }}
-    >
-      <div className="flex items-center gap-3">
-        <ShapeIcon shape={entry.shape} hue={entry.hue} saturation={entry.saturation} size={48} />
-        
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[11px] font-bold truncate" style={{ fontFamily: 'Orbitron, monospace', color }}>
-            {entry.name}
-          </h3>
-          
-          <div className="text-[8px] text-[#00ff88]/50 flex flex-wrap gap-x-2 mt-1" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-            <span className="flex items-center gap-1">
-              <span className="text-[#00ff88]/30">FORM:</span>
-              <span className="text-[#00ff88]/70">{entry.shape.toUpperCase()}</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="text-[#00ff88]/30">PATTERN:</span>
-              <span className="text-[#00ff88]/70"><BehaviorLabel behavior={entry.behavior} /></span>
-            </span>
-          </div>
-          
-          <div className="text-[8px] flex items-center gap-1 mt-0.5" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
-            <span className="text-[#00ff88]/30">ABILITY:</span>
-            <AbilityLabel ability={entry.ability} />
-          </div>
-        </div>
-        
-        <div className="text-right">
-          <div className="text-[8px] text-[#00ff88]/40" style={{ fontFamily: 'Orbitron, monospace' }}>
-            <div>MET: {entry.timesEncountered}</div>
-            <div className="text-[#ff4444]/60">KIA: {entry.timesDefeated}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+type TabType = 'enemies' | 'companions' | 'backgrounds' | 'hyperspace';
 
 // Visual entry card for backgrounds/hyperspace
 const VisualCard: React.FC<{ entry: VisualBestiaryEntry; index: number }> = ({ entry, index }) => {
@@ -260,11 +77,74 @@ const VisualCard: React.FC<{ entry: VisualBestiaryEntry; index: number }> = ({ e
   );
 };
 
+// Companion Card
+const CompanionCard: React.FC<{ companion: Companion; index: number; isActive: boolean; onSetActive: (seed: number) => void }> = ({ 
+  companion, index, isActive, onSetActive 
+}) => {
+  const color = `hsl(${companion.hue}, ${companion.saturation}%, 60%)`;
+  
+  return (
+    <div 
+      className={`rounded-lg p-3 border opacity-0 animate-pop-in ${isActive ? 'ring-2 ring-[#00ffaa]' : ''}`}
+      style={{ 
+        borderColor: `hsl(${companion.hue}, ${companion.saturation}%, 40%)`,
+        background: `linear-gradient(135deg, hsl(${companion.hue}, ${companion.saturation}%, 8%) 0%, transparent 100%)`,
+        animationDelay: `${200 + index * 50}ms`,
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <div 
+          className="w-12 h-12 rounded-full border-2 flex items-center justify-center"
+          style={{ 
+            borderColor: color,
+            background: `radial-gradient(circle, hsl(${companion.hue}, ${companion.saturation}%, 20%) 0%, transparent 100%)`,
+          }}
+        >
+          <span className="text-xl" style={{ color }}>⚔</span>
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[11px] font-bold truncate" style={{ fontFamily: 'Orbitron, monospace', color }}>
+            {companion.name}
+          </h3>
+          <div className="text-[8px] text-[#00ffaa]/50" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+            {companion.behavior.toUpperCase()} • {companion.ability.toUpperCase()}
+          </div>
+        </div>
+        
+        {isActive ? (
+          <span className="text-[8px] px-2 py-1 rounded bg-[#00ffaa]/20 text-[#00ffaa] border border-[#00ffaa]/50" style={{ fontFamily: 'Orbitron' }}>
+            ACTIVE
+          </span>
+        ) : (
+          <button
+            onClick={() => onSetActive(companion.seed)}
+            className="text-[8px] px-2 py-1 rounded bg-[#666]/20 text-[#aaa] border border-[#666]/50 hover:bg-[#888]/20 hover:text-white transition-colors"
+            style={{ fontFamily: 'Orbitron' }}
+          >
+            SET ACTIVE
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const BestiaryScreen: React.FC = () => {
   const navigate = useNavigate();
   const { hasEnteredGalaxy, enterGalaxy } = useMusicContext();
   const { entries: enemyEntries, stats: enemyStats } = useBestiary();
   const { entries: visualEntries, stats: visualStats } = useVisualBestiary();
+  const { scraps, addScraps, spendScraps } = useScrapCurrency();
+  const { 
+    companions, 
+    hasBountyCollected, 
+    collectBounty, 
+    hasCompanion, 
+    purchaseCompanion, 
+    setActiveCompanion,
+    activeCompanion 
+  } = useBestiaryRewards();
   const [activeTab, setActiveTab] = useState<TabType>('enemies');
   
   const sortedEnemyEntries = [...enemyEntries].sort((a, b) => b.discoveredAt - a.discoveredAt);
@@ -279,8 +159,28 @@ export const BestiaryScreen: React.FC = () => {
     playPopSoundsWithDelays([0, 50, 100, 150]);
   }, []);
 
+  const handleCollectBounty = (seed: number, value: number) => {
+    collectBounty(seed);
+    addScraps(value);
+  };
+
+  const handlePurchaseCompanion = (entry: BestiaryEntry, cost: number) => {
+    if (spendScraps(cost)) {
+      purchaseCompanion({
+        seed: entry.seed,
+        name: entry.name,
+        shape: entry.shape,
+        hue: entry.hue,
+        saturation: entry.saturation,
+        behavior: entry.behavior,
+        ability: entry.ability,
+      });
+    }
+  };
+
   const tabs: { id: TabType; label: string; count: number }[] = [
     { id: 'enemies', label: 'CREATURES', count: enemyStats.totalDiscovered },
+    { id: 'companions', label: 'ALLIES', count: companions.length },
     { id: 'backgrounds', label: 'REALMS', count: visualStats.backgroundsDiscovered },
     { id: 'hyperspace', label: 'WARP ZONES', count: visualStats.hyperspacesDiscovered },
   ];
@@ -312,11 +212,20 @@ export const BestiaryScreen: React.FC = () => {
 
       {/* Header */}
       <div className="relative z-10 w-full max-w-md pt-2.5">
-        <button onClick={() => navigate('/')}
-                className="text-[11px] tracking-wider text-[#aa88ff]/60 hover:text-[#aa88ff] mb-4 flex items-center gap-2 transition-colors opacity-0 animate-pop-in"
-                style={{ fontFamily: 'Orbitron, monospace', animationDelay: '0ms' }}>
-          <ArrowBackIcon size={14} glow={false} /> BACK TO MENU
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => navigate('/')}
+                  className="text-[11px] tracking-wider text-[#aa88ff]/60 hover:text-[#aa88ff] flex items-center gap-2 transition-colors opacity-0 animate-pop-in"
+                  style={{ fontFamily: 'Orbitron, monospace', animationDelay: '0ms' }}>
+            <ArrowBackIcon size={14} glow={false} /> BACK
+          </button>
+          
+          {/* Scraps display */}
+          <div className="text-[10px] text-[#ffaa00] opacity-0 animate-pop-in flex items-center gap-1" 
+               style={{ fontFamily: 'Orbitron, monospace', animationDelay: '50ms' }}>
+            <span className="text-[#ffaa00]/60">◈</span>
+            <span>{scraps}</span>
+          </div>
+        </div>
 
         <h1 className="text-2xl text-center mb-2 opacity-0 animate-pop-in tracking-widest" style={{ fontFamily: 'Orbitron, monospace', animationDelay: '50ms' }}>
           <span className="text-[#aa88ff]" style={{ textShadow: '0 0 20px #aa44ff, 0 0 40px #aa44ff50' }}>BESTIARY</span>
@@ -327,10 +236,10 @@ export const BestiaryScreen: React.FC = () => {
         </p>
 
         {/* Tab Navigation */}
-        <div className="flex justify-center gap-2 mb-4 flex-wrap opacity-0 animate-pop-in" style={{ animationDelay: '120ms' }}>
+        <div className="flex justify-center gap-1.5 mb-4 flex-wrap opacity-0 animate-pop-in" style={{ animationDelay: '120ms' }}>
           {tabs.map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                    className={`text-[8px] px-3 py-1.5 rounded transition-all duration-300 ${
+                    className={`text-[7px] px-2 py-1.5 rounded transition-all duration-300 ${
                       activeTab === tab.id
                         ? 'bg-[#aa88ff]/10 text-[#aa88ff] border border-[#aa88ff]'
                         : 'text-[#aa88ff]/50 border border-[#aa88ff]/30 hover:border-[#aa88ff]/60 hover:text-[#aa88ff]/80'
@@ -356,6 +265,17 @@ export const BestiaryScreen: React.FC = () => {
               <div className="text-center">
                 <div className="text-lg text-[#ff4444]" style={{ fontFamily: 'Orbitron, monospace', textShadow: '0 0 10px #ff0000' }}>{enemyStats.totalDefeated}</div>
                 <div className="text-[7px] text-[#ff4444]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>TERMINATED</div>
+              </div>
+            </>
+          ) : activeTab === 'companions' ? (
+            <>
+              <div className="text-center">
+                <div className="text-lg text-[#00ffaa]" style={{ fontFamily: 'Orbitron, monospace', textShadow: '0 0 10px #00ff88' }}>{companions.length}</div>
+                <div className="text-[7px] text-[#00ffaa]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>RECRUITED</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg text-[#ffaa00]" style={{ fontFamily: 'Orbitron, monospace', textShadow: '0 0 10px #ff8800' }}>{activeCompanion ? 1 : 0}</div>
+                <div className="text-[7px] text-[#ffaa00]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>ACTIVE</div>
               </div>
             </>
           ) : (
@@ -384,7 +304,36 @@ export const BestiaryScreen: React.FC = () => {
               <p className="text-[10px] text-[#aa88ff]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>No anomaly creatures discovered yet.</p>
               <p className="text-[9px] text-[#aa88ff]/30 mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Reach Map 3+ to encounter anomalies.</p>
             </div>
-          ) : sortedEnemyEntries.map((entry, index) => <AnomalyCard key={entry.seed} entry={entry} index={index} />)
+          ) : sortedEnemyEntries.map((entry, index) => (
+            <AnomalyCard 
+              key={entry.seed} 
+              entry={entry} 
+              index={index}
+              hasBountyCollected={hasBountyCollected(entry.seed)}
+              hasCompanion={hasCompanion(entry.seed)}
+              scraps={scraps}
+              onCollectBounty={handleCollectBounty}
+              onPurchaseCompanion={handlePurchaseCompanion}
+            />
+          ))
+        )}
+
+        {activeTab === 'companions' && (
+          companions.length === 0 ? (
+            <div className="text-center py-12 opacity-0 animate-pop-in" style={{ animationDelay: '200ms' }}>
+              <div className="text-4xl mb-4 text-[#00ffaa]/20" style={{ fontFamily: 'Orbitron, monospace' }}>⚔</div>
+              <p className="text-[10px] text-[#00ffaa]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>No allies recruited yet.</p>
+              <p className="text-[9px] text-[#00ffaa]/30 mt-2" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Defeat anomalies and recruit them as companions!</p>
+            </div>
+          ) : companions.map((companion, index) => (
+            <CompanionCard 
+              key={companion.seed} 
+              companion={companion} 
+              index={index}
+              isActive={activeCompanion?.seed === companion.seed}
+              onSetActive={setActiveCompanion}
+            />
+          ))
         )}
         
         {activeTab === 'backgrounds' && (

@@ -17,6 +17,7 @@ import {
   HyperspaceAnomalyDNA
 } from './visualAnomalyGenerator';
 import { recordBackgroundAnomalyVisit, recordHyperspaceAnomalyVisit } from '@/hooks/useVisualBestiary';
+import { renderCompanion } from './companion';
 
 // Track which anomalies we've already recorded this session to avoid duplicates
 let lastRecordedBgSeed: number | null = null;
@@ -50,6 +51,11 @@ export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorS
   
   // Draw enemies
   renderEnemies(ctx, state);
+  
+  // Draw companion (if any)
+  if (state.companion) {
+    renderCompanion(ctx, state.companion, state.gameTime);
+  }
   
   // Draw player
   renderPlayer(ctx, state);

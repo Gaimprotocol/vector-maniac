@@ -1,9 +1,10 @@
 // Vector Maniac State Management
 
-import { VectorState, PlayerStats } from './types';
+import { VectorState, PlayerStats, CompanionState } from './types';
 import { VM_CONFIG } from './constants';
 import { getComputedStats } from '@/hooks/useShipUpgrades';
 import { resetGameStartVoice } from './sounds';
+import { getActiveCompanion } from '@/hooks/useBestiaryRewards';
 
 export function createDefaultStats(): PlayerStats {
   const upgrades = getComputedStats();
@@ -40,6 +41,22 @@ export function createVectorManiacState(): VectorState {
   
   const initialHealth = getInitialHealth();
   const stats = createDefaultStats();
+  
+  // Load active companion if any
+  const activeCompanion = getActiveCompanion();
+  const companionState: CompanionState | null = activeCompanion ? {
+    seed: activeCompanion.seed,
+    name: activeCompanion.name,
+    shape: activeCompanion.shape,
+    hue: activeCompanion.hue,
+    saturation: activeCompanion.saturation,
+    behavior: activeCompanion.behavior,
+    ability: activeCompanion.ability,
+    x: centerX + 50,
+    y: centerY + 50,
+    angle: -Math.PI / 2,
+    fireTimer: 0,
+  } : null;
   
   return {
     phase: 'entering',
@@ -126,6 +143,9 @@ export function createVectorManiacState(): VectorState {
     // Visual anomaly system - chance to generate unique visuals
     backgroundAnomalySeed: null,
     hyperspaceAnomalySeed: null,
+    
+    // Companion
+    companion: companionState,
   };
 }
 
