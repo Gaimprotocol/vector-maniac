@@ -1,80 +1,43 @@
-// Arena Battle Mode Renderer - High Quality Tron-Inspired Graphics
+// Arena Battle Mode Renderer - High Quality (Matches Main Game)
 
 import { ArenaState } from './types';
 import { ARENA_CONFIG } from './constants';
 import { drawMegaShip } from '../megaShipRenderer';
-import { getShipProjectileStyle } from '../vectorManiac/shipProjectiles';
+import { getShipProjectileStyle, ShipProjectileStyle } from '../vectorManiac/shipProjectiles';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
+import { VM_CONFIG, getMapTheme } from '../vectorManiac/constants';
 
-// Arena color scheme - Cyan/Blue Tron aesthetic
+// Arena color scheme - matches main game aesthetic
 const ARENA_COLORS = {
-  primary: '#00d4ff',      // Bright cyan
-  secondary: '#0088cc',    // Medium blue
-  accent: '#66eeff',       // Light cyan
-  glow: '#00aaff',         // Glow color
-  dark: '#001122',         // Dark background
-  grid: '#003366',         // Grid lines
-  player: '#00ff88',       // Player green
-  opponent: '#ff4466',     // Opponent red
-  energy: '#8866ff',       // Energy purple
+  primary: '#00d4ff',
+  secondary: '#0088cc',
+  accent: '#66eeff',
+  glow: '#00aaff',
+  dark: '#001122',
+  grid: '#003366',
+  player: '#00ff88',
+  opponent: '#ff4466',
+  energy: '#8866ff',
 };
 
-// Store animation state
+// Animation state
 let animationTime = 0;
-let stars: Array<{ x: number; y: number; size: number; brightness: number; speed: number }> = [];
-let starsInitialized = false;
 
-function initStars(width: number, height: number) {
-  if (starsInitialized) return;
-  stars = [];
-  for (let i = 0; i < 100; i++) {
-    stars.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 1.5 + 0.5,
-      brightness: Math.random() * 0.5 + 0.3,
-      speed: Math.random() * 0.2 + 0.1,
-    });
-  }
-  starsInitialized = true;
-}
-
-export function renderArena(
-  ctx: CanvasRenderingContext2D, 
-  state: ArenaState,
-  canvasWidth: number,
-  canvasHeight: number
-): void {
+export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   animationTime = state.gameTime;
-  
-  // Calculate scale to fit arena in canvas
-  const scaleX = canvasWidth / state.arenaWidth;
-  const scaleY = canvasHeight / state.arenaHeight;
-  const scale = Math.min(scaleX, scaleY);
-  
-  // Center arena in canvas
-  const offsetX = (canvasWidth - state.arenaWidth * scale) / 2;
-  const offsetY = (canvasHeight - state.arenaHeight * scale) / 2;
-  
-  initStars(state.arenaWidth, state.arenaHeight);
   
   ctx.save();
   
   // Apply screen shake
   if (state.screenShakeIntensity > 0) {
-    const shakeX = (Math.random() - 0.5) * state.screenShakeIntensity;
-    const shakeY = (Math.random() - 0.5) * state.screenShakeIntensity;
+    const shakeX = (Math.random() - 0.5) * state.screenShakeIntensity * 2;
+    const shakeY = (Math.random() - 0.5) * state.screenShakeIntensity * 2;
     ctx.translate(shakeX, shakeY);
   }
   
-  ctx.translate(offsetX, offsetY);
-  ctx.scale(scale, scale);
-  
-  // Render layers
-  renderStarfield(ctx, state);
-  renderArenaBackground(ctx, state);
-  renderCentralCore(ctx, state);
-  renderEnergyLines(ctx, state);
+  // Render layers (same order as main game)
+  renderBackground(ctx, state);
+  renderPattern(ctx, state);
   renderObstacles(ctx, state);
   renderProjectiles(ctx, state);
   renderParticles(ctx, state);
@@ -95,229 +58,112 @@ export function renderArena(
   // Draw phase overlays
   renderPhaseOverlay(ctx, state);
   
-  // Vignette effect
-  renderVignette(ctx, state);
-  
   ctx.restore();
 }
 
+function renderBackground(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth, arenaHeight } = state;
+  
+  // Arena-specific theme (red tint for battle)
+  const gradient = ctx.createRadialGradient(
+    arenaWidth / 2, arenaHeight / 2, 0,
+    arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
+  );
+  gradient.addColorStop(0, '#0a0815');
+  gradient.addColorStop(0.5, '#050408');
+  gradient.addColorStop(1, '#020203');
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  // Starfield
+  renderStarfield(ctx, state);
+}
+
 function renderStarfield(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  // Animate and draw stars
-  for (const star of stars) {
-    star.y += star.speed;
-    if (star.y > state.arenaHeight) {
-      star.y = 0;
-      star.x = Math.random() * state.arenaWidth;
-    }
+  const { arenaWidth, arenaHeight } = state;
+  
+  // Use deterministic stars based on seed
+  for (let i = 0; i < 80; i++) {
+    const seed = i * 137.5;
+    const x = ((seed * 7.3) % arenaWidth);
+    const y = ((seed * 11.7) % arenaHeight);
+    const size = 0.5 + (i % 3) * 0.5;
+    const twinkle = Math.sin(animationTime * 0.05 + seed) * 0.3 + 0.7;
     
-    const twinkle = Math.sin(animationTime * 0.05 + star.x) * 0.3 + 0.7;
-    ctx.globalAlpha = star.brightness * twinkle;
+    ctx.globalAlpha = 0.3 + twinkle * 0.4;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+    ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 }
 
-function renderArenaBackground(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  // Deep space gradient background
-  const gradient = ctx.createRadialGradient(
-    state.arenaWidth / 2, state.arenaHeight / 2, 0,
-    state.arenaWidth / 2, state.arenaHeight / 2, state.arenaWidth * 0.7
-  );
-  gradient.addColorStop(0, '#0a1525');
-  gradient.addColorStop(0.5, '#050d18');
-  gradient.addColorStop(1, '#010408');
+function renderPattern(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth, arenaHeight } = state;
+  const gridSize = 40;
+  const offset = (animationTime * 0.3) % gridSize;
   
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
+  ctx.strokeStyle = 'rgba(255, 68, 102, 0.04)';
+  ctx.lineWidth = 1;
   
-  // Animated perspective grid
-  renderPerspectiveGrid(ctx, state);
+  // Vertical lines
+  for (let x = offset; x < arenaWidth; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, arenaHeight);
+    ctx.stroke();
+  }
   
-  // Arena border with animated glow
+  // Horizontal lines
+  for (let y = offset; y < arenaHeight; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(arenaWidth, y);
+    ctx.stroke();
+  }
+  
+  // Central arena marker
+  renderArenaBorder(ctx, state);
+}
+
+function renderArenaBorder(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth, arenaHeight } = state;
+  const padding = ARENA_CONFIG.arenaPadding;
   const pulseIntensity = Math.sin(animationTime * 0.05) * 0.3 + 0.7;
   
-  ctx.strokeStyle = ARENA_COLORS.primary;
+  // Outer glow border
+  ctx.strokeStyle = ARENA_COLORS.opponent;
   ctx.lineWidth = 2;
-  ctx.shadowColor = ARENA_COLORS.primary;
+  ctx.shadowColor = ARENA_COLORS.opponent;
   ctx.shadowBlur = 15 * pulseIntensity;
-  ctx.strokeRect(8, 8, state.arenaWidth - 16, state.arenaHeight - 16);
+  ctx.strokeRect(padding, padding, arenaWidth - padding * 2, arenaHeight - padding * 2);
   
-  // Double border
-  ctx.strokeStyle = ARENA_COLORS.secondary;
+  // Inner border
+  ctx.strokeStyle = `rgba(255, 68, 102, 0.3)`;
   ctx.lineWidth = 1;
-  ctx.shadowBlur = 8 * pulseIntensity;
-  ctx.strokeRect(15, 15, state.arenaWidth - 30, state.arenaHeight - 30);
-  
   ctx.shadowBlur = 0;
+  ctx.strokeRect(padding + 5, padding + 5, arenaWidth - padding * 2 - 10, arenaHeight - padding * 2 - 10);
   
-  // Corner tech decorations
+  // Corner decorations
   renderCornerDecorations(ctx, state);
 }
 
-function renderPerspectiveGrid(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const centerX = state.arenaWidth / 2;
-  const centerY = state.arenaHeight / 2;
-  const gridSize = 50;
-  const scrollOffset = (animationTime * 0.5) % gridSize;
-  
-  ctx.save();
-  
-  // Horizontal grid lines with perspective fade
-  ctx.strokeStyle = ARENA_COLORS.grid;
-  ctx.lineWidth = 1;
-  
-  for (let y = 0; y <= state.arenaHeight; y += gridSize) {
-    const adjustedY = y + scrollOffset;
-    if (adjustedY > state.arenaHeight) continue;
-    
-    const distFromCenter = Math.abs(adjustedY - centerY) / (state.arenaHeight / 2);
-    const alpha = 0.3 - distFromCenter * 0.2;
-    
-    ctx.globalAlpha = Math.max(0, alpha);
-    ctx.beginPath();
-    ctx.moveTo(0, adjustedY);
-    ctx.lineTo(state.arenaWidth, adjustedY);
-    ctx.stroke();
-  }
-  
-  // Vertical grid lines with perspective
-  for (let x = 0; x <= state.arenaWidth; x += gridSize) {
-    const distFromCenter = Math.abs(x - centerX) / (state.arenaWidth / 2);
-    const alpha = 0.3 - distFromCenter * 0.15;
-    
-    ctx.globalAlpha = Math.max(0, alpha);
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, state.arenaHeight);
-    ctx.stroke();
-  }
-  
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-function renderCentralCore(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const centerX = state.arenaWidth / 2;
-  const centerY = state.arenaHeight / 2;
-  
-  ctx.save();
-  
-  // Animated concentric rings
-  for (let i = 5; i >= 0; i--) {
-    const baseRadius = 30 + i * 25;
-    const pulse = Math.sin(animationTime * 0.03 + i * 0.5) * 5;
-    const radius = baseRadius + pulse;
-    
-    const alpha = 0.15 - i * 0.02;
-    ctx.strokeStyle = ARENA_COLORS.primary;
-    ctx.globalAlpha = alpha;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = ARENA_COLORS.glow;
-    ctx.shadowBlur = 10;
-    
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  
-  // Inner core glow
-  const coreGradient = ctx.createRadialGradient(
-    centerX, centerY, 0,
-    centerX, centerY, 40
-  );
-  coreGradient.addColorStop(0, 'rgba(0, 212, 255, 0.3)');
-  coreGradient.addColorStop(0.5, 'rgba(0, 136, 204, 0.1)');
-  coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  
-  ctx.globalAlpha = 0.5 + Math.sin(animationTime * 0.05) * 0.2;
-  ctx.fillStyle = coreGradient;
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Central hexagon
-  ctx.globalAlpha = 0.6;
-  ctx.strokeStyle = ARENA_COLORS.accent;
-  ctx.lineWidth = 2;
-  ctx.shadowColor = ARENA_COLORS.accent;
-  ctx.shadowBlur = 15;
-  
-  const hexRadius = 15 + Math.sin(animationTime * 0.08) * 3;
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2 + animationTime * 0.01;
-    const x = centerX + Math.cos(angle) * hexRadius;
-    const y = centerY + Math.sin(angle) * hexRadius;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.stroke();
-  
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-function renderEnergyLines(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const centerX = state.arenaWidth / 2;
-  const centerY = state.arenaHeight / 2;
-  
-  ctx.save();
-  
-  // Radiating energy lines from center
-  const numLines = 8;
-  for (let i = 0; i < numLines; i++) {
-    const baseAngle = (i / numLines) * Math.PI * 2;
-    const angle = baseAngle + animationTime * 0.002;
-    
-    // Pulsing line length
-    const pulseOffset = (animationTime * 2 + i * 50) % 200;
-    const lineStart = 50 + pulseOffset;
-    const lineEnd = 100 + pulseOffset;
-    
-    if (lineEnd > 400) continue;
-    
-    const x1 = centerX + Math.cos(angle) * lineStart;
-    const y1 = centerY + Math.sin(angle) * lineStart;
-    const x2 = centerX + Math.cos(angle) * lineEnd;
-    const y2 = centerY + Math.sin(angle) * lineEnd;
-    
-    const alpha = 1 - pulseOffset / 200;
-    
-    ctx.strokeStyle = ARENA_COLORS.energy;
-    ctx.globalAlpha = alpha * 0.4;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = ARENA_COLORS.energy;
-    ctx.shadowBlur = 8;
-    
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-  
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
 function renderCornerDecorations(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth, arenaHeight } = state;
+  const padding = ARENA_CONFIG.arenaPadding;
+  
   const corners = [
-    { x: 0, y: 0, rot: 0 },
-    { x: state.arenaWidth, y: 0, rot: Math.PI / 2 },
-    { x: state.arenaWidth, y: state.arenaHeight, rot: Math.PI },
-    { x: 0, y: state.arenaHeight, rot: -Math.PI / 2 },
+    { x: padding, y: padding, rot: 0 },
+    { x: arenaWidth - padding, y: padding, rot: Math.PI / 2 },
+    { x: arenaWidth - padding, y: arenaHeight - padding, rot: Math.PI },
+    { x: padding, y: arenaHeight - padding, rot: -Math.PI / 2 },
   ];
   
-  ctx.save();
-  ctx.strokeStyle = ARENA_COLORS.primary;
-  ctx.fillStyle = ARENA_COLORS.primary;
+  ctx.strokeStyle = ARENA_COLORS.opponent;
   ctx.lineWidth = 2;
-  ctx.shadowColor = ARENA_COLORS.glow;
+  ctx.shadowColor = ARENA_COLORS.opponent;
   ctx.shadowBlur = 10;
   
   for (const corner of corners) {
@@ -327,31 +173,15 @@ function renderCornerDecorations(ctx: CanvasRenderingContext2D, state: ArenaStat
     
     // Tech corner bracket
     ctx.beginPath();
-    ctx.moveTo(5, 40);
+    ctx.moveTo(5, 35);
     ctx.lineTo(5, 5);
-    ctx.lineTo(40, 5);
+    ctx.lineTo(35, 5);
     ctx.stroke();
-    
-    // Corner triangle
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(25, 0);
-    ctx.lineTo(0, 25);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Decorative dot
-    ctx.globalAlpha = 0.8;
-    ctx.beginPath();
-    ctx.arc(12, 12, 3, 0, Math.PI * 2);
-    ctx.fill();
     
     ctx.restore();
   }
   
   ctx.shadowBlur = 0;
-  ctx.restore();
 }
 
 function renderObstacles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
@@ -364,10 +194,8 @@ function renderObstacles(ctx: CanvasRenderingContext2D, state: ArenaState): void
     const pulseIntensity = Math.sin(animationTime * 0.05 + obs.x * 0.01) * 0.2 + 0.8;
     
     if (obs.type === 'pillar') {
-      // 3D Hexagonal pillar with glow
       renderHexPillar(ctx, halfW, pulseIntensity, obs.destructible);
     } else {
-      // 3D Wall/barrier with tech details
       renderTechWall(ctx, halfW, halfH, pulseIntensity, obs.destructible);
     }
     
@@ -379,11 +207,10 @@ function renderHexPillar(ctx: CanvasRenderingContext2D, radius: number, pulse: n
   const color = destructible ? '#ffaa00' : ARENA_COLORS.primary;
   const glowColor = destructible ? '#ff8800' : ARENA_COLORS.glow;
   
-  // Outer glow
   ctx.shadowColor = glowColor;
   ctx.shadowBlur = 20 * pulse;
   
-  // Main hexagon shape
+  // Main hexagon
   ctx.fillStyle = '#0a1520';
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
@@ -401,10 +228,8 @@ function renderHexPillar(ctx: CanvasRenderingContext2D, radius: number, pulse: n
   ctx.stroke();
   
   // Inner hexagon
-  ctx.strokeStyle = color;
   ctx.globalAlpha = 0.6;
   ctx.lineWidth = 1;
-  
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
@@ -416,7 +241,7 @@ function renderHexPillar(ctx: CanvasRenderingContext2D, radius: number, pulse: n
   ctx.closePath();
   ctx.stroke();
   
-  // Center glow dot
+  // Center glow
   ctx.globalAlpha = pulse;
   const dotGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 8);
   dotGradient.addColorStop(0, color);
@@ -434,16 +259,14 @@ function renderTechWall(ctx: CanvasRenderingContext2D, halfW: number, halfH: num
   const color = destructible ? '#ffaa00' : ARENA_COLORS.primary;
   const glowColor = destructible ? '#ff8800' : ARENA_COLORS.glow;
   
-  // Outer glow
   ctx.shadowColor = glowColor;
   ctx.shadowBlur = 15 * pulse;
   
-  // Main wall body
+  // Wall body
   ctx.fillStyle = '#0a1520';
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   
-  // Beveled rectangle
   const bevel = 5;
   ctx.beginPath();
   ctx.moveTo(-halfW + bevel, -halfH);
@@ -458,43 +281,6 @@ function renderTechWall(ctx: CanvasRenderingContext2D, halfW: number, halfH: num
   ctx.fill();
   ctx.stroke();
   
-  // Inner detail lines
-  ctx.globalAlpha = 0.4;
-  ctx.lineWidth = 1;
-  
-  // Horizontal detail
-  ctx.beginPath();
-  ctx.moveTo(-halfW + 10, 0);
-  ctx.lineTo(halfW - 10, 0);
-  ctx.stroke();
-  
-  // Vertical details
-  ctx.beginPath();
-  ctx.moveTo(-halfW * 0.5, -halfH + 6);
-  ctx.lineTo(-halfW * 0.5, halfH - 6);
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.moveTo(halfW * 0.5, -halfH + 6);
-  ctx.lineTo(halfW * 0.5, halfH - 6);
-  ctx.stroke();
-  
-  // Corner dots
-  ctx.globalAlpha = pulse * 0.8;
-  ctx.fillStyle = color;
-  const dotPositions = [
-    [-halfW + 8, -halfH + 8],
-    [halfW - 8, -halfH + 8],
-    [-halfW + 8, halfH - 8],
-    [halfW - 8, halfH - 8],
-  ];
-  
-  for (const [x, y] of dotPositions) {
-    ctx.beginPath();
-    ctx.arc(x, y, 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
 }
@@ -502,49 +288,224 @@ function renderTechWall(ctx: CanvasRenderingContext2D, halfW: number, halfH: num
 function renderProjectiles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   for (const proj of state.projectiles) {
     ctx.save();
-    ctx.translate(proj.x, proj.y);
     
-    // Get style based on ship
-    const style = proj.shipId ? getShipProjectileStyle(proj.shipId) : null;
-    const color = style?.color || (proj.isPlayer ? ARENA_COLORS.player : ARENA_COLORS.opponent);
-    const glowColor = style?.glowColor || color;
+    if (proj.isPlayer) {
+      // Player bullets - use ship-specific styling (SAME AS MAIN GAME)
+      const style = proj.shipId ? getShipProjectileStyle(proj.shipId) : getShipProjectileStyle('default');
+      const size = proj.size * style.size;
+      
+      ctx.shadowColor = style.glowColor;
+      ctx.shadowBlur = 8;
+      
+      // Draw trail if enabled
+      if (style.trailLength > 0) {
+        const angle = Math.atan2(proj.vy, proj.vx);
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = style.color;
+        ctx.lineWidth = size * 0.8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(proj.x, proj.y);
+        ctx.lineTo(
+          proj.x - Math.cos(angle) * size * style.trailLength * 3,
+          proj.y - Math.sin(angle) * size * style.trailLength * 3
+        );
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      
+      // Draw projectile based on shape (SAME AS MAIN GAME)
+      drawPlayerProjectile(ctx, proj.x, proj.y, size, style, proj.vx, proj.vy, state.gameTime);
+      
+    } else {
+      // Enemy bullets - red
+      ctx.shadowColor = '#ff4444';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#ff4444';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.size, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Core
+      ctx.fillStyle = '#ffaa00';
+      ctx.beginPath();
+      ctx.arc(proj.x, proj.y, proj.size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
     
-    // Projectile trail
-    const angle = Math.atan2(proj.vy, proj.vx);
-    const trailLength = 15;
-    
-    const trailGradient = ctx.createLinearGradient(
-      -Math.cos(angle) * trailLength, -Math.sin(angle) * trailLength,
-      0, 0
-    );
-    trailGradient.addColorStop(0, 'transparent');
-    trailGradient.addColorStop(1, color);
-    
-    ctx.strokeStyle = trailGradient;
-    ctx.lineWidth = proj.size * 0.8;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(-Math.cos(angle) * trailLength, -Math.sin(angle) * trailLength);
-    ctx.lineTo(0, 0);
-    ctx.stroke();
-    
-    // Main projectile with glow
-    ctx.fillStyle = color;
-    ctx.shadowColor = glowColor;
-    ctx.shadowBlur = 15;
-    
-    ctx.beginPath();
-    ctx.arc(0, 0, proj.size * (style?.size || 1), 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Inner bright core
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, proj.size * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.shadowBlur = 0;
     ctx.restore();
+  }
+}
+
+// Draw player projectile with ship-specific shape - EXACT COPY FROM MAIN GAME
+function drawPlayerProjectile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  style: ShipProjectileStyle,
+  vx: number,
+  vy: number,
+  gameTime: number
+): void {
+  const angle = Math.atan2(vy, vx);
+  
+  ctx.fillStyle = style.color;
+  
+  switch (style.shape) {
+    case 'circle': {
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = style.coreColor;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    
+    case 'laser': {
+      ctx.strokeStyle = style.color;
+      ctx.lineWidth = size * 0.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x - Math.cos(angle) * size * 2, y - Math.sin(angle) * size * 2);
+      ctx.lineTo(x + Math.cos(angle) * size * 2, y + Math.sin(angle) * size * 2);
+      ctx.stroke();
+      ctx.strokeStyle = style.coreColor;
+      ctx.lineWidth = size * 0.2;
+      ctx.stroke();
+      break;
+    }
+    
+    case 'diamond': {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(gameTime * 0.15);
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size * 0.6, 0);
+      ctx.lineTo(0, size);
+      ctx.lineTo(-size * 0.6, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'star': {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(gameTime * 0.1);
+      ctx.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        ctx.lineTo(Math.cos(a) * size * 1.2, Math.sin(a) * size * 1.2);
+        const a2 = ((i + 0.5) / 4) * Math.PI * 2;
+        ctx.lineTo(Math.cos(a2) * size * 0.4, Math.sin(a2) * size * 0.4);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'triangle': {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(size * 1.2, 0);
+      ctx.lineTo(-size * 0.6, size * 0.8);
+      ctx.lineTo(-size * 0.6, -size * 0.8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'plasma': {
+      const pulseSize = size + Math.sin(gameTime * 0.2) * size * 0.3;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize * 1.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = style.coreColor;
+      ctx.beginPath();
+      ctx.arc(x, y, pulseSize * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    
+    case 'needle': {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(size * 2, 0);
+      ctx.lineTo(-size, size * 0.3);
+      ctx.lineTo(-size, -size * 0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'crescent': {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.arc(0, 0, size, -Math.PI * 0.6, Math.PI * 0.6);
+      ctx.arc(size * 0.4, 0, size * 0.7, Math.PI * 0.5, -Math.PI * 0.5, true);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    case 'ring': {
+      ctx.strokeStyle = style.color;
+      ctx.lineWidth = size * 0.4;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = style.coreColor;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    
+    case 'bolt': {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(size * 1.5, 0);
+      ctx.lineTo(size * 0.2, size * 0.4);
+      ctx.lineTo(size * 0.5, 0);
+      ctx.lineTo(-size, size * 0.3);
+      ctx.lineTo(-size * 0.3, 0);
+      ctx.lineTo(-size, -size * 0.3);
+      ctx.lineTo(size * 0.5, 0);
+      ctx.lineTo(size * 0.2, -size * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    
+    default: {
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
   }
 }
 
@@ -583,19 +544,19 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   ctx.shadowColor = ARENA_COLORS.player;
   ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(0, 0, 25, 0, Math.PI * 2);
+  ctx.arc(0, 0, 30, 0, Math.PI * 2);
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   
-  // Use player's ship model
+  // Use player's ship model (SAME AS MAIN GAME)
   const shipId = getStoredMegaShipId();
   drawMegaShip(ctx, 0, 0, shipId, state.gameTime);
   
   ctx.restore();
   
   // Health bar under player
-  renderHealthBar(ctx, state.playerX, state.playerY + 30, 50, 5, 
+  renderHealthBar(ctx, state.playerX, state.playerY + 40, 60, 6, 
     state.playerHealth / state.playerMaxHealth, ARENA_COLORS.player);
 }
 
@@ -616,12 +577,12 @@ function renderOpponent(ctx: CanvasRenderingContext2D, state: ArenaState): void 
   ctx.shadowColor = ARENA_COLORS.opponent;
   ctx.shadowBlur = 10;
   ctx.beginPath();
-  ctx.arc(0, 0, 25, 0, Math.PI * 2);
+  ctx.arc(0, 0, 30, 0, Math.PI * 2);
   ctx.stroke();
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   
-  // Render opponent's ship (with red tint overlay)
+  // Render opponent's ship (with red tint)
   ctx.save();
   drawMegaShip(ctx, 0, 0, opp.shipId, state.gameTime);
   
@@ -629,23 +590,23 @@ function renderOpponent(ctx: CanvasRenderingContext2D, state: ArenaState): void 
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = 'rgba(255, 68, 102, 0.3)';
   ctx.beginPath();
-  ctx.arc(0, 0, 30, 0, Math.PI * 2);
+  ctx.arc(0, 0, 35, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
   
   ctx.restore();
   
   // Health bar above opponent
-  renderHealthBar(ctx, opp.x, opp.y - 35, 60, 6, 
+  renderHealthBar(ctx, opp.x, opp.y - 45, 70, 7, 
     opp.health / opp.maxHealth, ARENA_COLORS.opponent);
   
   // Opponent name with glow
   ctx.fillStyle = ARENA_COLORS.opponent;
-  ctx.font = '11px Orbitron';
+  ctx.font = '14px Orbitron';
   ctx.textAlign = 'center';
   ctx.shadowColor = ARENA_COLORS.opponent;
   ctx.shadowBlur = 8;
-  ctx.fillText(opp.name, opp.x, opp.y - 45);
+  ctx.fillText(opp.name, opp.x, opp.y - 55);
   ctx.shadowBlur = 0;
 }
 
@@ -679,6 +640,8 @@ function renderHealthBar(
 }
 
 function renderArenaHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  const { arenaWidth, arenaHeight } = state;
+  
   // Difficulty badge
   const diffColors: Record<string, string> = {
     bronze: '#cd7f32',
@@ -691,46 +654,46 @@ function renderArenaHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void 
   
   // Difficulty indicator with glow
   ctx.fillStyle = badgeColor;
-  ctx.font = '12px Orbitron';
+  ctx.font = '16px Orbitron';
   ctx.textAlign = 'left';
   ctx.shadowColor = badgeColor;
   ctx.shadowBlur = 10;
-  ctx.fillText(`◆ ${state.difficulty.toUpperCase()} ARENA`, 20, 30);
+  ctx.fillText(`◆ ${state.difficulty.toUpperCase()} ARENA`, 25, 40);
   ctx.shadowBlur = 0;
   
   // Match timer
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
-  ctx.font = '11px Orbitron';
+  ctx.font = '14px Orbitron';
   
   if (state.phase === 'fighting' && state.opponent) {
     const timeInSeconds = Math.floor(state.gameTime / 60);
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = timeInSeconds % 60;
-    ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, state.arenaWidth / 2, 30);
+    ctx.fillText(`${minutes}:${seconds.toString().padStart(2, '0')}`, arenaWidth / 2, 40);
   }
   
   // Health displays in corners
-  ctx.font = '10px Orbitron';
+  ctx.font = '14px Orbitron';
   
   // Player health indicator
   ctx.fillStyle = ARENA_COLORS.player;
   ctx.textAlign = 'right';
   const playerHealthPercent = Math.round((state.playerHealth / state.playerMaxHealth) * 100);
-  ctx.fillText(`HULL: ${playerHealthPercent}%`, state.arenaWidth - 20, 30);
+  ctx.fillText(`HULL: ${playerHealthPercent}%`, arenaWidth - 25, 40);
   
   // Opponent health indicator
   if (state.opponent) {
     ctx.fillStyle = ARENA_COLORS.opponent;
-    ctx.textAlign = 'right';
     const oppHealthPercent = Math.round((state.opponent.health / state.opponent.maxHealth) * 100);
-    ctx.fillText(`ENEMY: ${oppHealthPercent}%`, state.arenaWidth - 20, 45);
+    ctx.fillText(`ENEMY: ${oppHealthPercent}%`, arenaWidth - 25, 60);
   }
 }
 
 function renderPhaseOverlay(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const centerX = state.arenaWidth / 2;
-  const centerY = state.arenaHeight / 2;
+  const { arenaWidth, arenaHeight } = state;
+  const centerX = arenaWidth / 2;
+  const centerY = arenaHeight / 2;
   
   switch (state.phase) {
     case 'entering':
@@ -752,10 +715,9 @@ function renderPhaseOverlay(ctx: CanvasRenderingContext2D, state: ArenaState): v
 }
 
 function renderVSScreen(ctx: CanvasRenderingContext2D, state: ArenaState, centerX: number, centerY: number): void {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
   ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
   
-  // Animated VS text
   const scale = 1 + Math.sin(animationTime * 0.1) * 0.1;
   
   ctx.save();
@@ -763,58 +725,57 @@ function renderVSScreen(ctx: CanvasRenderingContext2D, state: ArenaState, center
   ctx.scale(scale, scale);
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = '50px Orbitron';
+  ctx.font = '72px Orbitron';
   ctx.textAlign = 'center';
-  ctx.shadowColor = ARENA_COLORS.primary;
-  ctx.shadowBlur = 30;
-  ctx.fillText('VS', 0, 15);
+  ctx.shadowColor = ARENA_COLORS.opponent;
+  ctx.shadowBlur = 40;
+  ctx.fillText('VS', 0, 20);
   ctx.shadowBlur = 0;
   
   ctx.restore();
   
   // Decorative lines
-  ctx.strokeStyle = ARENA_COLORS.primary;
-  ctx.lineWidth = 2;
-  ctx.shadowColor = ARENA_COLORS.primary;
-  ctx.shadowBlur = 10;
+  ctx.strokeStyle = ARENA_COLORS.opponent;
+  ctx.lineWidth = 3;
+  ctx.shadowColor = ARENA_COLORS.opponent;
+  ctx.shadowBlur = 15;
   
   ctx.beginPath();
-  ctx.moveTo(centerX - 100, centerY);
-  ctx.lineTo(centerX - 50, centerY);
+  ctx.moveTo(centerX - 150, centerY);
+  ctx.lineTo(centerX - 60, centerY);
   ctx.stroke();
   
   ctx.beginPath();
-  ctx.moveTo(centerX + 50, centerY);
-  ctx.lineTo(centerX + 100, centerY);
+  ctx.moveTo(centerX + 60, centerY);
+  ctx.lineTo(centerX + 150, centerY);
   ctx.stroke();
   
   ctx.shadowBlur = 0;
   
   // Player label
   ctx.fillStyle = ARENA_COLORS.player;
-  ctx.font = '16px Orbitron';
+  ctx.font = '24px Orbitron';
   ctx.shadowColor = ARENA_COLORS.player;
-  ctx.shadowBlur = 10;
-  ctx.fillText('YOU', centerX, centerY + 80);
+  ctx.shadowBlur = 15;
+  ctx.fillText('YOU', centerX, centerY + 120);
   
   // Opponent label
   ctx.fillStyle = ARENA_COLORS.opponent;
   ctx.shadowColor = ARENA_COLORS.opponent;
-  ctx.fillText(state.opponent?.name || 'OPPONENT', centerX, centerY - 50);
+  ctx.fillText(state.opponent?.name || 'OPPONENT', centerX, centerY - 80);
   ctx.shadowBlur = 0;
 }
 
 function renderCountdown(ctx: CanvasRenderingContext2D, state: ArenaState, centerX: number, centerY: number): void {
   const countdown = Math.ceil(state.phaseTimer / 60);
   
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
   ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
   
   const isGo = countdown === 0;
   const color = isGo ? ARENA_COLORS.player : '#ffffff';
   const text = isGo ? 'FIGHT!' : countdown.toString();
   
-  // Pulsing countdown
   const pulse = 1 + (60 - (state.phaseTimer % 60)) / 60 * 0.3;
   
   ctx.save();
@@ -822,10 +783,10 @@ function renderCountdown(ctx: CanvasRenderingContext2D, state: ArenaState, cente
   ctx.scale(pulse, pulse);
   
   ctx.fillStyle = color;
-  ctx.font = '80px Orbitron';
+  ctx.font = '120px Orbitron';
   ctx.textAlign = 'center';
   ctx.shadowColor = isGo ? ARENA_COLORS.player : ARENA_COLORS.primary;
-  ctx.shadowBlur = 40;
+  ctx.shadowBlur = 50;
   ctx.fillText(text, 0, 0);
   ctx.shadowBlur = 0;
   
@@ -833,7 +794,7 @@ function renderCountdown(ctx: CanvasRenderingContext2D, state: ArenaState, cente
 }
 
 function renderVictoryOverlay(ctx: CanvasRenderingContext2D, state: ArenaState, centerX: number, centerY: number): void {
-  ctx.fillStyle = 'rgba(0, 40, 20, 0.85)';
+  ctx.fillStyle = 'rgba(0, 40, 20, 0.9)';
   ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
   
   const pulse = Math.sin(animationTime * 0.1) * 0.1 + 1;
@@ -843,49 +804,33 @@ function renderVictoryOverlay(ctx: CanvasRenderingContext2D, state: ArenaState, 
   ctx.scale(pulse, pulse);
   
   ctx.fillStyle = ARENA_COLORS.player;
-  ctx.font = '40px Orbitron';
+  ctx.font = '60px Orbitron';
   ctx.textAlign = 'center';
   ctx.shadowColor = ARENA_COLORS.player;
-  ctx.shadowBlur = 40;
+  ctx.shadowBlur = 50;
   ctx.fillText('VICTORY!', 0, 0);
   ctx.shadowBlur = 0;
   
   ctx.restore();
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = '14px Orbitron';
-  ctx.fillText('Collecting rewards...', centerX, centerY + 50);
+  ctx.font = '20px Orbitron';
+  ctx.fillText('Collecting rewards...', centerX, centerY + 70);
 }
 
 function renderDefeatOverlay(ctx: CanvasRenderingContext2D, state: ArenaState, centerX: number, centerY: number): void {
-  ctx.fillStyle = 'rgba(40, 0, 0, 0.85)';
+  ctx.fillStyle = 'rgba(40, 0, 0, 0.9)';
   ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
   
   ctx.fillStyle = ARENA_COLORS.opponent;
-  ctx.font = '40px Orbitron';
+  ctx.font = '60px Orbitron';
   ctx.textAlign = 'center';
   ctx.shadowColor = ARENA_COLORS.opponent;
-  ctx.shadowBlur = 40;
+  ctx.shadowBlur = 50;
   ctx.fillText('DEFEATED', centerX, centerY);
   ctx.shadowBlur = 0;
   
   ctx.fillStyle = '#888888';
-  ctx.font = '14px Orbitron';
-  ctx.fillText('Better luck next time...', centerX, centerY + 50);
-}
-
-function renderVignette(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const centerX = state.arenaWidth / 2;
-  const centerY = state.arenaHeight / 2;
-  const radius = Math.max(state.arenaWidth, state.arenaHeight) * 0.8;
-  
-  const vignette = ctx.createRadialGradient(
-    centerX, centerY, radius * 0.3,
-    centerX, centerY, radius
-  );
-  vignette.addColorStop(0, 'transparent');
-  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-  
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
+  ctx.font = '20px Orbitron';
+  ctx.fillText('Better luck next time...', centerX, centerY + 70);
 }

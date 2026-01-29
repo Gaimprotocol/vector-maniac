@@ -109,7 +109,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
     touchRef.current.touching = false;
   }, []);
   
-  // Game loop
+  // Game loop - fullscreen rendering like main game
   useEffect(() => {
     if (screen !== 'battle' || !arenaState || !canvasRef.current) return;
     
@@ -117,29 +117,23 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Set canvas size
+    // Set canvas size to match arena dimensions (same approach as main game)
     const updateSize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
+      // Use arena dimensions directly for internal resolution
+      canvas.width = arenaState.arenaWidth;
+      canvas.height = arenaState.arenaHeight;
     };
     updateSize();
     
     const gameLoop = () => {
-      // Calculate input position relative to arena
+      // Calculate input position relative to screen - scale touch input to arena coordinates
       const rect = canvas.getBoundingClientRect();
       const scaleX = arenaState.arenaWidth / rect.width;
       const scaleY = arenaState.arenaHeight / rect.height;
-      const scale = Math.min(scaleX, scaleY);
-      
-      const offsetX = (rect.width - arenaState.arenaWidth / scale) / 2;
-      const offsetY = (rect.height - arenaState.arenaHeight / scale) / 2;
       
       const input = {
-        touchX: (touchRef.current.x - offsetX) * scale,
-        touchY: (touchRef.current.y - offsetY) * scale,
+        touchX: touchRef.current.x * scaleX,
+        touchY: touchRef.current.y * scaleY,
         isTouching: touchRef.current.touching,
       };
       
@@ -165,11 +159,11 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
         return newState;
       });
       
-      // Render
+      // Render directly at arena resolution (no scaling - same as main game)
       const currentState = arenaState;
       if (currentState) {
-        ctx.clearRect(0, 0, rect.width, rect.height);
-        renderArena(ctx, currentState, rect.width, rect.height);
+        ctx.clearRect(0, 0, arenaState.arenaWidth, arenaState.arenaHeight);
+        renderArena(ctx, currentState);
       }
       
       frameRef.current = requestAnimationFrame(gameLoop);
