@@ -116,6 +116,102 @@ export function createMiniBoss(targetX: number, targetY: number, mapId: number):
   };
 }
 
+// Create a Dasher - fast enemy that rushes toward player (unlocks map 5)
+export function createDasher(targetX: number, targetY: number): VectorEnemy {
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  
+  const dir = normalize(targetX - spawn.x, targetY - spawn.y);
+  
+  return {
+    id: generateId(),
+    x: spawn.x,
+    y: spawn.y,
+    vx: dir.x * VM_CONFIG.dasherSpeed,
+    vy: dir.y * VM_CONFIG.dasherSpeed,
+    size: VM_CONFIG.dasherSize,
+    health: VM_CONFIG.dasherHealth,
+    maxHealth: VM_CONFIG.dasherHealth,
+    type: 'dasher',
+    fireTimer: 0,
+    behaviorTimer: 0,
+    targetAngle: spawn.angle,
+  };
+}
+
+// Create a Splitter - splits into 2 smaller enemies on death (unlocks map 10)
+export function createSplitter(targetX: number, targetY: number, isSplit: boolean = false): VectorEnemy {
+  const spawn = isSplit 
+    ? { x: targetX, y: targetY, angle: Math.random() * Math.PI * 2 }
+    : randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  
+  const centerX = VM_CONFIG.arenaWidth / 2;
+  const centerY = VM_CONFIG.arenaHeight / 2;
+  const dir = normalize(centerX - spawn.x, centerY - spawn.y);
+  
+  // Split versions are smaller and weaker
+  const sizeMult = isSplit ? 0.6 : 1;
+  const healthMult = isSplit ? 0.4 : 1;
+  
+  return {
+    id: generateId(),
+    x: spawn.x,
+    y: spawn.y,
+    vx: dir.x * VM_CONFIG.splitterSpeed * (isSplit ? 1.5 : 1),
+    vy: dir.y * VM_CONFIG.splitterSpeed * (isSplit ? 1.5 : 1),
+    size: VM_CONFIG.splitterSize * sizeMult,
+    health: VM_CONFIG.splitterHealth * healthMult,
+    maxHealth: VM_CONFIG.splitterHealth * healthMult,
+    type: 'splitter',
+    fireTimer: isSplit ? 1 : 0, // Use fireTimer to track if this is a split version (1 = split)
+    behaviorTimer: 0,
+    targetAngle: spawn.angle,
+  };
+}
+
+// Create an Orbiter - circles around player at fixed distance (unlocks map 15)
+export function createOrbiter(targetX: number, targetY: number): VectorEnemy {
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  
+  const dir = normalize(targetX - spawn.x, targetY - spawn.y);
+  
+  return {
+    id: generateId(),
+    x: spawn.x,
+    y: spawn.y,
+    vx: dir.x * VM_CONFIG.orbiterSpeed,
+    vy: dir.y * VM_CONFIG.orbiterSpeed,
+    size: VM_CONFIG.orbiterSize,
+    health: VM_CONFIG.orbiterHealth,
+    maxHealth: VM_CONFIG.orbiterHealth,
+    type: 'orbiter',
+    fireTimer: VM_CONFIG.orbiterFireRate,
+    behaviorTimer: Math.random() * Math.PI * 2, // Random starting orbit angle
+    targetAngle: spawn.angle,
+  };
+}
+
+// Create a Sniper - stops and aims carefully before shooting (unlocks map 20)
+export function createSniper(targetX: number, targetY: number): VectorEnemy {
+  const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
+  
+  const dir = normalize(targetX - spawn.x, targetY - spawn.y);
+  
+  return {
+    id: generateId(),
+    x: spawn.x,
+    y: spawn.y,
+    vx: dir.x * VM_CONFIG.sniperSpeed,
+    vy: dir.y * VM_CONFIG.sniperSpeed,
+    size: VM_CONFIG.sniperSize,
+    health: VM_CONFIG.sniperHealth,
+    maxHealth: VM_CONFIG.sniperHealth,
+    type: 'sniper',
+    fireTimer: VM_CONFIG.sniperFireRate,
+    behaviorTimer: 0, // Counts up to aim time
+    targetAngle: spawn.angle,
+  };
+}
+
 // Create a boss for each map - unique behavior based on map number
 export function createBoss(mapId: number, level: number): VectorEnemy {
   const spawn = randomFromEdge(VM_CONFIG.arenaWidth, VM_CONFIG.arenaHeight, 20);
