@@ -976,11 +976,21 @@ function renderOpponent(ctx: CanvasRenderingContext2D, state: ArenaState): void 
   
   // Opponent name with glow
   ctx.fillStyle = ARENA_COLORS.opponent;
-  ctx.font = '14px Orbitron';
+  ctx.font = opp.isHumanPlayer ? '12px Orbitron' : '14px Orbitron';
   ctx.textAlign = 'center';
   ctx.shadowColor = ARENA_COLORS.opponent;
   ctx.shadowBlur = 8;
   ctx.fillText(opp.name, opp.x, opp.y - 55);
+  
+  // Show player info if human
+  if (opp.isHumanPlayer && opp.playerLevel) {
+    ctx.font = '9px Rajdhani';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.shadowBlur = 0;
+    const levelText = `LVL ${opp.playerLevel}`;
+    ctx.fillText(levelText, opp.x, opp.y - 66);
+  }
+  
   ctx.shadowBlur = 0;
 }
 
@@ -1089,9 +1099,13 @@ function renderPhaseOverlay(ctx: CanvasRenderingContext2D, state: ArenaState): v
 }
 
 function renderVSScreen(ctx: CanvasRenderingContext2D, state: ArenaState, centerX: number, centerY: number): void {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
   ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
   
+  const opp = state.opponent;
+  const isHuman = opp?.isHumanPlayer;
+  
+  // VS text with pulse
   const scale = 1 + Math.sin(animationTime * 0.1) * 0.1;
   
   ctx.save();
@@ -1126,18 +1140,53 @@ function renderVSScreen(ctx: CanvasRenderingContext2D, state: ArenaState, center
   
   ctx.shadowBlur = 0;
   
-  // Player label
+  // Player label (you)
   ctx.fillStyle = ARENA_COLORS.player;
   ctx.font = '24px Orbitron';
   ctx.shadowColor = ARENA_COLORS.player;
   ctx.shadowBlur = 15;
   ctx.fillText('YOU', centerX, centerY + 120);
-  
-  // Opponent label
-  ctx.fillStyle = ARENA_COLORS.opponent;
-  ctx.shadowColor = ARENA_COLORS.opponent;
-  ctx.fillText(state.opponent?.name || 'OPPONENT', centerX, centerY - 80);
   ctx.shadowBlur = 0;
+  
+  // Opponent section
+  if (opp) {
+    // Name
+    ctx.fillStyle = ARENA_COLORS.opponent;
+    ctx.font = isHuman ? '18px Orbitron' : '24px Orbitron';
+    ctx.shadowColor = ARENA_COLORS.opponent;
+    ctx.shadowBlur = 15;
+    ctx.fillText(opp.name, centerX, centerY - 80);
+    ctx.shadowBlur = 0;
+    
+    // Player info for "human" opponents
+    if (isHuman) {
+      ctx.font = '12px Rajdhani';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      
+      const infoLines: string[] = [];
+      if (opp.playerLevel) infoLines.push(`Level ${opp.playerLevel}`);
+      if (opp.playStyle) infoLines.push(opp.playStyle.toUpperCase());
+      
+      let yOffset = -100;
+      for (const line of infoLines) {
+        ctx.fillText(line, centerX, centerY + yOffset);
+        yOffset -= 16;
+      }
+      
+      // "Online" indicator
+      const pulse = Math.sin(animationTime * 0.15) * 0.3 + 0.7;
+      ctx.fillStyle = `rgba(0, 255, 136, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(centerX - 60, centerY - 82, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.font = '10px Rajdhani';
+      ctx.fillStyle = 'rgba(0, 255, 136, 0.8)';
+      ctx.textAlign = 'left';
+      ctx.fillText('ONLINE', centerX - 52, centerY - 78);
+      ctx.textAlign = 'center';
+    }
+  }
 }
 
 function renderCountdown(ctx: CanvasRenderingContext2D, state: ArenaState, centerX: number, centerY: number): void {

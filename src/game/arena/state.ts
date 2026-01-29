@@ -5,6 +5,7 @@ import {
   ArenaOpponent, 
   ArenaObstacle, 
   ArenaDifficulty,
+  ArenaMode,
   ArenaReward,
   ARENA_ENTRY_COSTS,
   ARENA_OPPONENT_NAMES,
@@ -14,6 +15,13 @@ import { ARENA_CONFIG } from './constants';
 import { getComputedStats } from '@/hooks/useShipUpgrades';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { SHIP_MODELS } from '../shipModels';
+import { 
+  generatePlayerProfile, 
+  getDisplayName, 
+  getPlayStyleBehaviorWeights,
+  FAMOUS_PLAYERS,
+  PlayerProfile,
+} from './playerProfiles';
 
 function generateObstacles(): ArenaObstacle[] {
   const obstacles: ArenaObstacle[] = [];
@@ -120,7 +128,8 @@ function generateObstacles(): ArenaObstacle[] {
   return obstacles;
 }
 
-function createOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
+// Create AI opponent (original behavior)
+function createAIOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   const stats = ARENA_DIFFICULTY_STATS[difficulty];
   const names = ARENA_OPPONENT_NAMES[difficulty];
   const name = names[Math.floor(Math.random() * names.length)];
@@ -130,18 +139,19 @@ function createOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   const shipId = shipIds[Math.floor(Math.random() * shipIds.length)];
   
   const spawnX = ARENA_CONFIG.arenaWidth / 2;
-  const spawnY = 200; // Top of arena (larger arena needs more space)
+  const spawnY = 200;
   
   return {
     id: 'opponent_1',
     x: spawnX,
     y: spawnY,
-    angle: Math.PI / 2, // Facing down
+    angle: Math.PI / 2,
     health: stats.health,
     maxHealth: stats.health,
     shipId,
     name,
     difficulty,
+    isHumanPlayer: false,
     targetX: spawnX,
     targetY: spawnY,
     fireTimer: 0,
@@ -152,6 +162,76 @@ function createOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     speed: stats.speed,
     accuracy: stats.accuracy,
   };
+}
+
+// Create "human" player opponent (fake multiplayer)
+function createHumanOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
+  // Small chance for famous player
+  const isFamous = Math.random() < 0.05;
+  
+  let profile: PlayerProfile;
+  if (isFamous && FAMOUS_PLAYERS.length > 0) {
+    profile = FAMOUS_PLAYERS[Math.floor(Math.random() * FAMOUS_PLAYERS.length)];
+  } else {
+    profile = generatePlayerProfile(difficulty);
+  }
+  
+  const stats = ARENA_DIFFICULTY_STATS[difficulty];
+  
+  // Pick ship - use preference or random
+  const shipIds = Object.keys(SHIP_MODELS);
+  const shipId = profile.shipPreference.length > 0 
+    ? profile.shipPreference[Math.floor(Math.random() * profile.shipPreference.length)]
+    : shipIds[Math.floor(Math.random() * shipIds.length)];
+  
+  const spawnX = ARENA_CONFIG.arenaWidth / 2;
+  const spawnY = 200;
+  
+  // Get behavior weights for this playstyle
+  const behaviorWeights = profile.playStyle 
+    ? getPlayStyleBehaviorWeights(profile.playStyle as any)
+    : { chase: 0.25, evade: 0.25, strafe: 0.25, cover: 0.25 };
+  
+  // Calculate modified stats based on player profile
+  const modifiedAccuracy = Math.min(1, stats.accuracy * 0.7 + profile.accuracy * 0.4);
+  const modifiedSpeed = stats.speed * (0.8 + profile.aggressiveness * 0.4);
+  const modifiedFireRate = Math.max(10, stats.fireRate * (0.7 + profile.patience * 0.5));
+  
+  return {
+    id: 'opponent_1',
+    x: spawnX,
+    y: spawnY,
+    angle: Math.PI / 2,
+    health: stats.health,
+    maxHealth: stats.health,
+    shipId,
+    name: getDisplayName(profile),
+    difficulty,
+    isHumanPlayer: true,
+    playerTag: profile.tag,
+    playerLevel: profile.level,
+    playerCountry: profile.country,
+    playStyle: profile.playStyle,
+    targetX: spawnX,
+    targetY: spawnY,
+    fireTimer: 0,
+    behaviorTimer: 0,
+    behaviorState: 'chase',
+    behaviorWeights,
+    damage: stats.damage,
+    fireRate: modifiedFireRate,
+    speed: modifiedSpeed,
+    accuracy: modifiedAccuracy,
+    dodgeSkill: profile.dodgeSkill,
+    adaptability: profile.adaptability,
+  };
+}
+
+function createOpponent(difficulty: ArenaDifficulty, mode: ArenaMode = 'ai'): ArenaOpponent {
+  if (mode === 'multiplayer') {
+    return createHumanOpponent(difficulty);
+  }
+  return createAIOpponent(difficulty);
 }
 
 function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
@@ -204,9 +284,9 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
   return rewards;
 }
 
-export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
+export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 'ai'): ArenaState {
   const centerX = ARENA_CONFIG.arenaWidth / 2;
-  const playerY = ARENA_CONFIG.arenaHeight - 250; // More room at bottom for larger arena
+  const playerY = ARENA_CONFIG.arenaHeight - 250;
   
   const upgrades = getComputedStats();
   const playerMaxHealth = Math.floor(ARENA_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
@@ -222,7 +302,7 @@ export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
     // Player starts at bottom center
     playerX: centerX,
     playerY: playerY,
-    playerAngle: -Math.PI / 2, // Facing up
+    playerAngle: -Math.PI / 2,
     targetX: centerX,
     targetY: playerY,
     playerHealth: playerMaxHealth,
@@ -231,7 +311,7 @@ export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
     playerInvulnerable: 0,
     
     // Opponent
-    opponent: createOpponent(difficulty),
+    opponent: createOpponent(difficulty, mode),
     opponentStunTimer: 0,
     
     // Environment
@@ -242,7 +322,7 @@ export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
     
     // Active effects
     overdriveTimer: 0,
-    powerUpSpawnTimer: 300, // First power-up spawns after 5 seconds
+    powerUpSpawnTimer: 300,
     lastPowerUpCollected: null,
     powerUpNotificationTimer: 0,
     

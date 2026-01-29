@@ -31,6 +31,8 @@ export interface ArenaObstacle {
   isVisible?: boolean; // Current visibility state
 }
 
+export type ArenaMode = 'ai' | 'multiplayer';
+
 export interface ArenaOpponent {
   id: string;
   x: number;
@@ -42,18 +44,28 @@ export interface ArenaOpponent {
   name: string;
   difficulty: ArenaDifficulty;
   
+  // Player profile (for multiplayer illusion)
+  isHumanPlayer?: boolean;
+  playerTag?: string;
+  playerLevel?: number;
+  playerCountry?: string;
+  playStyle?: string;
+  
   // AI behavior
   targetX: number;
   targetY: number;
   fireTimer: number;
   behaviorTimer: number;
   behaviorState: 'chase' | 'evade' | 'strafe' | 'cover';
+  behaviorWeights?: Record<string, number>; // Weighted behavior selection
   
   // Stats (scaled by difficulty)
   damage: number;
   fireRate: number;
   speed: number;
   accuracy: number; // 0-1, affects aim prediction
+  dodgeSkill?: number; // How well they evade
+  adaptability?: number; // How quickly they change tactics
 }
 
 export interface ArenaProjectile {
