@@ -435,10 +435,11 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
       break;
       
     case 'fighting':
-      // Update player
+      // Update player - ship is positioned 180px above finger (scaled for arena size)
+      const shipOffsetY = 180; // Ship flies above finger for visibility
       if (input.isTouching) {
         newState.targetX = input.touchX;
-        newState.targetY = input.touchY;
+        newState.targetY = input.touchY - shipOffsetY; // Ship above finger
       }
       
       // Move player
