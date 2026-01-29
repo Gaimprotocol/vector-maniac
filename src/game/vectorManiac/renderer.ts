@@ -8,6 +8,20 @@ import { getStoredSkinColors } from '@/hooks/useEquipment';
 import { getStoredUpgrades } from '@/hooks/useShipUpgrades';
 import { getShipProjectileStyle, ProjectileShape } from './shipProjectiles';
 import { decodeDNA, getAnomalyColor, getAnomalyGlowColor, getAnomalyName, AnomalyShape } from './anomalyGenerator';
+import { 
+  generateBackgroundAnomalyDNA, 
+  generateHyperspaceAnomalyDNA,
+  getBackgroundColors,
+  getHyperspaceColors,
+  BackgroundAnomalyDNA,
+  HyperspaceAnomalyDNA
+} from './visualAnomalyGenerator';
+import { recordBackgroundAnomalyVisit, recordHyperspaceAnomalyVisit } from '@/hooks/useVisualBestiary';
+
+// Track which anomalies we've already recorded this session to avoid duplicates
+let lastRecordedBgSeed: number | null = null;
+let lastRecordedHsSeed: number | null = null;
+
 export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   
@@ -264,43 +278,402 @@ function renderBackground(ctx: CanvasRenderingContext2D, state: VectorState): vo
                        state.phase === 'hyperspaceExit';
   
   if (isHyperspace) {
-    // Get hyperspace variant for color variation
-    const variantIndex = (state.currentMap - 1) % VM_CONFIG.hyperspaceVariants.length;
-    const variant = VM_CONFIG.hyperspaceVariants[variantIndex];
-    
-    // Parse variant color to get hue for background
-    // Hyperspace background - deep variant-tinted colors
-    const gradient = ctx.createLinearGradient(0, 0, 0, arenaHeight);
-    
-    // Use different background tints based on variant
-    const bgColors: Record<string, [string, string, string]> = {
-      '#00ffff': ['#000022', '#001144', '#002255'], // Cyan - default
-      '#ff00ff': ['#110022', '#220044', '#330066'], // Magenta - nebula
-      '#ffaa00': ['#221100', '#332200', '#443300'], // Orange - asteroid
-      '#8800ff': ['#0a0022', '#150044', '#200066'], // Purple - void
-      '#ffff00': ['#222200', '#333300', '#444400'], // Yellow - star
-    };
-    const colors = bgColors[variant.color] || bgColors['#00ffff'];
-    
-    gradient.addColorStop(0, colors[0]);
-    gradient.addColorStop(0.5, colors[1]);
-    gradient.addColorStop(1, colors[2]);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, arenaWidth, arenaHeight);
-    
-    // Render speed lines (star streaks)
-    renderHyperspaceSpeedLines(ctx, state);
+    // Check for hyperspace visual anomaly
+    if (state.hyperspaceAnomalySeed !== null) {
+      const hsDNA = generateHyperspaceAnomalyDNA(state.currentMap, state.hyperspaceAnomalySeed);
+      const hsColors = getHyperspaceColors(hsDNA);
+      
+      // Record visit to visual bestiary (once per seed)
+      if (lastRecordedHsSeed !== state.hyperspaceAnomalySeed) {
+        recordHyperspaceAnomalyVisit(hsDNA);
+        lastRecordedHsSeed = state.hyperspaceAnomalySeed;
+      }
+      
+      // Anomaly hyperspace background
+      const gradient = ctx.createLinearGradient(0, 0, 0, arenaHeight);
+      gradient.addColorStop(0, hsColors.bg1);
+      gradient.addColorStop(0.5, hsColors.bg2);
+      gradient.addColorStop(1, hsColors.bg3);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+      
+      // Render anomaly hyperspace speed lines with custom colors
+      renderAnomalyHyperspaceSpeedLines(ctx, state, hsDNA);
+    } else {
+      // Standard hyperspace variant
+      const variantIndex = (state.currentMap - 1) % VM_CONFIG.hyperspaceVariants.length;
+      const variant = VM_CONFIG.hyperspaceVariants[variantIndex];
+      
+      const gradient = ctx.createLinearGradient(0, 0, 0, arenaHeight);
+      
+      const bgColors: Record<string, [string, string, string]> = {
+        '#00ffff': ['#000022', '#001144', '#002255'],
+        '#ff00ff': ['#110022', '#220044', '#330066'],
+        '#ffaa00': ['#221100', '#332200', '#443300'],
+        '#8800ff': ['#0a0022', '#150044', '#200066'],
+        '#ffff00': ['#222200', '#333300', '#444400'],
+      };
+      const colors = bgColors[variant.color] || bgColors['#00ffff'];
+      
+      gradient.addColorStop(0, colors[0]);
+      gradient.addColorStop(0.5, colors[1]);
+      gradient.addColorStop(1, colors[2]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+      
+      renderHyperspaceSpeedLines(ctx, state);
+    }
   } else {
-    const gradient = ctx.createRadialGradient(
-      arenaWidth / 2, arenaHeight / 2, 0,
-      arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
+    // Check for background visual anomaly
+    if (state.backgroundAnomalySeed !== null) {
+      const bgDNA = generateBackgroundAnomalyDNA(state.currentMap, state.backgroundAnomalySeed);
+      const bgColors = getBackgroundColors(bgDNA);
+      
+      // Record visit to visual bestiary (once per seed)
+      if (lastRecordedBgSeed !== state.backgroundAnomalySeed) {
+        recordBackgroundAnomalyVisit(bgDNA);
+        lastRecordedBgSeed = state.backgroundAnomalySeed;
+      }
+      
+      // Anomaly background gradient
+      const gradient = ctx.createRadialGradient(
+        arenaWidth / 2, arenaHeight / 2, 0,
+        arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
+      );
+      gradient.addColorStop(0, bgColors.bg2);
+      gradient.addColorStop(1, bgColors.bg1);
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+      
+      // Render special anomaly effects
+      renderAnomalyBackgroundEffects(ctx, state, bgDNA);
+    } else {
+      // Standard map theme
+      const gradient = ctx.createRadialGradient(
+        arenaWidth / 2, arenaHeight / 2, 0,
+        arenaWidth / 2, arenaHeight / 2, arenaWidth / 2
+      );
+      gradient.addColorStop(0, theme.bg2);
+      gradient.addColorStop(1, theme.bg1);
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+    }
+  }
+}
+
+// Render anomaly-specific background effects
+function renderAnomalyBackgroundEffects(ctx: CanvasRenderingContext2D, state: VectorState, dna: BackgroundAnomalyDNA): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const bgColors = getBackgroundColors(dna);
+  const time = state.gameTime * dna.patternSpeed * 0.01;
+  
+  ctx.save();
+  
+  // Pattern-specific rendering
+  switch (dna.pattern) {
+    case 'vortex':
+      // Spiraling lines toward center
+      const spiralCount = Math.floor(12 * dna.patternDensity);
+      for (let i = 0; i < spiralCount; i++) {
+        const angle = (i / spiralCount) * Math.PI * 2 + time;
+        ctx.beginPath();
+        for (let r = 50; r < arenaHeight * 0.8; r += 20) {
+          const spiralAngle = angle + r * 0.008;
+          const x = arenaWidth / 2 + Math.cos(spiralAngle) * r;
+          const y = arenaHeight / 2 + Math.sin(spiralAngle) * r;
+          if (r === 50) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `hsla(${dna.accentHue}, ${dna.saturation}%, 50%, 0.08)`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      break;
+      
+    case 'neural':
+      // Neural network nodes and connections
+      const nodeCount = Math.floor(20 * dna.patternDensity);
+      const nodes: Array<{x: number; y: number}> = [];
+      for (let i = 0; i < nodeCount; i++) {
+        const seed = i * 137.5 + dna.seed;
+        const x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+        const y = ((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
+        nodes.push({ x, y });
+        
+        // Draw node
+        ctx.beginPath();
+        ctx.arc(x, y, 3 + Math.sin(time + i) * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${dna.accentHue}, ${dna.saturation}%, 60%, 0.15)`;
+        ctx.fill();
+      }
+      // Draw connections
+      ctx.strokeStyle = `hsla(${dna.accentHue}, ${dna.saturation}%, 50%, 0.05)`;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dist = Math.hypot(nodes[j].x - nodes[i].x, nodes[j].y - nodes[i].y);
+          if (dist < 200) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      break;
+      
+    case 'quantum':
+      // Floating particles with quantum-like behavior
+      const particleCount = Math.floor(60 * dna.patternDensity);
+      for (let i = 0; i < particleCount; i++) {
+        const seed = i * 73.7 + dna.seed;
+        const baseX = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+        const baseY = ((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
+        const wobble = Math.sin(time * 2 + seed) * 20;
+        const x = baseX + wobble;
+        const y = baseY + Math.cos(time * 1.5 + seed) * 15;
+        const size = 2 + Math.sin(time + i) * 1.5;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${dna.primaryHue + i * 3}, ${dna.saturation}%, 60%, 0.12)`;
+        ctx.fill();
+      }
+      break;
+      
+    case 'glitch':
+      // Digital glitch lines
+      const glitchCount = Math.floor(15 * dna.patternDensity);
+      for (let i = 0; i < glitchCount; i++) {
+        const seed = i * 97.3 + dna.seed + Math.floor(time * 0.1);
+        const y = ((Math.sin(seed) * 10000) % 1) * arenaHeight;
+        const x1 = ((Math.sin(seed + 1) * 10000) % 1) * arenaWidth;
+        const width = 50 + ((Math.sin(seed + 2) * 10000) % 1) * 200;
+        const height = 2 + ((Math.sin(seed + 3) * 10000) % 1) * 8;
+        
+        ctx.fillStyle = `hsla(${dna.accentHue}, ${dna.saturation}%, 60%, 0.08)`;
+        ctx.fillRect(x1, y, width, height);
+      }
+      break;
+      
+    case 'circuit':
+      // Circuit board traces
+      ctx.strokeStyle = `hsla(${dna.accentHue}, ${dna.saturation}%, 50%, 0.06)`;
+      ctx.lineWidth = 2;
+      const traceCount = Math.floor(8 * dna.patternDensity);
+      for (let i = 0; i < traceCount; i++) {
+        const seed = i * 157.3 + dna.seed;
+        let x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+        let y = ((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        for (let j = 0; j < 8; j++) {
+          const dir = Math.floor(((Math.sin(seed + j * 10) * 10000) % 1) * 4);
+          const len = 40 + ((Math.sin(seed + j * 20) * 10000) % 1) * 80;
+          if (dir === 0) x += len;
+          else if (dir === 1) x -= len;
+          else if (dir === 2) y += len;
+          else y -= len;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      break;
+      
+    case 'nebula':
+      // Soft cosmic clouds
+      for (let i = 0; i < 5; i++) {
+        const seed = i * 237.5 + dna.seed;
+        const x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+        const y = ((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
+        const r = 100 + ((Math.sin(seed + 2) * 10000) % 1) * 200;
+        
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+        const hue = dna.primaryHue + i * 30;
+        gradient.addColorStop(0, `hsla(${hue}, ${dna.saturation}%, 40%, 0.08)`);
+        gradient.addColorStop(0.5, `hsla(${hue}, ${dna.saturation}%, 30%, 0.04)`);
+        gradient.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+      }
+      break;
+      
+    default:
+      // Default: subtle floating particles
+      for (let i = 0; i < 30; i++) {
+        const seed = i * 97.7 + dna.seed;
+        const x = ((Math.sin(seed + time * 0.1) * 10000) % 1) * arenaWidth;
+        const y = ((Math.sin(seed + 1 + time * 0.05) * 10000) % 1) * arenaHeight;
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${dna.accentHue}, ${dna.saturation}%, 60%, 0.1)`;
+        ctx.fill();
+      }
+  }
+  
+  // Starfield overlay (if enabled)
+  if (dna.hasStarfield) {
+    for (let i = 0; i < 50; i++) {
+      const seed = i * 47.3 + dna.seed;
+      const x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+      const y = ((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
+      const size = 1 + ((Math.sin(seed + 2) * 10000) % 1) * 2;
+      const twinkle = 0.3 + Math.sin(time * 3 + seed) * 0.3;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${twinkle * 0.3})`;
+      ctx.fill();
+    }
+  }
+  
+  // Vignette (if has vignette)
+  if (dna.vignetteStrength > 0.1) {
+    const vignetteGradient = ctx.createRadialGradient(
+      arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.3,
+      arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.9
     );
-    gradient.addColorStop(0, theme.bg2);
-    gradient.addColorStop(1, theme.bg1);
-    
-    ctx.fillStyle = gradient;
+    vignetteGradient.addColorStop(0, 'transparent');
+    vignetteGradient.addColorStop(1, `hsla(${dna.primaryHue}, ${dna.saturation}%, 10%, ${dna.vignetteStrength})`);
+    ctx.fillStyle = vignetteGradient;
     ctx.fillRect(0, 0, arenaWidth, arenaHeight);
   }
+  
+  ctx.restore();
+}
+
+// Render anomaly hyperspace speed lines with procedural colors
+function renderAnomalyHyperspaceSpeedLines(ctx: CanvasRenderingContext2D, state: VectorState, dna: HyperspaceAnomalyDNA): void {
+  const { arenaWidth, arenaHeight } = VM_CONFIG;
+  const scrollOffset = state.hyperspaceScrollOffset * dna.lineSpeed;
+  const transitionProgress = state.hyperspaceTransitionProgress;
+  const hsColors = getHyperspaceColors(dna);
+  
+  ctx.save();
+  
+  // Star streaks
+  const lineCount = dna.lineCount;
+  for (let i = 0; i < lineCount; i++) {
+    const seed = i * 137.5;
+    const x = ((seed * 7.3) % arenaWidth);
+    const baseY = ((seed * 11.7 + scrollOffset * (1 + (i % 3) * 0.5)) % (arenaHeight + 200)) - 100;
+    const lineLength = (20 + (i % 5) * 15 + transitionProgress * 60) * dna.lineLength;
+    
+    // Rainbow effect if enabled
+    let hue = dna.primaryHue;
+    if (dna.hasRainbow) {
+      hue = (dna.primaryHue + i * 5 + state.gameTime * 0.5) % 360;
+    }
+    
+    // Pulse effect if enabled
+    let alpha = 0.3 + transitionProgress * 0.4;
+    if (dna.hasPulse) {
+      alpha *= 0.7 + Math.sin(state.gameTime * 0.1 + i * 0.3) * 0.3;
+    }
+    
+    const lightness = 60 + (i % 30);
+    
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.lineTo(x, baseY + lineLength);
+    ctx.strokeStyle = `hsla(${hue}, ${dna.saturation}%, ${lightness}%, ${alpha})`;
+    ctx.lineWidth = 1 + (i % 3);
+    ctx.stroke();
+  }
+  
+  // Brighter close stars
+  for (let i = 0; i < 25; i++) {
+    const seed = i * 97.3;
+    let x = ((seed * 13.7) % arenaWidth);
+    const baseY = ((seed * 17.3 + scrollOffset * 2 * dna.lineSpeed) % (arenaHeight + 300)) - 150;
+    const lineLength = (80 + (i % 4) * 40 + transitionProgress * 100) * dna.lineLength;
+    
+    // Wave distortion if enabled
+    if (dna.hasWave) {
+      x += Math.sin(baseY * 0.02 + state.gameTime * 0.05) * 20;
+    }
+    
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.lineTo(x, baseY + lineLength);
+    
+    const gradient = ctx.createLinearGradient(x, baseY, x, baseY + lineLength);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(0.3, `${hsColors.primary.slice(0, -1)}, ${0.5 + transitionProgress * 0.3})`);
+    gradient.addColorStop(1, `${hsColors.secondary.slice(0, -1)}, 0)`);
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 2 + (i % 2);
+    ctx.stroke();
+  }
+  
+  // Effect-specific additions
+  switch (dna.effect) {
+    case 'wormhole':
+      // Tunnel rings
+      for (let i = 0; i < 5; i++) {
+        const ringY = ((state.gameTime * 5 + i * 300) % (arenaHeight + 200)) - 100;
+        const ringSize = 200 + Math.sin(state.gameTime * 0.05 + i) * 50;
+        ctx.beginPath();
+        ctx.ellipse(arenaWidth / 2, ringY, ringSize, 30, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(${dna.primaryHue}, ${dna.saturation}%, 60%, ${0.1 * dna.effectIntensity})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      break;
+      
+    case 'dataflow':
+      // Binary-like data streams
+      for (let i = 0; i < 10; i++) {
+        const x = (i / 10) * arenaWidth + 20;
+        for (let j = 0; j < 8; j++) {
+          const y = ((state.gameTime * 3 + j * 80 + i * 50) % arenaHeight);
+          const char = Math.sin(i * 17 + j * 31) > 0 ? '1' : '0';
+          ctx.fillStyle = `hsla(${dna.primaryHue}, ${dna.saturation}%, 60%, ${0.15 * dna.effectIntensity})`;
+          ctx.font = '12px monospace';
+          ctx.fillText(char, x, y);
+        }
+      }
+      break;
+      
+    case 'aurora':
+      // Northern lights waves
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, arenaHeight * 0.3 + i * 100);
+        for (let x = 0; x <= arenaWidth; x += 20) {
+          const y = arenaHeight * 0.3 + i * 100 + 
+                    Math.sin(x * 0.01 + state.gameTime * 0.02 + i) * 80 +
+                    Math.sin(x * 0.005 + state.gameTime * 0.01) * 40;
+          ctx.lineTo(x, y);
+        }
+        const gradient = ctx.createLinearGradient(0, 0, arenaWidth, 0);
+        const h1 = (dna.primaryHue + i * 40) % 360;
+        const h2 = (dna.secondaryHue + i * 40) % 360;
+        gradient.addColorStop(0, `hsla(${h1}, ${dna.saturation}%, 50%, 0)`);
+        gradient.addColorStop(0.5, `hsla(${h1}, ${dna.saturation}%, 60%, ${0.15 * dna.effectIntensity})`);
+        gradient.addColorStop(1, `hsla(${h2}, ${dna.saturation}%, 50%, 0)`);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+      break;
+  }
+  
+  // Vignette
+  const vignetteGradient = ctx.createRadialGradient(
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.3,
+    arenaWidth / 2, arenaHeight / 2, arenaHeight * 0.8
+  );
+  vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  vignetteGradient.addColorStop(1, `hsla(${dna.primaryHue}, ${dna.saturation * 0.5}%, 20%, ${0.3 * transitionProgress})`);
+  ctx.fillStyle = vignetteGradient;
+  ctx.fillRect(0, 0, arenaWidth, arenaHeight);
+  
+  ctx.restore();
 }
 
 // Render hyperspace speed lines effect

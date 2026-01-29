@@ -122,6 +122,10 @@ export function createVectorManiacState(): VectorState {
     nextHyperspaceMap: getNextHyperspaceMapTarget(1), // Random between 2-4
     hyperspaceFormationTimer: 0,
     hyperspacePlayerBaseY: VM_CONFIG.arenaHeight - 300,
+    
+    // Visual anomaly system - chance to generate unique visuals
+    backgroundAnomalySeed: null,
+    hyperspaceAnomalySeed: null,
   };
 }
 
