@@ -17,6 +17,8 @@ export interface Companion {
   behavior: string;
   ability: string;
   purchasedAt: number;
+  evolutionLevel?: number; // 1 = base, 2+ = evolved
+  mergedFrom?: number[]; // Seeds of companions merged to create this
 }
 
 // Bounty values based on ability rarity
@@ -148,12 +150,78 @@ export function useBestiaryRewards() {
   const setActiveCompanion = useCallback((seed: number) => {
     setCompanions(prev => {
       const index = prev.findIndex(c => c.seed === seed);
-      if (index <= 0) return prev; // Already first or not found
+      if (index < 0) return prev; // Not found
+      if (index === 0) return prev; // Already first
       const companion = prev[index];
       const newList = [companion, ...prev.filter((_, i) => i !== index)];
+      saveCompanions(newList); // Save immediately
       return newList;
     });
   }, []);
+
+  // Calculate evolution cost based on the companions being merged
+  const getEvolutionCost = useCallback((seeds: number[]): number => {
+    if (seeds.length !== 2) return 0;
+    const comps = seeds.map(s => companions.find(c => c.seed === s)).filter(Boolean) as Companion[];
+    if (comps.length !== 2) return 0;
+    
+    // Base cost + bonus for evolution levels
+    const baseCost = 150;
+    const levelBonus = comps.reduce((sum, c) => sum + (c.evolutionLevel || 1) * 50, 0);
+    return baseCost + levelBonus;
+  }, [companions]);
+
+  // Evolve two companions into a stronger one
+  const evolveCompanions = useCallback((seed1: number, seed2: number): Companion | null => {
+    const comp1 = companions.find(c => c.seed === seed1);
+    const comp2 = companions.find(c => c.seed === seed2);
+    
+    if (!comp1 || !comp2) return null;
+    
+    // Create evolved companion with combined traits
+    const newLevel = Math.max(comp1.evolutionLevel || 1, comp2.evolutionLevel || 1) + 1;
+    const newSeed = Date.now(); // Unique new seed
+    
+    // Pick stronger ability
+    const abilityRank: Record<string, number> = { none: 0, shooter: 1, splitter: 2, shield: 3, phaser: 4, leech: 5 };
+    const strongerAbility = (abilityRank[comp1.ability] || 0) >= (abilityRank[comp2.ability] || 0) ? comp1.ability : comp2.ability;
+    
+    // Pick more complex behavior
+    const behaviorRank: Record<string, number> = { chase: 0, orbit: 1, zigzag: 2, strafe: 3, spiral: 4, pounce: 5, teleport: 6, mirror: 7 };
+    const strongerBehavior = (behaviorRank[comp1.behavior] || 0) >= (behaviorRank[comp2.behavior] || 0) ? comp1.behavior : comp2.behavior;
+    
+    // Blend colors
+    const newHue = Math.round((comp1.hue + comp2.hue) / 2);
+    const newSat = Math.round((comp1.saturation + comp2.saturation) / 2);
+    
+    // Pick the more complex shape or randomly
+    const shapes = ['triangle', 'square', 'pentagon', 'hexagon', 'star', 'cross', 'crescent', 'spiral'];
+    const shapeRank = (s: string) => shapes.indexOf(s);
+    const strongerShape = shapeRank(comp1.shape) >= shapeRank(comp2.shape) ? comp1.shape : comp2.shape;
+    
+    const evolvedCompanion: Companion = {
+      seed: newSeed,
+      name: `Evolved ${comp1.name.split(' ')[0]}`,
+      shape: strongerShape,
+      hue: newHue,
+      saturation: newSat,
+      behavior: strongerBehavior,
+      ability: strongerAbility,
+      purchasedAt: Date.now(),
+      evolutionLevel: newLevel,
+      mergedFrom: [seed1, seed2],
+    };
+    
+    // Remove old companions and add evolved one
+    setCompanions(prev => {
+      const filtered = prev.filter(c => c.seed !== seed1 && c.seed !== seed2);
+      const newList = [evolvedCompanion, ...filtered];
+      saveCompanions(newList);
+      return newList;
+    });
+    
+    return evolvedCompanion;
+  }, [companions]);
 
   return {
     rewards,
@@ -164,5 +232,7 @@ export function useBestiaryRewards() {
     purchaseCompanion,
     setActiveCompanion,
     activeCompanion: companions[0] || null,
+    evolveCompanions,
+    getEvolutionCost,
   };
 }
