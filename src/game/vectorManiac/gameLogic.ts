@@ -1886,16 +1886,16 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
           newState.bossDefeated = true;
           newState.bossActive = false;
           
-          // Boss reward: spawn 5-10 salvage pieces
-          const bossRewardCount = 5 + Math.floor(Math.random() * 6);
+          // Boss reward: spawn 2-4 salvage pieces (ECONOMY v3: reduced from 5-10)
+          const bossRewardCount = 2 + Math.floor(Math.random() * 3);
           for (let i = 0; i < bossRewardCount; i++) {
             const angle = (i / bossRewardCount) * Math.PI * 2;
             const dist = 30 + Math.random() * 20;
             const salvage = createSalvage(
               enemy.x + Math.cos(angle) * dist,
               enemy.y + Math.sin(angle) * dist,
-              VM_CONFIG.salvageValue.elite,
-              Math.random() < 0.3
+              VM_CONFIG.salvageValue.boss,
+              Math.random() < 0.15 // Reduced rare chance from 0.3
             );
             newState.salvage = [...newState.salvage, salvage];
           }
