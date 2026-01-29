@@ -12,7 +12,6 @@ import {
   ARENA_DIFFICULTY_STATS,
 } from './types';
 import { ARENA_CONFIG } from './constants';
-import { getComputedStats } from '@/hooks/useShipUpgrades';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { SHIP_MODELS } from '../shipModels';
 import { getRandomArena, loadArenaImage } from './arenas';
@@ -94,33 +93,6 @@ function generateObstacles(): ArenaObstacle[] {
     }
   }
   
-  // Rotating laser grid
-  const laserCount = 1;
-  for (let i = 0; i < laserCount; i++) {
-    let x: number, y: number;
-    let attempts = 0;
-    
-    do {
-      x = padding + 50 + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2 - 100);
-      y = padding + 75 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 150);
-      attempts++;
-    } while (attempts < 50 && !isValidPosition(x, y, 90));
-    
-    if (attempts < 50) {
-      obstacles.push({
-        id: `laser_${i}`,
-        x,
-        y,
-        width: 10,
-        height: 10,
-        type: 'laserGrid',
-        destructible: false,
-        rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (0.01 + Math.random() * 0.006) * (Math.random() < 0.5 ? 1 : -1),
-        laserLength: 50 + Math.random() * 25,
-      });
-    }
-  }
   
   // Phase platforms (temporary - phase in/out)
   const phaseCount = 2 + Math.floor(Math.random() * 2);
@@ -430,8 +402,8 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
   const centerX = ARENA_CONFIG.arenaWidth / 2;
   const playerY = ARENA_CONFIG.arenaHeight - 125; // Scaled down
   
-  const upgrades = getComputedStats();
-  const playerMaxHealth = Math.floor(ARENA_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
+  // Use base stats only - no upgrades in arena for fair matches
+  const playerMaxHealth = ARENA_CONFIG.playerMaxHealth;
   
   // Select random arena
   const arena = getRandomArena();
