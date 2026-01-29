@@ -2022,8 +2022,41 @@ function checkCollisions(state: VectorState): VectorState {
   }
   
   // Enemies vs player (collision damage)
+  // Boss collision: continuous damage while touching (bypasses invulnerability)
+  for (const enemy of newState.enemies) {
+    if (enemy.type === 'boss' || enemy.type === 'miniboss') {
+      const dist = distance(enemy.x, enemy.y, newState.playerX, newState.playerY);
+      
+      if (dist < VM_CONFIG.playerSize + enemy.size) {
+        // Continuous damage while touching boss (2 damage per frame = 120/sec)
+        if (newState.shields > 0) {
+          // Shields still block, but drain faster on continuous contact
+          if (newState.gameTime % 30 === 0) { // Every 0.5 sec
+            newState.shields--;
+            newState.soundQueue = [...newState.soundQueue, 'shield'];
+            const particles = createParticle(newState.playerX, newState.playerY, '#00aaff', 10);
+            newState.particles = [...newState.particles, ...particles];
+          }
+        } else {
+          newState.health -= 2; // Continuous damage
+          // Play damage sound occasionally (not every frame)
+          if (newState.gameTime % 15 === 0) {
+            newState.soundQueue = [...newState.soundQueue, 'damage'];
+            const particles = createParticle(newState.playerX, newState.playerY, '#ff0000', 3);
+            newState.particles = [...newState.particles, ...particles];
+          }
+        }
+        break; // Only one boss can damage at a time
+      }
+    }
+  }
+  
+  // Regular enemy collision damage (respects invulnerability)
   if (newState.invulnerableTimer <= 0) {
     for (const enemy of newState.enemies) {
+      // Skip bosses - handled above with continuous damage
+      if (enemy.type === 'boss' || enemy.type === 'miniboss') continue;
+      
       const dist = distance(enemy.x, enemy.y, newState.playerX, newState.playerY);
       
       if (dist < VM_CONFIG.playerSize + enemy.size) {
