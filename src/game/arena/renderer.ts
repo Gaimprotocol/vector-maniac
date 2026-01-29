@@ -1,6 +1,6 @@
 // Arena Battle Mode Renderer - Clean with image backgrounds
 
-import { ArenaState, ARENA_POWERUP_INFO } from './types';
+import { ArenaState, ArenaObstacle, ArenaPowerUp, ARENA_POWERUP_INFO } from './types';
 import { drawMegaShip } from '../megaShipRenderer';
 import { getShipProjectileStyle } from '../vectorManiac/shipProjectiles';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
@@ -10,6 +10,8 @@ const COLORS = {
   player: '#00ffaa',
   opponent: '#ff5577',
   white: '#ffffff',
+  barrier: '#00ffcc',
+  obstacle: '#00ddaa',
 };
 
 let animTime = 0;
@@ -29,6 +31,8 @@ export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): v
   
   // Render layers
   renderBackground(ctx, state);
+  renderObstacles(ctx, state);
+  renderPowerUps(ctx, state);
   renderProjectiles(ctx, state);
   renderParticles(ctx, state);
   
@@ -172,6 +176,317 @@ function renderScanlines(ctx: CanvasRenderingContext2D, state: ArenaState): void
       const nw = 2 + Math.random() * 10;
       ctx.fillRect(nx, ny, nw, 1);
     }
+  }
+}
+
+// Render obstacles that blend with the tech background
+function renderObstacles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  for (const obs of state.obstacles) {
+    // Phase platforms - only render when visible or fading
+    if (obs.type === 'phasePlatform') {
+      if (!obs.isVisible) {
+        // Ghost effect when about to appear
+        if (obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
+          const timeLeft = obs.phaseDuration - obs.phaseTimer;
+          if (timeLeft < 40) {
+            renderGhostPlatform(ctx, obs, timeLeft / 40);
+          }
+        }
+        continue;
+      }
+      renderPhasePlatform(ctx, obs);
+    } else if (obs.type === 'laserGrid') {
+      renderLaserGrid(ctx, obs);
+    } else if (obs.type === 'barrier') {
+      renderEnergyBarrier(ctx, obs);
+    } else if (obs.type === 'pillar') {
+      renderTechPillar(ctx, obs);
+    } else if (obs.type === 'wall') {
+      renderTechWall(ctx, obs);
+    }
+  }
+}
+
+function renderEnergyBarrier(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const hw = obs.width / 2;
+  const hh = obs.height / 2;
+  const pulse = Math.sin(animTime * 0.08 + obs.x * 0.01) * 0.3 + 0.7;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  
+  // Outer glow
+  ctx.strokeStyle = COLORS.barrier;
+  ctx.lineWidth = 4;
+  ctx.globalAlpha = 0.2 * pulse;
+  ctx.beginPath();
+  ctx.moveTo(-hw, 0);
+  ctx.lineTo(hw, 0);
+  ctx.stroke();
+  
+  // Main barrier line
+  ctx.strokeStyle = COLORS.barrier;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.8 * pulse;
+  ctx.beginPath();
+  ctx.moveTo(-hw, 0);
+  ctx.lineTo(hw, 0);
+  ctx.stroke();
+  
+  // Core bright line
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6 * pulse;
+  ctx.beginPath();
+  ctx.moveTo(-hw, 0);
+  ctx.lineTo(hw, 0);
+  ctx.stroke();
+  
+  // End caps
+  ctx.fillStyle = COLORS.barrier;
+  ctx.globalAlpha = pulse;
+  ctx.beginPath();
+  ctx.arc(-hw, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(hw, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+function renderTechPillar(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const r = obs.width / 2;
+  const pulse = Math.sin(animTime * 0.05 + obs.x * 0.02) * 0.2 + 0.8;
+  const color = obs.destructible ? '#ffaa00' : COLORS.obstacle;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  
+  // Outer glow
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 0.15 * pulse;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * (r + 3);
+    const y = Math.sin(angle) * (r + 3);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Main hexagon
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = pulse;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Fill
+  ctx.fillStyle = 'rgba(0, 20, 30, 0.8)';
+  ctx.fill();
+  
+  // Center dot
+  ctx.fillStyle = color;
+  ctx.globalAlpha = pulse;
+  ctx.beginPath();
+  ctx.arc(0, 0, 2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+function renderTechWall(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const hw = obs.width / 2;
+  const hh = obs.height / 2;
+  const color = obs.destructible ? '#ffaa00' : COLORS.obstacle;
+  const pulse = Math.sin(animTime * 0.04 + obs.y * 0.02) * 0.15 + 0.85;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  
+  // Fill
+  ctx.fillStyle = 'rgba(0, 20, 30, 0.8)';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = pulse;
+  
+  ctx.beginPath();
+  ctx.rect(-hw, -hh, obs.width, obs.height);
+  ctx.fill();
+  ctx.stroke();
+  
+  // Center line detail
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = 0.5 * pulse;
+  ctx.beginPath();
+  ctx.moveTo(-hw + 3, 0);
+  ctx.lineTo(hw - 3, 0);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function renderLaserGrid(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const rotation = obs.rotation || 0;
+  const len = (obs.laserLength || 50) * 0.5;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  
+  // 4 laser beams
+  for (let i = 0; i < 4; i++) {
+    const angle = rotation + (i * Math.PI / 2);
+    const ex = Math.cos(angle) * len;
+    const ey = Math.sin(angle) * len;
+    
+    // Glow
+    ctx.strokeStyle = 'rgba(255, 50, 80, 0.25)';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    
+    // Core
+    ctx.strokeStyle = '#ff3355';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    
+    // Inner
+    ctx.strokeStyle = '#ffaaaa';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  
+  // Hub
+  ctx.fillStyle = '#ff3355';
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = '#220008';
+  ctx.beginPath();
+  ctx.arc(0, 0, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+function renderPhasePlatform(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const hw = obs.width / 2;
+  const hh = obs.height / 2;
+  
+  let alpha = 1;
+  if (obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
+    const timeLeft = obs.phaseDuration - obs.phaseTimer;
+    if (timeLeft < 30) alpha = timeLeft / 30;
+  }
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  ctx.globalAlpha = alpha;
+  
+  // Fill
+  ctx.fillStyle = 'rgba(0, 180, 120, 0.4)';
+  ctx.strokeStyle = '#00ffaa';
+  ctx.lineWidth = 1.5;
+  
+  ctx.beginPath();
+  ctx.rect(-hw, -hh, obs.width, obs.height);
+  ctx.fill();
+  ctx.stroke();
+  
+  // Grid pattern inside
+  ctx.strokeStyle = 'rgba(0, 255, 170, 0.25)';
+  ctx.lineWidth = 0.5;
+  const gs = 8;
+  for (let x = -hw + gs; x < hw; x += gs) {
+    ctx.beginPath();
+    ctx.moveTo(x, -hh + 2);
+    ctx.lineTo(x, hh - 2);
+    ctx.stroke();
+  }
+  
+  ctx.restore();
+}
+
+function renderGhostPlatform(ctx: CanvasRenderingContext2D, obs: ArenaObstacle, alpha: number): void {
+  const hw = obs.width / 2;
+  const hh = obs.height / 2;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  ctx.globalAlpha = alpha * 0.3;
+  ctx.strokeStyle = '#00ffaa';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.strokeRect(-hw, -hh, obs.width, obs.height);
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// Render power-ups
+function renderPowerUps(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  for (const pu of state.powerUps) {
+    const info = ARENA_POWERUP_INFO[pu.type];
+    const bob = Math.sin(animTime * 0.08 + pu.bobOffset) * 3;
+    const pulse = Math.sin(animTime * 0.1) * 0.2 + 0.8;
+    
+    ctx.save();
+    ctx.translate(pu.x, pu.y + bob);
+    
+    // Outer glow
+    ctx.strokeStyle = info.glowColor;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.3 * pulse;
+    ctx.beginPath();
+    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Outer ring
+    ctx.strokeStyle = info.color;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.6 * pulse;
+    ctx.beginPath();
+    ctx.arc(0, 0, 11, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Inner fill
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = info.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Icon
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 7px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const icons: Record<string, string> = { emp: '⚡', teleport: '◊', shield: '+', overdrive: '»' };
+    ctx.fillText(icons[pu.type] || '?', 0, 0);
+    
+    ctx.restore();
   }
 }
 

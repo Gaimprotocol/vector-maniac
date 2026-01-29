@@ -9,27 +9,32 @@ export const ARENA_CONFIG = {
   arenaHeight: Math.floor(VM_CONFIG.arenaHeight * 0.5), // 844
   arenaPadding: 25,
   
-  // Player stats - MUCH slower for tactical combat
-  playerMaxHealth: 100,
-  playerSpeed: 2.5, // Very slow, tactical movement
+  // Player stats - Higher health for longer matches
+  playerMaxHealth: 200, // Doubled from 100
+  playerSpeed: 2.5,
   playerFireRate: VM_CONFIG.baseFireRate,
-  playerDamage: VM_CONFIG.baseDamage,
-  playerBulletSpeed: 6, // Slower bullets
-  playerSize: 14, // Smaller ships
+  playerDamage: 6, // Reduced from base for longer fights
+  playerBulletSpeed: 6,
+  playerSize: 14,
   
   // Ship offset (scaled down)
   shipOffsetY: 100,
   
-  // Combat
-  invulnerabilityFrames: 60,
+  // Combat - Reduced damage for longer matches
+  invulnerabilityFrames: 45, // Shorter i-frames
   projectileSize: 3,
   
   // Obstacles - scaled for smaller arena
-  minObstacles: 2,
-  maxObstacles: 4,
+  minObstacles: 3,
+  maxObstacles: 6,
   pillarSize: 20,
   wallWidth: 50,
   wallHeight: 10,
+  
+  // Energy barriers (new)
+  barrierCount: 2,
+  barrierWidth: 60,
+  barrierHeight: 8,
   
   // Timing
   countdownDuration: 180,
@@ -40,7 +45,8 @@ export const ARENA_CONFIG = {
   // Colors - Clean minimalist palette
   playerColor: '#00ffaa',
   opponentColor: '#ff5577',
-  obstacleColor: '#3366ff',
+  obstacleColor: '#00ffcc',
+  barrierColor: '#00ffaa',
   arenaBackgroundColor: '#05080c',
   gridColor: '#0d1520',
   accentCyan: '#00ccff',

@@ -28,11 +28,10 @@ function generateObstacles(): ArenaObstacle[] {
   const obstacles: ArenaObstacle[] = [];
   const baseCount = Math.floor(Math.random() * (ARENA_CONFIG.maxObstacles - ARENA_CONFIG.minObstacles + 1)) + ARENA_CONFIG.minObstacles;
   
-  const padding = 50; // Scaled down
+  const padding = 50;
   const centerX = ARENA_CONFIG.arenaWidth / 2;
   const centerY = ARENA_CONFIG.arenaHeight / 2;
   
-  // Define safe zones for spawns - scaled for smaller arena
   const playerSpawnZone = 150;
   const opponentSpawnZone = 150;
   
@@ -43,9 +42,34 @@ function generateObstacles(): ArenaObstacle[] {
     return !obstacles.some(o => Math.abs(o.x - x) < minDist && Math.abs(o.y - y) < minDist);
   };
   
-  // Regular obstacles (pillars and walls) - scaled
+  // Energy barriers (permanent) - blend with tech background
+  const barrierCount = ARENA_CONFIG.barrierCount;
+  for (let i = 0; i < barrierCount; i++) {
+    let x: number, y: number;
+    let attempts = 0;
+    
+    do {
+      x = padding + 30 + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2 - 60);
+      y = 200 + Math.random() * (ARENA_CONFIG.arenaHeight - 400);
+      attempts++;
+    } while (attempts < 50 && !isValidPosition(x, y, 80));
+    
+    if (attempts < 50) {
+      obstacles.push({
+        id: `barrier_${i}`,
+        x,
+        y,
+        width: ARENA_CONFIG.barrierWidth + Math.random() * 30,
+        height: ARENA_CONFIG.barrierHeight,
+        type: 'barrier',
+        destructible: false,
+      });
+    }
+  }
+  
+  // Tech pillars (permanent)
   for (let i = 0; i < baseCount; i++) {
-    const type = Math.random() < 0.6 ? 'pillar' : 'wall';
+    const type = Math.random() < 0.5 ? 'pillar' : 'wall';
     
     let x: number, y: number;
     let attempts = 0;
@@ -64,13 +88,13 @@ function generateObstacles(): ArenaObstacle[] {
         width: type === 'pillar' ? ARENA_CONFIG.pillarSize : ARENA_CONFIG.wallWidth,
         height: type === 'pillar' ? ARENA_CONFIG.pillarSize : ARENA_CONFIG.wallHeight,
         type,
-        destructible: Math.random() < 0.2,
-        health: Math.random() < 0.2 ? 50 : undefined,
+        destructible: Math.random() < 0.3, // 30% destructible
+        health: Math.random() < 0.3 ? 80 : undefined,
       });
     }
   }
   
-  // Add 1 rotating laser grid (scaled)
+  // Rotating laser grid
   const laserCount = 1;
   for (let i = 0; i < laserCount; i++) {
     let x: number, y: number;
@@ -92,14 +116,14 @@ function generateObstacles(): ArenaObstacle[] {
         type: 'laserGrid',
         destructible: false,
         rotation: Math.random() * Math.PI * 2,
-        rotationSpeed: (0.012 + Math.random() * 0.008) * (Math.random() < 0.5 ? 1 : -1),
-        laserLength: 60 + Math.random() * 30,
+        rotationSpeed: (0.01 + Math.random() * 0.006) * (Math.random() < 0.5 ? 1 : -1),
+        laserLength: 50 + Math.random() * 25,
       });
     }
   }
   
-  // Add 1-2 phase platforms (scaled)
-  const phaseCount = 1 + Math.floor(Math.random() * 2);
+  // Phase platforms (temporary - phase in/out)
+  const phaseCount = 2 + Math.floor(Math.random() * 2);
   for (let i = 0; i < phaseCount; i++) {
     let x: number, y: number;
     let attempts = 0;
@@ -115,12 +139,12 @@ function generateObstacles(): ArenaObstacle[] {
         id: `phase_${i}`,
         x,
         y,
-        width: 35 + Math.random() * 20,
-        height: 35 + Math.random() * 20,
+        width: 30 + Math.random() * 25,
+        height: 30 + Math.random() * 25,
         type: 'phasePlatform',
         destructible: false,
         phaseTimer: Math.floor(Math.random() * 180),
-        phaseDuration: 120 + Math.floor(Math.random() * 60),
+        phaseDuration: 90 + Math.floor(Math.random() * 90), // Faster phasing
         isVisible: Math.random() < 0.5,
       });
     }
@@ -239,47 +263,164 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
   const multiplier = ARENA_DIFFICULTY_STATS[difficulty].rewardMultiplier;
   const rewards: ArenaReward[] = [];
   
-  // Always include scraps reward
+  // Always include scraps reward (higher base)
   rewards.push({
     type: 'scraps',
     id: 'scraps_reward',
     name: 'Scrap Bounty',
-    description: `${50 * multiplier} scraps`,
-    value: 50 * multiplier,
+    description: `${80 * multiplier} scraps`,
+    value: 80 * multiplier,
     rarity: 'common',
     icon: '◆',
   });
   
-  // Chance for better rewards based on difficulty
+  // Unique rewards pool
+  const uniqueShips = [
+    { name: 'ARENA STRIKER', desc: 'Battle-forged hull with enhanced speed' },
+    { name: 'VOID HUNTER', desc: 'Stealth systems from the arena void' },
+    { name: 'NEON PHANTOM', desc: 'Ghostly silhouette with evasion boost' },
+    { name: 'CIRCUIT BREAKER', desc: 'EMP-resistant chassis' },
+  ];
+  
+  const uniqueAllies = [
+    { name: 'Combat Sentinel', desc: 'Arena guardian drone' },
+    { name: 'Plasma Orb', desc: 'Orbiting energy sphere' },
+    { name: 'Shadow Clone', desc: 'Holographic decoy system' },
+    { name: 'Shield Bot', desc: 'Personal barrier generator' },
+  ];
+  
+  const uniqueUpgrades = [
+    { name: 'Arena Mastery I', desc: '+8% damage in arena battles' },
+    { name: 'Tactical Reflexes', desc: '+10% movement speed in arena' },
+    { name: 'Combat Focus', desc: '+15% fire rate in arena' },
+    { name: 'Hull Reinforcement', desc: '+20 max health in arena' },
+  ];
+  
+  // Higher chance for unique rewards
   const roll = Math.random();
   
-  if (difficulty === 'diamond' && roll < 0.15) {
-    rewards.push({
-      type: 'unique_ship',
-      id: `arena_ship_${Date.now()}`,
-      name: 'Arena Champion',
-      description: 'Exclusive arena-only ship skin',
-      rarity: 'legendary',
-      icon: '⬢',
-    });
-  } else if (difficulty === 'gold' && roll < 0.2) {
-    rewards.push({
-      type: 'rare_ally',
-      id: `arena_ally_${Date.now()}`,
-      name: 'Battle Drone',
-      description: 'A fierce companion forged in battle',
-      rarity: 'epic',
-      icon: '◈',
-    });
-  } else if (difficulty === 'silver' && roll < 0.25) {
-    rewards.push({
-      type: 'power_upgrade',
-      id: `arena_upgrade_${Date.now()}`,
-      name: 'Arena Boost',
-      description: '+5% permanent damage in arena',
-      rarity: 'rare',
-      icon: '⊕',
-    });
+  if (difficulty === 'diamond') {
+    // Diamond: 35% legendary ship, 30% epic ally, 25% rare upgrade
+    if (roll < 0.35) {
+      const ship = uniqueShips[Math.floor(Math.random() * uniqueShips.length)];
+      rewards.push({
+        type: 'unique_ship',
+        id: `arena_ship_${Date.now()}_${Math.random()}`,
+        name: ship.name,
+        description: ship.desc,
+        rarity: 'legendary',
+        icon: '⬢',
+      });
+    } else if (roll < 0.65) {
+      const ally = uniqueAllies[Math.floor(Math.random() * uniqueAllies.length)];
+      rewards.push({
+        type: 'rare_ally',
+        id: `arena_ally_${Date.now()}_${Math.random()}`,
+        name: ally.name,
+        description: ally.desc,
+        rarity: 'epic',
+        icon: '◈',
+      });
+    } else if (roll < 0.90) {
+      const upgrade = uniqueUpgrades[Math.floor(Math.random() * uniqueUpgrades.length)];
+      rewards.push({
+        type: 'power_upgrade',
+        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
+        name: upgrade.name,
+        description: upgrade.desc,
+        rarity: 'rare',
+        icon: '⊕',
+      });
+    }
+  } else if (difficulty === 'gold') {
+    // Gold: 25% legendary, 35% epic, 20% rare
+    if (roll < 0.25) {
+      const ship = uniqueShips[Math.floor(Math.random() * uniqueShips.length)];
+      rewards.push({
+        type: 'unique_ship',
+        id: `arena_ship_${Date.now()}_${Math.random()}`,
+        name: ship.name,
+        description: ship.desc,
+        rarity: 'legendary',
+        icon: '⬢',
+      });
+    } else if (roll < 0.60) {
+      const ally = uniqueAllies[Math.floor(Math.random() * uniqueAllies.length)];
+      rewards.push({
+        type: 'rare_ally',
+        id: `arena_ally_${Date.now()}_${Math.random()}`,
+        name: ally.name,
+        description: ally.desc,
+        rarity: 'epic',
+        icon: '◈',
+      });
+    } else if (roll < 0.80) {
+      const upgrade = uniqueUpgrades[Math.floor(Math.random() * uniqueUpgrades.length)];
+      rewards.push({
+        type: 'power_upgrade',
+        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
+        name: upgrade.name,
+        description: upgrade.desc,
+        rarity: 'rare',
+        icon: '⊕',
+      });
+    }
+  } else if (difficulty === 'silver') {
+    // Silver: 10% legendary, 25% epic, 35% rare
+    if (roll < 0.10) {
+      const ship = uniqueShips[Math.floor(Math.random() * uniqueShips.length)];
+      rewards.push({
+        type: 'unique_ship',
+        id: `arena_ship_${Date.now()}_${Math.random()}`,
+        name: ship.name,
+        description: ship.desc,
+        rarity: 'legendary',
+        icon: '⬢',
+      });
+    } else if (roll < 0.35) {
+      const ally = uniqueAllies[Math.floor(Math.random() * uniqueAllies.length)];
+      rewards.push({
+        type: 'rare_ally',
+        id: `arena_ally_${Date.now()}_${Math.random()}`,
+        name: ally.name,
+        description: ally.desc,
+        rarity: 'epic',
+        icon: '◈',
+      });
+    } else if (roll < 0.70) {
+      const upgrade = uniqueUpgrades[Math.floor(Math.random() * uniqueUpgrades.length)];
+      rewards.push({
+        type: 'power_upgrade',
+        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
+        name: upgrade.name,
+        description: upgrade.desc,
+        rarity: 'rare',
+        icon: '⊕',
+      });
+    }
+  } else {
+    // Bronze: 5% epic ally, 20% rare upgrade
+    if (roll < 0.05) {
+      const ally = uniqueAllies[Math.floor(Math.random() * uniqueAllies.length)];
+      rewards.push({
+        type: 'rare_ally',
+        id: `arena_ally_${Date.now()}_${Math.random()}`,
+        name: ally.name,
+        description: ally.desc,
+        rarity: 'epic',
+        icon: '◈',
+      });
+    } else if (roll < 0.25) {
+      const upgrade = uniqueUpgrades[Math.floor(Math.random() * uniqueUpgrades.length)];
+      rewards.push({
+        type: 'power_upgrade',
+        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
+        name: upgrade.name,
+        description: upgrade.desc,
+        rarity: 'rare',
+        icon: '⊕',
+      });
+    }
   }
   
   return rewards;
@@ -322,8 +463,8 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
     opponent: createOpponent(difficulty, mode),
     opponentStunTimer: 0,
     
-    // Environment (no obstacles anymore)
-    obstacles: [],
+    // Environment with obstacles
+    obstacles: generateObstacles(),
     projectiles: [],
     particles: [],
     powerUps: [],
