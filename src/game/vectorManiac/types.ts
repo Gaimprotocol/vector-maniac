@@ -184,6 +184,10 @@ export interface CompanionState {
   y: number;
   angle: number;
   fireTimer: number;
+  evolutionLevel: number;      // 1 = base, 2+ = evolved
+  health: number;              // Current health
+  maxHealth: number;           // Max health (scales with evolution)
+  invulnerableTimer: number;   // Brief invulnerability after hit
 }
 
 export interface VectorState {

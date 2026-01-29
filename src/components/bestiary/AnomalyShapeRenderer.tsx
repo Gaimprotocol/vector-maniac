@@ -10,6 +10,7 @@ interface AnomalyShapeRendererProps {
   hasAura?: boolean;
   hasPulse?: boolean;
   className?: string;
+  evolutionLevel?: number; // 1 = base, 2+ = evolved (visual enhancements)
 }
 
 export const AnomalyShapeRenderer: React.FC<AnomalyShapeRendererProps> = ({
@@ -20,14 +21,25 @@ export const AnomalyShapeRenderer: React.FC<AnomalyShapeRendererProps> = ({
   hasAura = true,
   hasPulse = true,
   className = '',
+  evolutionLevel = 1,
 }) => {
-  const color = `hsl(${hue}, ${saturation}%, 60%)`;
-  const glowColor = `hsl(${hue}, ${saturation}%, 70%)`;
-  const fillColor = `hsl(${hue}, ${saturation}%, 20%)`;
+  // Evolution modifies appearance
+  const evolvedSaturation = Math.min(100, saturation + (evolutionLevel - 1) * 10);
+  const evolvedBrightness = 60 + (evolutionLevel - 1) * 5;
+  const evolvedScale = 1 + (evolutionLevel - 1) * 0.15; // 15% bigger per level
   
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size * 0.35;
+  const color = `hsl(${hue}, ${evolvedSaturation}%, ${evolvedBrightness}%)`;
+  const glowColor = `hsl(${hue}, ${evolvedSaturation}%, ${evolvedBrightness + 10}%)`;
+  const fillColor = `hsl(${hue}, ${evolvedSaturation}%, ${15 + (evolutionLevel - 1) * 5}%)`;
+  
+  // Secondary color for evolved units (shifted hue)
+  const secondaryHue = (hue + 30 * (evolutionLevel - 1)) % 360;
+  const secondaryColor = evolutionLevel > 1 ? `hsl(${secondaryHue}, ${evolvedSaturation}%, ${evolvedBrightness}%)` : undefined;
+  
+  const scaledSize = size * evolvedScale;
+  const cx = scaledSize / 2;
+  const cy = scaledSize / 2;
+  const r = scaledSize * 0.35;
 
   const renderShape = () => {
     const commonProps = {
@@ -134,30 +146,95 @@ export const AnomalyShapeRenderer: React.FC<AnomalyShapeRendererProps> = ({
     }
   };
 
-  // Add "eye" or core detail
+  // Add "eye" or core detail - enhanced for evolved units
   const renderCore = () => {
-    const coreSize = r * 0.25;
+    const coreSize = r * (0.25 + (evolutionLevel - 1) * 0.05);
     return (
-      <circle 
-        cx={cx} 
-        cy={cy} 
-        r={coreSize} 
-        fill={glowColor}
-        style={{ filter: `drop-shadow(0 0 4px ${glowColor})` }}
-      />
+      <>
+        <circle 
+          cx={cx} 
+          cy={cy} 
+          r={coreSize} 
+          fill={glowColor}
+          style={{ filter: `drop-shadow(0 0 ${4 + evolutionLevel * 2}px ${glowColor})` }}
+        />
+        {/* Inner core for evolved units */}
+        {evolutionLevel > 1 && (
+          <circle 
+            cx={cx} 
+            cy={cy} 
+            r={coreSize * 0.5} 
+            fill={secondaryColor || glowColor}
+            style={{ filter: `drop-shadow(0 0 4px ${secondaryColor || glowColor})` }}
+          />
+        )}
+      </>
     );
+  };
+
+  // Evolution rings
+  const renderEvolutionRings = () => {
+    if (evolutionLevel <= 1) return null;
+    const rings = [];
+    for (let i = 1; i < evolutionLevel; i++) {
+      rings.push(
+        <circle 
+          key={i}
+          cx={cx} 
+          cy={cy} 
+          r={r + 6 + i * 4} 
+          fill="none" 
+          stroke={secondaryColor || glowColor} 
+          strokeWidth={0.8} 
+          opacity={0.4 - i * 0.1}
+          strokeDasharray={`${4 + i * 2} ${2 + i}`}
+        />
+      );
+    }
+    return rings;
+  };
+
+  // Evolution spikes for level 3+
+  const renderEvolutionSpikes = () => {
+    if (evolutionLevel < 3) return null;
+    const spikes = [];
+    const spikeCount = 4 + evolutionLevel;
+    for (let i = 0; i < spikeCount; i++) {
+      const angle = (i * 2 * Math.PI / spikeCount);
+      const innerR = r + 8;
+      const outerR = r + 12 + evolutionLevel * 2;
+      spikes.push(
+        <line
+          key={i}
+          x1={cx + innerR * Math.cos(angle)}
+          y1={cy + innerR * Math.sin(angle)}
+          x2={cx + outerR * Math.cos(angle)}
+          y2={cy + outerR * Math.sin(angle)}
+          stroke={secondaryColor || glowColor}
+          strokeWidth={1.5}
+          opacity={0.6}
+        />
+      );
+    }
+    return spikes;
   };
 
   return (
     <svg 
-      width={size} 
-      height={size} 
-      viewBox={`0 0 ${size} ${size}`}
+      width={scaledSize} 
+      height={scaledSize} 
+      viewBox={`0 0 ${scaledSize} ${scaledSize}`}
       className={`${className} ${hasPulse ? 'animate-pulse' : ''}`}
       style={{ 
-        filter: hasAura ? `drop-shadow(0 0 6px ${glowColor})` : undefined,
+        filter: hasAura ? `drop-shadow(0 0 ${6 + evolutionLevel * 3}px ${glowColor})` : undefined,
       }}
     >
+      {/* Evolution spikes (level 3+) */}
+      {renderEvolutionSpikes()}
+      
+      {/* Evolution rings */}
+      {renderEvolutionRings()}
+      
       {/* Aura ring */}
       {hasAura && (
         <circle 
@@ -166,12 +243,26 @@ export const AnomalyShapeRenderer: React.FC<AnomalyShapeRendererProps> = ({
           r={r + 4} 
           fill="none" 
           stroke={glowColor} 
-          strokeWidth={1} 
-          opacity={0.3}
+          strokeWidth={1 + (evolutionLevel - 1) * 0.5} 
+          opacity={0.3 + (evolutionLevel - 1) * 0.1}
         />
       )}
       {renderShape()}
       {renderCore()}
+      
+      {/* Evolution level indicator */}
+      {evolutionLevel > 1 && (
+        <text 
+          x={scaledSize - 8} 
+          y={12} 
+          fill="#ffaa00" 
+          fontSize={8} 
+          fontFamily="Orbitron, monospace"
+          fontWeight="bold"
+        >
+          {evolutionLevel}
+        </text>
+      )}
     </svg>
   );
 };

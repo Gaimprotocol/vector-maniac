@@ -105,7 +105,7 @@ const CompanionCard: React.FC<{
       onClick={() => selectionMode && onSelect?.(companion.seed)}
     >
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 flex items-center justify-center">
+        <div className="flex items-center justify-center" style={{ width: 48 + (companion.evolutionLevel || 1) * 8, height: 48 + (companion.evolutionLevel || 1) * 8 }}>
           <AnomalyShapeRenderer
             shape={companion.shape as any}
             hue={companion.hue}
@@ -113,6 +113,7 @@ const CompanionCard: React.FC<{
             size={48}
             hasAura={true}
             hasPulse={false}
+            evolutionLevel={companion.evolutionLevel || 1}
           />
         </div>
         
@@ -123,9 +124,14 @@ const CompanionCard: React.FC<{
           <div className="text-[8px] text-[#00ffaa]/50" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
             {companion.behavior.toUpperCase()} • {companion.ability.toUpperCase()}
           </div>
-          {companion.evolutionLevel && (
-            <div className="text-[7px] text-[#ffaa00]" style={{ fontFamily: 'Orbitron' }}>
-              ★ EVOLVED LV.{companion.evolutionLevel}
+          {(companion.evolutionLevel || 1) > 1 && (
+            <div className="flex gap-2 mt-1">
+              <span className="text-[7px] text-[#ffaa00]" style={{ fontFamily: 'Orbitron' }}>
+                {'★'.repeat(Math.min(companion.evolutionLevel || 1, 5))} LV.{companion.evolutionLevel}
+              </span>
+              <span className="text-[7px] text-[#00aaff]" style={{ fontFamily: 'Rajdhani' }}>
+                {companion.evolutionLevel >= 4 ? 'PLASMA' : companion.evolutionLevel >= 2 ? 'LASER' : 'NORMAL'}
+              </span>
             </div>
           )}
         </div>
