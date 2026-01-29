@@ -19,9 +19,13 @@ function generateObstacles(): ArenaObstacle[] {
   const obstacles: ArenaObstacle[] = [];
   const count = Math.floor(Math.random() * (ARENA_CONFIG.maxObstacles - ARENA_CONFIG.minObstacles + 1)) + ARENA_CONFIG.minObstacles;
   
-  const padding = 80;
+  const padding = 100;
   const centerX = ARENA_CONFIG.arenaWidth / 2;
   const centerY = ARENA_CONFIG.arenaHeight / 2;
+  
+  // Define safe zones for spawns - larger for the bigger arena
+  const playerSpawnZone = 300; // Bottom area
+  const opponentSpawnZone = 300; // Top area
   
   for (let i = 0; i < count; i++) {
     const type = Math.random() < 0.6 ? 'pillar' : 'wall';
@@ -37,14 +41,14 @@ function generateObstacles(): ArenaObstacle[] {
     } while (
       attempts < 50 && (
         // Too close to player spawn (bottom)
-        (y > ARENA_CONFIG.arenaHeight - 150) ||
+        (y > ARENA_CONFIG.arenaHeight - playerSpawnZone) ||
         // Too close to opponent spawn (top)
-        (y < 150) ||
+        (y < opponentSpawnZone) ||
         // Too close to center
-        (Math.abs(x - centerX) < 60 && Math.abs(y - centerY) < 60) ||
+        (Math.abs(x - centerX) < 100 && Math.abs(y - centerY) < 100) ||
         // Too close to other obstacles
         obstacles.some(o => 
-          Math.abs(o.x - x) < 80 && Math.abs(o.y - y) < 80
+          Math.abs(o.x - x) < 100 && Math.abs(o.y - y) < 100
         )
       )
     );
@@ -74,7 +78,7 @@ function createOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   const shipId = shipIds[Math.floor(Math.random() * shipIds.length)];
   
   const spawnX = ARENA_CONFIG.arenaWidth / 2;
-  const spawnY = 100; // Top of arena
+  const spawnY = 200; // Top of arena (larger arena needs more space)
   
   return {
     id: 'opponent_1',
@@ -150,7 +154,7 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
 
 export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
   const centerX = ARENA_CONFIG.arenaWidth / 2;
-  const playerY = ARENA_CONFIG.arenaHeight - 120;
+  const playerY = ARENA_CONFIG.arenaHeight - 250; // More room at bottom for larger arena
   
   const upgrades = getComputedStats();
   const playerMaxHealth = Math.floor(ARENA_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
