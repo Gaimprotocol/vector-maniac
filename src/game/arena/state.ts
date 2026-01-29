@@ -17,7 +17,7 @@ import { SHIP_MODELS } from '../shipModels';
 
 function generateObstacles(): ArenaObstacle[] {
   const obstacles: ArenaObstacle[] = [];
-  const count = Math.floor(Math.random() * (ARENA_CONFIG.maxObstacles - ARENA_CONFIG.minObstacles + 1)) + ARENA_CONFIG.minObstacles;
+  const baseCount = Math.floor(Math.random() * (ARENA_CONFIG.maxObstacles - ARENA_CONFIG.minObstacles + 1)) + ARENA_CONFIG.minObstacles;
   
   const padding = 100;
   const centerX = ARENA_CONFIG.arenaWidth / 2;
@@ -27,42 +27,94 @@ function generateObstacles(): ArenaObstacle[] {
   const playerSpawnZone = 300; // Bottom area
   const opponentSpawnZone = 300; // Top area
   
-  for (let i = 0; i < count; i++) {
+  const isValidPosition = (x: number, y: number, minDist: number = 100): boolean => {
+    if (y > ARENA_CONFIG.arenaHeight - playerSpawnZone) return false;
+    if (y < opponentSpawnZone) return false;
+    if (Math.abs(x - centerX) < 120 && Math.abs(y - centerY) < 120) return false;
+    return !obstacles.some(o => Math.abs(o.x - x) < minDist && Math.abs(o.y - y) < minDist);
+  };
+  
+  // Regular obstacles (pillars and walls)
+  for (let i = 0; i < baseCount; i++) {
     const type = Math.random() < 0.6 ? 'pillar' : 'wall';
     
     let x: number, y: number;
     let attempts = 0;
     
-    // Avoid spawning too close to spawn points or center
     do {
       x = padding + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2);
       y = padding + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2);
       attempts++;
-    } while (
-      attempts < 50 && (
-        // Too close to player spawn (bottom)
-        (y > ARENA_CONFIG.arenaHeight - playerSpawnZone) ||
-        // Too close to opponent spawn (top)
-        (y < opponentSpawnZone) ||
-        // Too close to center
-        (Math.abs(x - centerX) < 100 && Math.abs(y - centerY) < 100) ||
-        // Too close to other obstacles
-        obstacles.some(o => 
-          Math.abs(o.x - x) < 100 && Math.abs(o.y - y) < 100
-        )
-      )
-    );
+    } while (attempts < 50 && !isValidPosition(x, y));
     
-    obstacles.push({
-      id: `obstacle_${i}`,
-      x,
-      y,
-      width: type === 'pillar' ? ARENA_CONFIG.pillarSize : ARENA_CONFIG.wallWidth,
-      height: type === 'pillar' ? ARENA_CONFIG.pillarSize : ARENA_CONFIG.wallHeight,
-      type,
-      destructible: Math.random() < 0.2, // 20% chance to be destructible
-      health: Math.random() < 0.2 ? 50 : undefined,
-    });
+    if (attempts < 50) {
+      obstacles.push({
+        id: `obstacle_${i}`,
+        x,
+        y,
+        width: type === 'pillar' ? ARENA_CONFIG.pillarSize : ARENA_CONFIG.wallWidth,
+        height: type === 'pillar' ? ARENA_CONFIG.pillarSize : ARENA_CONFIG.wallHeight,
+        type,
+        destructible: Math.random() < 0.2,
+        health: Math.random() < 0.2 ? 50 : undefined,
+      });
+    }
+  }
+  
+  // Add 1-2 rotating laser grids
+  const laserCount = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < laserCount; i++) {
+    let x: number, y: number;
+    let attempts = 0;
+    
+    do {
+      x = padding + 100 + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2 - 200);
+      y = padding + 150 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 300);
+      attempts++;
+    } while (attempts < 50 && !isValidPosition(x, y, 180));
+    
+    if (attempts < 50) {
+      obstacles.push({
+        id: `laser_${i}`,
+        x,
+        y,
+        width: 20,
+        height: 20,
+        type: 'laserGrid',
+        destructible: false,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (0.015 + Math.random() * 0.01) * (Math.random() < 0.5 ? 1 : -1),
+        laserLength: 120 + Math.random() * 60,
+      });
+    }
+  }
+  
+  // Add 2-3 phase platforms
+  const phaseCount = 2 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < phaseCount; i++) {
+    let x: number, y: number;
+    let attempts = 0;
+    
+    do {
+      x = padding + Math.random() * (ARENA_CONFIG.arenaWidth - padding * 2);
+      y = padding + 150 + Math.random() * (ARENA_CONFIG.arenaHeight - padding * 2 - 300);
+      attempts++;
+    } while (attempts < 50 && !isValidPosition(x, y, 120));
+    
+    if (attempts < 50) {
+      obstacles.push({
+        id: `phase_${i}`,
+        x,
+        y,
+        width: 70 + Math.random() * 40,
+        height: 70 + Math.random() * 40,
+        type: 'phasePlatform',
+        destructible: false,
+        phaseTimer: Math.floor(Math.random() * 180), // Stagger start times
+        phaseDuration: 120 + Math.floor(Math.random() * 60), // 2-3 seconds
+        isVisible: Math.random() < 0.5,
+      });
+    }
   }
   
   return obstacles;

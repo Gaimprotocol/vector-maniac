@@ -16,9 +16,19 @@ export interface ArenaObstacle {
   y: number;
   width: number;
   height: number;
-  type: 'pillar' | 'wall' | 'barrier';
+  type: 'pillar' | 'wall' | 'barrier' | 'laserGrid' | 'phasePlatform';
   health?: number; // Some obstacles can be destroyed
   destructible: boolean;
+  
+  // Laser grid specific
+  rotation?: number; // Current rotation angle
+  rotationSpeed?: number; // Radians per frame
+  laserLength?: number; // Length of laser beams
+  
+  // Phase platform specific
+  phaseTimer?: number; // Timer for phase cycle
+  phaseDuration?: number; // How long each phase lasts
+  isVisible?: boolean; // Current visibility state
 }
 
 export interface ArenaOpponent {
