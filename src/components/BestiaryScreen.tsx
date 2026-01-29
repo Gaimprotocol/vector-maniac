@@ -9,6 +9,7 @@ import { useBestiaryRewards, Companion } from '@/hooks/useBestiaryRewards';
 import { ArrowBackIcon } from './VectorIcons';
 import { AnomalyCard } from './bestiary/AnomalyCard';
 import { AnomalyShapeRenderer } from './bestiary/AnomalyShapeRenderer';
+import { InsufficientScrapsPopup } from './InsufficientScrapsPopup';
 
 type TabType = 'enemies' | 'companions' | 'backgrounds' | 'hyperspace';
 
@@ -182,6 +183,7 @@ export const BestiaryScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('enemies');
   const [evolutionMode, setEvolutionMode] = useState(false);
   const [selectedForEvolution, setSelectedForEvolution] = useState<number[]>([]);
+  const [insufficientPopup, setInsufficientPopup] = useState<{ itemName: string; cost: number } | null>(null);
   
   const sortedEnemyEntries = [...enemyEntries].sort((a, b) => b.discoveredAt - a.discoveredAt);
   const sortedBackgroundEntries = [...visualEntries].filter(e => e.type === 'background').sort((a, b) => b.discoveredAt - a.discoveredAt);
@@ -201,6 +203,10 @@ export const BestiaryScreen: React.FC = () => {
   };
 
   const handlePurchaseCompanion = (entry: BestiaryEntry, cost: number) => {
+    if (scraps < cost) {
+      setInsufficientPopup({ itemName: `${entry.name} (Ally)`, cost });
+      return;
+    }
     if (spendScraps(cost)) {
       purchaseCompanion({
         seed: entry.seed,
@@ -229,6 +235,10 @@ export const BestiaryScreen: React.FC = () => {
   const handleEvolve = () => {
     if (selectedForEvolution.length !== 2) return;
     const cost = getEvolutionCost(selectedForEvolution);
+    if (scraps < cost) {
+      setInsufficientPopup({ itemName: 'Evolution Merge', cost });
+      return;
+    }
     if (spendScraps(cost)) {
       evolveCompanions(selectedForEvolution[0], selectedForEvolution[1]);
       setSelectedForEvolution([]);
@@ -487,6 +497,15 @@ export const BestiaryScreen: React.FC = () => {
         }
         .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
       `}</style>
+      
+      {/* Insufficient scraps popup */}
+      <InsufficientScrapsPopup
+        isOpen={!!insufficientPopup}
+        onClose={() => setInsufficientPopup(null)}
+        currentScraps={scraps}
+        requiredScraps={insufficientPopup?.cost || 0}
+        itemName={insufficientPopup?.itemName}
+      />
     </div>
   );
 };

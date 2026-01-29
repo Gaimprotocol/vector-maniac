@@ -5,6 +5,7 @@ import { useScrapCurrency } from '@/hooks/useScrapCurrency';
 import { useShipUpgrades, SHIP_UPGRADES } from '@/hooks/useShipUpgrades';
 import { PurchasePopup } from './PurchasePopup';
 import { LegendaryUnlockAnimation } from './LegendaryUnlockAnimation';
+import { InsufficientScrapsPopup } from './InsufficientScrapsPopup';
 import { useMusicContext } from '@/contexts/MusicContext';
 import { ShipPreview } from './ShipPreview';
 import { UpgradeStatPreview } from './UpgradeStatPreview';
@@ -40,6 +41,7 @@ export const ShopScreen: React.FC = () => {
   const [upgradeVersion, setUpgradeVersion] = useState(0);
   const [purchaseFlash, setPurchaseFlash] = useState<string | null>(null);
   const [showLegendaryAnimation, setShowLegendaryAnimation] = useState(false);
+  const [insufficientPopup, setInsufficientPopup] = useState<{ itemName: string; cost: number } | null>(null);
   
   const { purchaseProduct, isOwned, isLoading: purchasesLoading, shouldShowAds } = usePurchases();
   const { scraps, addScraps, spendScraps, canAfford } = useScrapCurrency();
@@ -80,7 +82,7 @@ export const ShopScreen: React.FC = () => {
     }
 
     if (!canAfford(cost)) {
-      setPopup({ type: 'not_enough', productName: upgrade.name });
+      setInsufficientPopup({ itemName: upgrade.name, cost });
       return;
     }
 
@@ -491,6 +493,15 @@ export const ShopScreen: React.FC = () => {
           }} 
         />
       )}
+      
+      {/* Insufficient scraps popup */}
+      <InsufficientScrapsPopup
+        isOpen={!!insufficientPopup}
+        onClose={() => setInsufficientPopup(null)}
+        currentScraps={scraps}
+        requiredScraps={insufficientPopup?.cost || 0}
+        itemName={insufficientPopup?.itemName}
+      />
     </div>
   );
 };
