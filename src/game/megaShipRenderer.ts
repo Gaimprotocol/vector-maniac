@@ -33,91 +33,41 @@ function drawUpgradeVisualsBack(
   const stats = computedStats ?? getComputedStats(upgrades);
   
   // ===== SHIELD AURA (energy_shields) - Visible protective bubble =====
+  // OPTIMIZED: Skip expensive radial gradients and shadowBlur in game mode
   if (stats.bonusShields > 0) {
     ctx.save();
     const pulse = Math.sin(time * 2.5) * 0.3 + 0.7;
     const shieldRadius = 32 + stats.bonusShields * 8;
     
-    if (quality === 'game') {
-      // Full quality: radial gradient + shadow
-      const shieldGrad = ctx.createRadialGradient(centerX, centerY, shieldRadius * 0.6, centerX, centerY, shieldRadius);
-      shieldGrad.addColorStop(0, 'transparent');
-      shieldGrad.addColorStop(0.7, `rgba(0, 200, 255, ${0.15 * pulse})`);
-      shieldGrad.addColorStop(0.9, `rgba(0, 150, 255, ${0.3 * pulse})`);
-      shieldGrad.addColorStop(1, `rgba(100, 200, 255, ${0.1 * pulse})`);
-      ctx.fillStyle = shieldGrad;
-      ctx.beginPath();
-      ctx.ellipse(centerX, centerY, shieldRadius, shieldRadius * 0.7, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowColor = '#00ddff';
-      ctx.shadowBlur = 15 + stats.bonusShields * 5;
-    }
-    
-    // Shield ring (simplified in preview)
+    // In game mode: simple solid ring only (no gradient, no shadow, no hexagons)
+    // In preview mode: simplified ring
     ctx.strokeStyle = `rgba(0, 220, 255, ${0.6 * pulse})`;
     ctx.lineWidth = 2 + stats.bonusShields;
     ctx.beginPath();
     ctx.ellipse(centerX, centerY, shieldRadius - 2, (shieldRadius - 2) * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
     
-    // Hexagon shield pattern (skip in preview for perf)
-    if (quality === 'game') {
-      ctx.globalAlpha = pulse * 0.4;
-      ctx.strokeStyle = '#00aaff';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + time * 0.3;
-        const x1 = centerX + Math.cos(angle) * shieldRadius * 0.5;
-        const y1 = centerY + Math.sin(angle) * shieldRadius * 0.35;
-        const x2 = centerX + Math.cos(angle + Math.PI / 6) * shieldRadius * 0.8;
-        const y2 = centerY + Math.sin(angle + Math.PI / 6) * shieldRadius * 0.56;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-      }
-    }
     ctx.restore();
   }
   
   // ===== MAGNET FIELD (magnet_range) - Green tractor beam rings =====
+  // OPTIMIZED: Single simple ring, no shadow, no particles in game mode
   const magnetLevel = upgrades['magnet_range'] || 0;
   if (magnetLevel > 0) {
     ctx.save();
     const magnetPulse = Math.sin(time * 4) * 0.3 + 0.7;
     
-    // Simplified in preview: just one ring
-    const ringCount = quality === 'game' ? magnetLevel : 1;
-    for (let i = 0; i < ringCount; i++) {
-      const ringRadius = 20 + i * 12 + Math.sin(time * 3 + i) * 3;
-      ctx.strokeStyle = `rgba(0, 255, 150, ${(0.2 + magnetLevel * 0.08) * magnetPulse * (1 - i * 0.15)})`;
-      ctx.lineWidth = 2;
-      if (quality === 'game') {
-        ctx.shadowColor = '#00ff88';
-        ctx.shadowBlur = 8;
-      }
-      ctx.setLineDash([8, 6]);
-      ctx.lineDashOffset = time * 30;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    // Single ring only - no shadow, no particles for performance
+    const ringRadius = 20 + Math.sin(time * 3) * 3;
+    ctx.strokeStyle = `rgba(0, 255, 150, ${(0.2 + magnetLevel * 0.08) * magnetPulse})`;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.lineDashOffset = time * 30;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
     
-    // Magnet particles (skip in preview)
-    if (quality === 'game') {
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#00ff88';
-      for (let i = 0; i < magnetLevel * 2; i++) {
-        const pAngle = time * 2 + (i / (magnetLevel * 2)) * Math.PI * 2;
-        const pDist = 25 + Math.sin(time * 4 + i) * 8;
-        const px = centerX + Math.cos(pAngle) * pDist;
-        const py = centerY + Math.sin(pAngle) * pDist;
-        ctx.globalAlpha = magnetPulse * 0.6;
-        ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
     ctx.restore();
   }
 }
@@ -136,39 +86,25 @@ function drawUpgradeVisualsFront(
   const stats = computedStats ?? getComputedStats(upgrades);
   
   // ===== THRUSTERS (thrusters) - Bigger, more powerful engine flames =====
+  // OPTIMIZED: Simplified flames, no gradient, no shadow in game mode
   const thrusterLevel = upgrades['thrusters'] || 0;
   if (thrusterLevel > 0) {
     ctx.save();
     
-    // Additional side thrusters
-    for (let i = 0; i < Math.min(thrusterLevel, 4); i++) {
+    // Max 2 side thrusters for performance
+    const maxThrusters = quality === 'game' ? Math.min(thrusterLevel, 2) : Math.min(thrusterLevel, 4);
+    for (let i = 0; i < maxThrusters; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      const tier = Math.floor(i / 2);
-      const yOffset = side * (8 + tier * 5);
-      const xOffset = -16 - tier * 3;
+      const yOffset = side * 8;
+      const xOffset = -16;
       
-      // Thruster housing
+      // Thruster housing (simple rect)
       ctx.fillStyle = '#445566';
-      ctx.beginPath();
-      ctx.roundRect(centerX + xOffset - 2, centerY + yOffset - 3, 6, 6, 1);
-      ctx.fill();
-      ctx.strokeStyle = '#00ccff';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      ctx.fillRect(centerX + xOffset - 2, centerY + yOffset - 3, 6, 6);
       
-      // Flame
-      const flameLen = 18 + thrusterLevel * 3 + (quality === 'game' ? Math.random() * 6 : 3);
-      const flameGrad = ctx.createLinearGradient(centerX + xOffset, centerY + yOffset, centerX + xOffset - flameLen, centerY + yOffset);
-      flameGrad.addColorStop(0, '#ffffff');
-      flameGrad.addColorStop(0.15, '#00ffff');
-      flameGrad.addColorStop(0.4, '#0088ff');
-      flameGrad.addColorStop(0.7, '#0044aa');
-      flameGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = flameGrad;
-      if (quality === 'game') {
-        ctx.shadowColor = '#00aaff';
-        ctx.shadowBlur = 10;
-      }
+      // Flame (solid color, no gradient for performance)
+      const flameLen = 18 + thrusterLevel * 3;
+      ctx.fillStyle = '#00ccff';
       ctx.beginPath();
       ctx.moveTo(centerX + xOffset, centerY + yOffset - 2);
       ctx.lineTo(centerX + xOffset - flameLen, centerY + yOffset);
@@ -180,279 +116,149 @@ function drawUpgradeVisualsFront(
   }
   
   // ===== EXTRA CANNONS - Side-mounted weapon pods =====
+  // OPTIMIZED: Simple shapes, no gradients, no shadows in game mode
   if (stats.extraCannons > 0) {
     ctx.save();
     
-    for (let i = 0; i < Math.min(stats.extraCannons * 2, 4); i++) {
+    // Max 2 cannons for performance
+    const maxCannons = quality === 'game' ? 2 : Math.min(stats.extraCannons * 2, 4);
+    for (let i = 0; i < maxCannons; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      const tier = Math.floor(i / 2);
-      const yOffset = side * (12 + tier * 6);
-      const xOffset = 2 - tier * 4;
+      const yOffset = side * 12;
+      const xOffset = 2;
       
-      // Cannon mount/pod
+      // Cannon mount/pod (simple rect)
       ctx.fillStyle = '#3a4555';
-      ctx.beginPath();
-      ctx.roundRect(centerX + xOffset - 6, centerY + yOffset - 4, 12, 8, 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ff6600';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      ctx.fillRect(centerX + xOffset - 6, centerY + yOffset - 4, 12, 8);
       
-      // Cannon barrel (simplified in preview - solid color instead of gradient)
-      if (quality === 'game') {
-        const barrelGrad = ctx.createLinearGradient(centerX + xOffset + 6, centerY + yOffset, centerX + xOffset + 22, centerY + yOffset);
-        barrelGrad.addColorStop(0, '#556677');
-        barrelGrad.addColorStop(0.6, '#778899');
-        barrelGrad.addColorStop(1, '#ff6600');
-        ctx.fillStyle = barrelGrad;
-      } else {
-        ctx.fillStyle = '#778899';
-      }
-      ctx.beginPath();
-      ctx.roundRect(centerX + xOffset + 4, centerY + yOffset - 2.5, 18, 5, 1);
-      ctx.fill();
+      // Cannon barrel (solid color)
+      ctx.fillStyle = '#778899';
+      ctx.fillRect(centerX + xOffset + 4, centerY + yOffset - 2, 18, 4);
       
-      // Muzzle glow (skip shadow in preview)
-      const muzzlePulse = Math.sin(time * 10 + i * 2) * 0.4 + 0.6;
-      ctx.fillStyle = `rgba(255, 120, 0, ${muzzlePulse})`;
-      if (quality === 'game') {
-        ctx.shadowColor = '#ff6600';
-        ctx.shadowBlur = 8;
-      }
+      // Muzzle tip
+      ctx.fillStyle = '#ff6600';
       ctx.beginPath();
-      ctx.arc(centerX + xOffset + 22, centerY + yOffset, 3, 0, Math.PI * 2);
+      ctx.arc(centerX + xOffset + 22, centerY + yOffset, 2, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
   }
   
   // ===== CANNON POWER - Enhanced main weapon with glow =====
+  // OPTIMIZED: Simple barrel extension, no gradients, no shadows
   const cannonPowerLevel = upgrades['cannon_power'] || 0;
   if (cannonPowerLevel > 0) {
     ctx.save();
-    const powerPulse = Math.sin(time * 3) * 0.3 + 0.7;
     
-    // Extended cannon barrel (simplified in preview)
+    // Extended cannon barrel (solid color)
     const barrelLen = 8 + cannonPowerLevel * 2;
-    if (quality === 'game') {
-      const barrelGrad = ctx.createLinearGradient(centerX + 22, centerY, centerX + 22 + barrelLen, centerY);
-      barrelGrad.addColorStop(0, '#667788');
-      barrelGrad.addColorStop(0.5, '#889900');
-      barrelGrad.addColorStop(1, '#ff6600');
-      ctx.fillStyle = barrelGrad;
-    } else {
-      ctx.fillStyle = '#889900';
-    }
+    ctx.fillStyle = '#889900';
+    ctx.fillRect(centerX + 20, centerY - 2, barrelLen, 4);
+    
+    // Power glow at muzzle (simple circle)
+    ctx.fillStyle = '#ff6600';
     ctx.beginPath();
-    ctx.roundRect(centerX + 20, centerY - 2, barrelLen, 4, 1);
+    ctx.arc(centerX + 22 + barrelLen, centerY, 3, 0, Math.PI * 2);
     ctx.fill();
     
-    // Power glow at muzzle (no shadow in preview)
-    if (quality === 'game') {
-      ctx.shadowColor = '#ff4400';
-      ctx.shadowBlur = 12 + cannonPowerLevel * 3;
-    }
-    ctx.fillStyle = `rgba(255, 100, 0, ${powerPulse * 0.8})`;
-    ctx.beginPath();
-    ctx.arc(centerX + 22 + barrelLen, centerY, 3 + cannonPowerLevel * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Energy charging effect (skip in preview)
-    if (quality === 'game') {
-      ctx.strokeStyle = `rgba(255, 150, 0, ${powerPulse * 0.6})`;
-      ctx.lineWidth = 1.5;
-      for (let i = 0; i < cannonPowerLevel; i++) {
-        const ringX = centerX + 22 + i * 3;
-        ctx.beginPath();
-        ctx.arc(ringX, centerY, 2.5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
     ctx.restore();
   }
   
   // ===== RAPID FIRE - Energy coils along weapon =====
+  // OPTIMIZED: Simple indicator dots, no animation, no shadows
   const rapidFireLevel = upgrades['rapid_fire'] || 0;
   if (rapidFireLevel > 0) {
     ctx.save();
-    const coilPulse = Math.sin(time * 8) * 0.4 + 0.6;
     
-    // Yellow energy coils spinning around cannon
-    ctx.strokeStyle = `rgba(255, 220, 0, ${0.6 * coilPulse})`;
-    ctx.lineWidth = 2;
-    if (quality === 'game') {
-      ctx.shadowColor = '#ffcc00';
-      ctx.shadowBlur = 8;
+    // Simple yellow indicator dots (max 3)
+    ctx.fillStyle = '#ffcc00';
+    const maxDots = Math.min(rapidFireLevel, 3);
+    for (let i = 0; i < maxDots; i++) {
+      const dotX = centerX + 10 + i * 5;
+      ctx.beginPath();
+      ctx.arc(dotX, centerY, 2, 0, Math.PI * 2);
+      ctx.fill();
     }
     
-    for (let i = 0; i < rapidFireLevel; i++) {
-      const coilAngle = time * (10 + rapidFireLevel * 2) + i * (Math.PI * 2 / rapidFireLevel);
-      const coilX = centerX + 10 + i * 4;
-      const coilRadius = 4 + rapidFireLevel * 0.5;
-      const coilY = centerY + Math.sin(coilAngle) * coilRadius * 0.6;
-      
-      ctx.beginPath();
-      ctx.arc(coilX, coilY, 2 + rapidFireLevel * 0.3, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    
-    // Energy arc (skip in preview)
-    if (quality === 'game') {
-      ctx.globalAlpha = coilPulse * 0.5;
-      ctx.beginPath();
-      ctx.moveTo(centerX + 8, centerY);
-      ctx.quadraticCurveTo(centerX + 14, centerY - 4 - rapidFireLevel, centerX + 20, centerY);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(centerX + 8, centerY);
-      ctx.quadraticCurveTo(centerX + 14, centerY + 4 + rapidFireLevel, centerX + 20, centerY);
-      ctx.stroke();
-    }
     ctx.restore();
   }
   
   // ===== PIERCING ROUNDS - Purple energy lines =====
+  // OPTIMIZED: Simple line indicator, no shadow, no animation
   const pierceLevel = upgrades['piercing_rounds'] || 0;
   if (pierceLevel > 0) {
     ctx.save();
-    const piercePulse = Math.sin(time * 5) * 0.3 + 0.7;
     
-    ctx.strokeStyle = `rgba(180, 0, 255, ${piercePulse * 0.7})`;
-    ctx.lineWidth = 2 + pierceLevel;
-    if (quality === 'game') {
-      ctx.shadowColor = '#aa00ff';
-      ctx.shadowBlur = 12;
-    }
-    
-    // Energy spear projecting from nose
-    for (let i = 0; i < pierceLevel; i++) {
-      const spread = ((i / Math.max(pierceLevel - 1, 1)) - 0.5) * 8;
-      ctx.beginPath();
-      ctx.moveTo(centerX + 26, centerY);
-      ctx.lineTo(centerX + 36 + pierceLevel * 4, centerY + spread);
-      ctx.stroke();
-    }
-    
-    // Pierce glow orb
-    ctx.fillStyle = `rgba(200, 100, 255, ${piercePulse * 0.6})`;
+    // Simple purple line indicator
+    ctx.strokeStyle = '#aa00ff';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(centerX + 36 + pierceLevel * 4, centerY, 3 + pierceLevel, 0, Math.PI * 2);
+    ctx.moveTo(centerX + 26, centerY);
+    ctx.lineTo(centerX + 36 + pierceLevel * 4, centerY);
+    ctx.stroke();
+    
+    // Pierce tip
+    ctx.fillStyle = '#cc66ff';
+    ctx.beginPath();
+    ctx.arc(centerX + 36 + pierceLevel * 4, centerY, 3, 0, Math.PI * 2);
     ctx.fill();
+    
     ctx.restore();
   }
   
   // ===== HULL ARMOR - Visible armor plates on ship =====
+  // OPTIMIZED: Simple armor indicator, no gradients, no complex shapes
   const hullLevel = upgrades['hull_armor'] || 0;
   if (hullLevel > 0) {
     ctx.save();
-    const armorPulse = Math.sin(time * 1.5) * 0.1 + 0.9;
     
-    // Armor plates on wings
-    const plateGrad = ctx.createLinearGradient(centerX - 10, centerY - 15, centerX + 5, centerY);
-    plateGrad.addColorStop(0, `rgba(100, 150, 200, ${0.5 * armorPulse})`);
-    plateGrad.addColorStop(0.5, `rgba(150, 180, 220, ${0.7 * armorPulse})`);
-    plateGrad.addColorStop(1, `rgba(80, 120, 180, ${0.4 * armorPulse})`);
+    // Simple armor plate indicators (solid color)
+    ctx.fillStyle = 'rgba(120, 180, 240, 0.5)';
+    ctx.strokeStyle = 'rgba(180, 220, 255, 0.6)';
+    ctx.lineWidth = 1;
     
-    // Top wing armor
-    ctx.fillStyle = plateGrad;
+    // Top wing armor (simple triangle)
     ctx.beginPath();
     ctx.moveTo(centerX + 2, centerY - 5);
-    ctx.lineTo(centerX - 3, centerY - 10 - hullLevel);
-    ctx.lineTo(centerX - 8, centerY - 9 - hullLevel);
+    ctx.lineTo(centerX - 5, centerY - 10);
     ctx.lineTo(centerX - 5, centerY - 4);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = `rgba(180, 220, 255, ${0.6 * armorPulse})`;
-    ctx.lineWidth = 1;
     ctx.stroke();
     
-    // Bottom wing armor
+    // Bottom wing armor (simple triangle)
     ctx.beginPath();
     ctx.moveTo(centerX + 2, centerY + 5);
-    ctx.lineTo(centerX - 3, centerY + 10 + hullLevel);
-    ctx.lineTo(centerX - 8, centerY + 9 + hullLevel);
+    ctx.lineTo(centerX - 5, centerY + 10);
     ctx.lineTo(centerX - 5, centerY + 4);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
     
-    // Body reinforcement stripe
-    if (hullLevel >= 3) {
-      ctx.fillStyle = `rgba(120, 180, 240, ${0.4 * armorPulse})`;
-      ctx.beginPath();
-      ctx.roundRect(centerX - 8, centerY - 3, 20, 6, 2);
-      ctx.fill();
-      ctx.strokeStyle = `rgba(180, 220, 255, ${0.5 * armorPulse})`;
-      ctx.stroke();
-    }
-    
-    // Heavy armor shoulder pads at high levels
-    if (hullLevel >= 5) {
-      ctx.fillStyle = plateGrad;
-      ctx.beginPath();
-      ctx.ellipse(centerX + 5, centerY - 6, 6, 3, -0.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.ellipse(centerX + 5, centerY + 6, 6, 3, 0.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-    }
     ctx.restore();
   }
 }
 
 // Draw engine flame (common for all ships) with glow halo
+// OPTIMIZED: Simple triangle flame, no gradients, no shadows in game mode
 function drawEngineFlame(ctx: CanvasRenderingContext2D, engineX: number, centerY: number, flameColors: { inner: string; mid: string; outer: string }, boostMultiplier: number = 1, quality: RenderQuality = 'game') {
-  const exhaustLen = (20 + (quality === 'game' ? Math.random() * 15 : 7.5)) * boostMultiplier;
+  const exhaustLen = 25 * boostMultiplier;
   const flameWidth = 3 * boostMultiplier;
   
-  // Engine glow halo (skip radial gradient in preview - very expensive)
-  if (quality === 'game') {
-    const haloGrad = ctx.createRadialGradient(engineX - 5, centerY, 0, engineX - 5, centerY, exhaustLen * 0.8);
-    haloGrad.addColorStop(0, flameColors.inner + 'aa');
-    haloGrad.addColorStop(0.3, flameColors.mid + '66');
-    haloGrad.addColorStop(0.6, flameColors.outer + '33');
-    haloGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = haloGrad;
-    ctx.beginPath();
-    ctx.ellipse(engineX - exhaustLen * 0.3, centerY, exhaustLen * 0.7, 8 * boostMultiplier, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  
-  // Apply shadow blur for additional glow effect (game only)
-  ctx.save();
-  if (quality === 'game') {
-    ctx.shadowColor = flameColors.mid;
-    ctx.shadowBlur = 12 * boostMultiplier;
-  }
-  
-  // Outer flame (use linear gradient in game, solid color in preview)
-  if (quality === 'game') {
-    const flameGrad = ctx.createLinearGradient(engineX, centerY, engineX - exhaustLen, centerY);
-    flameGrad.addColorStop(0, '#ffffff');
-    flameGrad.addColorStop(0.1, flameColors.inner);
-    flameGrad.addColorStop(0.3, flameColors.mid);
-    flameGrad.addColorStop(0.6, flameColors.outer);
-    flameGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = flameGrad;
-  } else {
-    ctx.fillStyle = flameColors.mid;
-  }
+  // Simple solid flame (no gradient, no shadow for max performance)
+  ctx.fillStyle = flameColors.mid;
   ctx.beginPath();
   ctx.moveTo(engineX, centerY - flameWidth);
-  ctx.quadraticCurveTo(engineX - exhaustLen * 0.6, centerY - flameWidth - 1, engineX - exhaustLen, centerY);
-  ctx.quadraticCurveTo(engineX - exhaustLen * 0.6, centerY + flameWidth + 1, engineX, centerY + flameWidth);
+  ctx.lineTo(engineX - exhaustLen, centerY);
+  ctx.lineTo(engineX, centerY + flameWidth);
   ctx.closePath();
   ctx.fill();
   
-  ctx.restore();
-  
-  // Inner core flame (no shadow for crisp look)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  // Inner core flame (simple white triangle)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
   ctx.beginPath();
   ctx.moveTo(engineX, centerY - 1.5);
-  ctx.lineTo(engineX - exhaustLen * 0.5, centerY);
+  ctx.lineTo(engineX - exhaustLen * 0.4, centerY);
   ctx.lineTo(engineX, centerY + 1.5);
   ctx.closePath();
   ctx.fill();
