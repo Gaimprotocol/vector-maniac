@@ -365,3 +365,27 @@ export const BestiaryIcon: React.FC<VectorIconProps> = ({ size = 24, className =
     </g>
   </svg>
 );
+
+// Arena icon - crossed swords / battle symbol
+export const ArenaIcon: React.FC<VectorIconProps> = ({ size = 24, className = '', glow = true }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+    <defs>
+      {glow && <filter id="glow-arena" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>}
+    </defs>
+    <g filter={glow ? "url(#glow-arena)" : undefined} stroke="#ff4466" strokeWidth="1.5" fill="none">
+      {/* Left sword */}
+      <line x1="5" y1="19" x2="14" y2="10" />
+      <line x1="5" y1="19" x2="7" y2="17" />
+      <polygon points="14 10 16 8 18 10 16 12 14 10" fill="#ff4466" />
+      {/* Right sword */}
+      <line x1="19" y1="19" x2="10" y2="10" />
+      <line x1="19" y1="19" x2="17" y2="17" />
+      <polygon points="10 10 8 8 6 10 8 12 10 10" fill="#ff4466" />
+      {/* Center collision spark */}
+      <circle cx="12" cy="10" r="2" fill="#ff4466" opacity="0.6" />
+    </g>
+  </svg>
+);

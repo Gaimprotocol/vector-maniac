@@ -117,3 +117,17 @@ export function addStoredScraps(amount: number): void {
     console.error('[Scraps] Failed to add:', error);
   }
 }
+
+// Utility function to subtract scraps without hook (for arena entry)
+export function subtractStoredScraps(amount: number): boolean {
+  try {
+    const current = getStoredScraps();
+    if (current < amount) return false;
+    const newValue = Math.max(0, current - amount);
+    localStorage.setItem(STORAGE_KEY, newValue.toString());
+    return true;
+  } catch (error) {
+    console.error('[Scraps] Failed to subtract:', error);
+    return false;
+  }
+}
