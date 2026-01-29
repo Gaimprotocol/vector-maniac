@@ -27,7 +27,7 @@ import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './soun
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getShipProjectileStyle } from './shipProjectiles';
 import { recordAnomalyEncounter, recordAnomalyDefeat } from '@/hooks/useBestiary';
-import { updateCompanion } from './companion';
+import { updateCompanion, damageCompanion, getEvolutionStats } from './companion';
 
 interface VectorInput {
   touchX: number;
@@ -2220,6 +2220,54 @@ function checkCollisions(state: VectorState): VectorState {
       
       if (dist < VM_CONFIG.playerSize + enemy.size) {
         newState = damagePlayer(newState, 20);
+        break;
+      }
+    }
+  }
+  
+  // Enemy projectiles vs companion
+  if (newState.companion && newState.companion.invulnerableTimer <= 0) {
+    const evoStats = getEvolutionStats(newState.companion.evolutionLevel);
+    const companionSize = 18 * evoStats.sizeMultiplier;
+    
+    for (const proj of newState.projectiles) {
+      if (proj.isPlayer) continue;
+      
+      const dist = distance(proj.x, proj.y, newState.companion.x, newState.companion.y);
+      
+      if (dist < companionSize + proj.size) {
+        newState = damageCompanion(newState, proj.damage);
+        
+        // Remove projectile
+        newState.projectiles = newState.projectiles.filter(p => p.id !== proj.id);
+        
+        // Damage particles at companion location
+        if (newState.companion) {
+          const particles = createParticle(newState.companion.x, newState.companion.y, '#ff8800', 3);
+          newState.particles = [...newState.particles, ...particles];
+        }
+        break;
+      }
+    }
+  }
+  
+  // Enemy collision damage to companion
+  if (newState.companion && newState.companion.invulnerableTimer <= 0) {
+    const evoStats = getEvolutionStats(newState.companion.evolutionLevel);
+    const companionSize = 18 * evoStats.sizeMultiplier;
+    
+    for (const enemy of newState.enemies) {
+      const dist = distance(enemy.x, enemy.y, newState.companion.x, newState.companion.y);
+      
+      if (dist < companionSize + enemy.size) {
+        // Bosses do more damage
+        const collisionDamage = (enemy.type === 'boss' || enemy.type === 'miniboss') ? 15 : 10;
+        newState = damageCompanion(newState, collisionDamage);
+        
+        if (newState.companion) {
+          const particles = createParticle(newState.companion.x, newState.companion.y, '#ff4400', 4);
+          newState.particles = [...newState.particles, ...particles];
+        }
         break;
       }
     }

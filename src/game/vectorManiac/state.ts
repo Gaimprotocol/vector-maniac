@@ -5,6 +5,7 @@ import { VM_CONFIG } from './constants';
 import { getComputedStats } from '@/hooks/useShipUpgrades';
 import { resetGameStartVoice } from './sounds';
 import { getActiveCompanion } from '@/hooks/useBestiaryRewards';
+import { getCompanionMaxHealth } from './companion';
 
 export function createDefaultStats(): PlayerStats {
   const upgrades = getComputedStats();
@@ -56,6 +57,10 @@ export function createVectorManiacState(): VectorState {
     y: centerY + 50,
     angle: -Math.PI / 2,
     fireTimer: 0,
+    evolutionLevel: activeCompanion.evolutionLevel || 1,
+    health: getCompanionMaxHealth(activeCompanion.evolutionLevel || 1),
+    maxHealth: getCompanionMaxHealth(activeCompanion.evolutionLevel || 1),
+    invulnerableTimer: 0,
   } : null;
   
   return {
