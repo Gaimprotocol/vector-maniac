@@ -74,7 +74,7 @@ export const VM_CONFIG = {
   // Boss config
   bossHealth: 400,
   bossSize: 60,
-  bossFireRate: 40,
+  bossFireRate: 50, // Base fire rate (reduced 20% = slower shooting)
   
   // Map system - 50 unique maps
   totalMaps: 50,
