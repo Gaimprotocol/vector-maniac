@@ -1,6 +1,6 @@
 // Arena Battle Mode Renderer - High Quality (Matches Main Game)
 
-import { ArenaState } from './types';
+import { ArenaState, ArenaObstacle } from './types';
 import { ARENA_CONFIG } from './constants';
 import { drawMegaShip } from '../megaShipRenderer';
 import { getShipProjectileStyle, ShipProjectileStyle } from '../vectorManiac/shipProjectiles';
@@ -186,6 +186,18 @@ function renderCornerDecorations(ctx: CanvasRenderingContext2D, state: ArenaStat
 
 function renderObstacles(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   for (const obs of state.obstacles) {
+    // Skip invisible phase platforms
+    if (obs.type === 'phasePlatform' && !obs.isVisible) {
+      // Render ghost outline for platforms about to appear
+      if (obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
+        const timeLeft = obs.phaseDuration - obs.phaseTimer;
+        if (timeLeft < 40) {
+          renderPhasePlatformGhost(ctx, obs, timeLeft / 40);
+        }
+      }
+      continue;
+    }
+    
     ctx.save();
     ctx.translate(obs.x, obs.y);
     
@@ -195,12 +207,211 @@ function renderObstacles(ctx: CanvasRenderingContext2D, state: ArenaState): void
     
     if (obs.type === 'pillar') {
       renderHexPillar(ctx, halfW, pulseIntensity, obs.destructible);
-    } else {
+    } else if (obs.type === 'wall') {
       renderTechWall(ctx, halfW, halfH, pulseIntensity, obs.destructible);
+    } else if (obs.type === 'laserGrid') {
+      ctx.restore();
+      renderLaserGrid(ctx, obs);
+      continue;
+    } else if (obs.type === 'phasePlatform') {
+      ctx.restore();
+      renderPhasePlatform(ctx, obs);
+      continue;
     }
     
     ctx.restore();
   }
+}
+
+function renderLaserGrid(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const rotation = obs.rotation || 0;
+  const laserLength = obs.laserLength || 100;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  
+  // Laser beams (4 in cross pattern)
+  for (let i = 0; i < 4; i++) {
+    const angle = rotation + (i * Math.PI / 2);
+    const endX = Math.cos(angle) * laserLength;
+    const endY = Math.sin(angle) * laserLength;
+    
+    // Outer glow
+    ctx.strokeStyle = 'rgba(255, 0, 68, 0.3)';
+    ctx.lineWidth = 12;
+    ctx.shadowColor = '#ff0044';
+    ctx.shadowBlur = 20;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    
+    // Core beam
+    const gradient = ctx.createLinearGradient(0, 0, endX, endY);
+    gradient.addColorStop(0, '#ff4466');
+    gradient.addColorStop(0.5, '#ff0044');
+    gradient.addColorStop(1, '#ff6688');
+    
+    ctx.strokeStyle = gradient;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    
+    // Inner white core
+    ctx.strokeStyle = 'rgba(255, 200, 200, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+  }
+  
+  // Central hub
+  ctx.shadowColor = '#ff0044';
+  ctx.shadowBlur = 25;
+  
+  // Outer ring
+  ctx.strokeStyle = '#ff0044';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Inner fill
+  const hubGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 18);
+  hubGradient.addColorStop(0, '#ff2244');
+  hubGradient.addColorStop(0.5, '#aa0022');
+  hubGradient.addColorStop(1, '#660011');
+  ctx.fillStyle = hubGradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, 16, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Pulsing core
+  const pulse = Math.sin(animationTime * 0.15) * 0.3 + 0.7;
+  ctx.fillStyle = `rgba(255, 100, 120, ${pulse})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function renderPhasePlatform(ctx: CanvasRenderingContext2D, obs: ArenaObstacle): void {
+  const halfW = obs.width / 2;
+  const halfH = obs.height / 2;
+  
+  // Calculate fade based on phase timer (fade out before disappearing)
+  let alpha = 1;
+  if (obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
+    const timeLeft = obs.phaseDuration - obs.phaseTimer;
+    if (timeLeft < 30) {
+      alpha = timeLeft / 30;
+    }
+  }
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  ctx.globalAlpha = alpha;
+  
+  // Glowing platform effect
+  ctx.shadowColor = '#00ffaa';
+  ctx.shadowBlur = 20 * alpha;
+  
+  // Platform body with gradient
+  const gradient = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
+  gradient.addColorStop(0, 'rgba(0, 180, 120, 0.8)');
+  gradient.addColorStop(0.5, 'rgba(0, 255, 170, 0.9)');
+  gradient.addColorStop(1, 'rgba(0, 180, 120, 0.8)');
+  
+  ctx.fillStyle = gradient;
+  ctx.strokeStyle = '#00ffaa';
+  ctx.lineWidth = 2;
+  
+  // Rounded rectangle
+  const radius = 8;
+  ctx.beginPath();
+  ctx.moveTo(-halfW + radius, -halfH);
+  ctx.lineTo(halfW - radius, -halfH);
+  ctx.quadraticCurveTo(halfW, -halfH, halfW, -halfH + radius);
+  ctx.lineTo(halfW, halfH - radius);
+  ctx.quadraticCurveTo(halfW, halfH, halfW - radius, halfH);
+  ctx.lineTo(-halfW + radius, halfH);
+  ctx.quadraticCurveTo(-halfW, halfH, -halfW, halfH - radius);
+  ctx.lineTo(-halfW, -halfH + radius);
+  ctx.quadraticCurveTo(-halfW, -halfH, -halfW + radius, -halfH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Inner pattern (grid lines)
+  ctx.strokeStyle = 'rgba(0, 255, 200, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.shadowBlur = 0;
+  
+  const gridSize = 15;
+  for (let x = -halfW + gridSize; x < halfW; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, -halfH + 5);
+    ctx.lineTo(x, halfH - 5);
+    ctx.stroke();
+  }
+  for (let y = -halfH + gridSize; y < halfH; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(-halfW + 5, y);
+    ctx.lineTo(halfW - 5, y);
+    ctx.stroke();
+  }
+  
+  // Corner indicators
+  ctx.fillStyle = '#00ffaa';
+  const dotSize = 3;
+  ctx.beginPath();
+  ctx.arc(-halfW + 8, -halfH + 8, dotSize, 0, Math.PI * 2);
+  ctx.arc(halfW - 8, -halfH + 8, dotSize, 0, Math.PI * 2);
+  ctx.arc(-halfW + 8, halfH - 8, dotSize, 0, Math.PI * 2);
+  ctx.arc(halfW - 8, halfH - 8, dotSize, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.restore();
+}
+
+function renderPhasePlatformGhost(ctx: CanvasRenderingContext2D, obs: ArenaObstacle, alpha: number): void {
+  const halfW = obs.width / 2;
+  const halfH = obs.height / 2;
+  
+  ctx.save();
+  ctx.translate(obs.x, obs.y);
+  ctx.globalAlpha = alpha * 0.3;
+  
+  // Flickering ghost outline
+  const flicker = Math.random() > 0.3 ? 1 : 0.5;
+  ctx.strokeStyle = `rgba(0, 255, 170, ${flicker})`;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  
+  const radius = 8;
+  ctx.beginPath();
+  ctx.moveTo(-halfW + radius, -halfH);
+  ctx.lineTo(halfW - radius, -halfH);
+  ctx.quadraticCurveTo(halfW, -halfH, halfW, -halfH + radius);
+  ctx.lineTo(halfW, halfH - radius);
+  ctx.quadraticCurveTo(halfW, halfH, halfW - radius, halfH);
+  ctx.lineTo(-halfW + radius, halfH);
+  ctx.quadraticCurveTo(-halfW, halfH, -halfW, halfH - radius);
+  ctx.lineTo(-halfW, -halfH + radius);
+  ctx.quadraticCurveTo(-halfW, -halfH, -halfW + radius, -halfH);
+  ctx.closePath();
+  ctx.stroke();
+  
+  ctx.setLineDash([]);
+  ctx.restore();
 }
 
 function renderHexPillar(ctx: CanvasRenderingContext2D, radius: number, pulse: number, destructible: boolean): void {

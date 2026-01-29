@@ -65,6 +65,25 @@ function circleRectCollision(
   return (dx * dx + dy * dy) < (cr * cr);
 }
 
+// Check if point intersects with a laser beam line segment
+function pointNearLine(
+  px: number, py: number, 
+  x1: number, y1: number, x2: number, y2: number,
+  threshold: number
+): boolean {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return false;
+  
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (len * len)));
+  const nearX = x1 + t * dx;
+  const nearY = y1 + t * dy;
+  
+  const distSq = (px - nearX) ** 2 + (py - nearY) ** 2;
+  return distSq < threshold * threshold;
+}
+
 // Create projectile
 function createProjectile(
   x: number, y: number, angle: number, 
@@ -406,16 +425,109 @@ function checkCombatCollisions(state: ArenaState): ArenaState {
   return newState;
 }
 
+// Update dynamic obstacles (laser grids and phase platforms)
+function updateDynamicObstacles(state: ArenaState): ArenaState {
+  let newState = { ...state };
+  let newObstacles = state.obstacles.map(obs => {
+    if (obs.type === 'laserGrid' && obs.rotation !== undefined && obs.rotationSpeed !== undefined) {
+      return {
+        ...obs,
+        rotation: obs.rotation + obs.rotationSpeed,
+      };
+    }
+    if (obs.type === 'phasePlatform' && obs.phaseTimer !== undefined && obs.phaseDuration !== undefined) {
+      let newTimer = obs.phaseTimer + 1;
+      let newVisible = obs.isVisible;
+      
+      if (newTimer >= obs.phaseDuration) {
+        newTimer = 0;
+        newVisible = !obs.isVisible;
+      }
+      
+      return {
+        ...obs,
+        phaseTimer: newTimer,
+        isVisible: newVisible,
+      };
+    }
+    return obs;
+  });
+  
+  newState.obstacles = newObstacles;
+  return newState;
+}
+
+// Check laser damage
+function checkLaserDamage(state: ArenaState): ArenaState {
+  if (state.phase !== 'fighting' || state.playerInvulnerable > 0) return state;
+  
+  let newState = { ...state };
+  
+  for (const obs of state.obstacles) {
+    if (obs.type === 'laserGrid' && obs.rotation !== undefined && obs.laserLength !== undefined) {
+      // Check 4 laser beams (cross pattern)
+      for (let i = 0; i < 4; i++) {
+        const angle = obs.rotation + (i * Math.PI / 2);
+        const endX = obs.x + Math.cos(angle) * obs.laserLength;
+        const endY = obs.y + Math.sin(angle) * obs.laserLength;
+        
+        if (pointNearLine(state.playerX, state.playerY, obs.x, obs.y, endX, endY, 18)) {
+          newState.playerHealth -= 5;
+          newState.playerInvulnerable = 30; // Shorter invuln for laser
+          newState.screenShakeIntensity = 5;
+          newState.particles = [
+            ...newState.particles,
+            ...createParticles(state.playerX, state.playerY, '#ff0044', 8),
+          ];
+          newState.soundQueue = [...newState.soundQueue, 'playerHit'];
+          
+          if (newState.playerHealth <= 0) {
+            newState.particles = [
+              ...newState.particles,
+              ...createExplosion(state.playerX, state.playerY, ARENA_CONFIG.playerColor),
+            ];
+            newState.phase = 'playerLost';
+            newState.phaseTimer = ARENA_CONFIG.defeatDuration;
+            newState.screenShakeIntensity = 25;
+            newState.soundQueue = [...newState.soundQueue, 'playerDeath'];
+          }
+          break;
+        }
+      }
+    }
+  }
+  
+  return newState;
+}
+
+// Check if obstacle blocks movement (considers phase platforms)
+function isObstacleBlocking(obs: ArenaObstacle, x: number, y: number, radius: number): boolean {
+  // Phase platforms only block when visible
+  if (obs.type === 'phasePlatform' && !obs.isVisible) {
+    return false;
+  }
+  // Laser grids don't block movement (just the center hub)
+  if (obs.type === 'laserGrid') {
+    return distance(x, y, obs.x, obs.y) < 25 + radius;
+  }
+  // Standard collision for other obstacles
+  return circleRectCollision(x, y, radius, obs.x - obs.width/2, obs.y - obs.height/2, obs.width, obs.height);
+}
+
 // Main update function
 export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaState {
   let newState: ArenaState = {
     ...state,
     projectiles: [...state.projectiles],
     particles: [...state.particles],
+    obstacles: [...state.obstacles],
     soundQueue: [],
   };
   
   newState.gameTime++;
+  
+  // Always update dynamic obstacles
+  newState = updateDynamicObstacles(newState);
   
   switch (newState.phase) {
     case 'entering':
@@ -452,10 +564,10 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
         let newX = newState.playerX + dir.x * moveSpeed;
         let newY = newState.playerY + dir.y * moveSpeed;
         
-        // Check obstacle collisions
+        // Check obstacle collisions (using new blocking check)
         let blocked = false;
-        for (const obs of state.obstacles) {
-          if (circleRectCollision(newX, newY, 15, obs.x - obs.width/2, obs.y - obs.height/2, obs.width, obs.height)) {
+        for (const obs of newState.obstacles) {
+          if (isObstacleBlocking(obs, newX, newY, 15)) {
             blocked = true;
             break;
           }
@@ -501,6 +613,9 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
       
       // Update projectiles
       newState = updateProjectiles(newState);
+      
+      // Check laser damage
+      newState = checkLaserDamage(newState);
       
       // Check collisions
       newState = checkCombatCollisions(newState);
