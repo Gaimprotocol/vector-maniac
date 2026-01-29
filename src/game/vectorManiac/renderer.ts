@@ -7,6 +7,7 @@ import { getStoredMegaShipId } from '@/hooks/useMegaShips';
 import { getStoredSkinColors } from '@/hooks/useEquipment';
 import { getStoredUpgrades } from '@/hooks/useShipUpgrades';
 import { getShipProjectileStyle, ProjectileShape } from './shipProjectiles';
+import { decodeDNA, getAnomalyColor, getAnomalyGlowColor, getAnomalyName, AnomalyShape } from './anomalyGenerator';
 export function renderVectorManiac(ctx: CanvasRenderingContext2D, state: VectorState): void {
   const { arenaWidth, arenaHeight } = VM_CONFIG;
   
@@ -1260,12 +1261,172 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         ctx.globalAlpha = 1;
         break;
       }
+      
+      case 'anomaly': {
+        // PROCEDURALLY GENERATED ENEMY - unique appearance based on DNA
+        const dna = decodeDNA(enemy.behaviorTimer, state.currentMap);
+        const anomalyColor = getAnomalyColor(dna);
+        const glowColor = getAnomalyGlowColor(dna);
+        
+        ctx.strokeStyle = anomalyColor;
+        ctx.fillStyle = anomalyColor;
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = dna.hasAura ? 20 : 10;
+        
+        // Rotation
+        const rotation = state.gameTime * dna.spinSpeed * 0.02;
+        ctx.rotate(rotation);
+        
+        // Pulsing effect
+        const pulse = dna.hasPulse ? 1 + Math.sin(state.gameTime * 0.15) * 0.15 : 1;
+        const drawSize = enemy.size * pulse;
+        
+        // Draw shape based on DNA
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        switch (dna.shape) {
+          case 'triangle':
+            for (let i = 0; i < 3; i++) {
+              const angle = (i / 3) * Math.PI * 2 - Math.PI / 2;
+              const x = Math.cos(angle) * drawSize;
+              const y = Math.sin(angle) * drawSize;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            break;
+            
+          case 'square':
+            ctx.rect(-drawSize * 0.7, -drawSize * 0.7, drawSize * 1.4, drawSize * 1.4);
+            break;
+            
+          case 'pentagon':
+            for (let i = 0; i < 5; i++) {
+              const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+              const x = Math.cos(angle) * drawSize;
+              const y = Math.sin(angle) * drawSize;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            break;
+            
+          case 'hexagon':
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
+              const x = Math.cos(angle) * drawSize;
+              const y = Math.sin(angle) * drawSize;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            break;
+            
+          case 'star':
+            for (let i = 0; i < 5; i++) {
+              const outerAngle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+              const innerAngle = outerAngle + Math.PI / 5;
+              ctx.lineTo(Math.cos(outerAngle) * drawSize, Math.sin(outerAngle) * drawSize);
+              ctx.lineTo(Math.cos(innerAngle) * drawSize * 0.4, Math.sin(innerAngle) * drawSize * 0.4);
+            }
+            ctx.closePath();
+            break;
+            
+          case 'cross':
+            const crossWidth = drawSize * 0.3;
+            ctx.moveTo(-crossWidth, -drawSize);
+            ctx.lineTo(crossWidth, -drawSize);
+            ctx.lineTo(crossWidth, -crossWidth);
+            ctx.lineTo(drawSize, -crossWidth);
+            ctx.lineTo(drawSize, crossWidth);
+            ctx.lineTo(crossWidth, crossWidth);
+            ctx.lineTo(crossWidth, drawSize);
+            ctx.lineTo(-crossWidth, drawSize);
+            ctx.lineTo(-crossWidth, crossWidth);
+            ctx.lineTo(-drawSize, crossWidth);
+            ctx.lineTo(-drawSize, -crossWidth);
+            ctx.lineTo(-crossWidth, -crossWidth);
+            ctx.closePath();
+            break;
+            
+          case 'crescent':
+            ctx.arc(0, 0, drawSize, 0, Math.PI * 2);
+            ctx.moveTo(drawSize * 0.6, 0);
+            ctx.arc(drawSize * 0.3, 0, drawSize * 0.6, 0, Math.PI * 2, true);
+            break;
+            
+          case 'spiral':
+            for (let a = 0; a < Math.PI * 4; a += 0.2) {
+              const r = (a / (Math.PI * 4)) * drawSize;
+              const x = Math.cos(a) * r;
+              const y = Math.sin(a) * r;
+              if (a === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            break;
+        }
+        
+        ctx.stroke();
+        
+        // Inner core
+        ctx.beginPath();
+        ctx.arc(0, 0, drawSize * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Trail effect
+        if (dna.hasTrail) {
+          ctx.globalAlpha = 0.4;
+          const trailAngle = Math.atan2(enemy.vy, enemy.vx) + Math.PI;
+          for (let i = 1; i <= 3; i++) {
+            const trailDist = i * 8;
+            const trailSize = drawSize * (1 - i * 0.2);
+            ctx.beginPath();
+            ctx.arc(
+              Math.cos(trailAngle) * trailDist,
+              Math.sin(trailAngle) * trailDist,
+              trailSize * 0.3,
+              0, Math.PI * 2
+            );
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+        
+        // Ability indicator
+        if (dna.ability === 'shield') {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.5 + Math.sin(state.gameTime * 0.1) * 0.3;
+          ctx.beginPath();
+          ctx.arc(0, 0, drawSize * 1.3, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (dna.ability === 'phaser') {
+          // Phasing indicator - flickering
+          if (Math.floor(state.gameTime / 20) % 2 === 0) {
+            ctx.globalAlpha = 0.3;
+          }
+        }
+        
+        // "?" symbol to indicate unknown enemy
+        ctx.rotate(-rotation); // Unrotate for text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(10, drawSize * 0.6)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 0.8;
+        ctx.fillText('?', 0, 0);
+        ctx.globalAlpha = 1;
+        
+        break;
+      }
     }
     
     ctx.restore();
     
-    // Health bar (for elites, bounty, miniboss, boss, splitter, and sniper)
-    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss' || enemy.type === 'miniboss' || enemy.type === 'splitter' || enemy.type === 'sniper') && healthPercent < 1) {
+    // Health bar (for elites, bounty, miniboss, boss, splitter, sniper, and anomaly)
+    if ((enemy.type === 'elite' || enemy.type === 'bounty' || enemy.type === 'boss' || enemy.type === 'miniboss' || enemy.type === 'splitter' || enemy.type === 'sniper' || enemy.type === 'anomaly') && healthPercent < 1) {
       const barWidth = enemy.type === 'boss' ? enemy.size * 3 : 
                        enemy.type === 'miniboss' ? enemy.size * 2.5 : enemy.size * 2;
       const barHeight = enemy.type === 'boss' ? 6 : 
@@ -1273,10 +1434,14 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
       const barX = enemy.x - barWidth / 2;
       const barY = enemy.y - enemy.size - 12;
       
-      // Get proper color for miniboss
-      const barColor = enemy.type === 'miniboss' 
-        ? VM_CONFIG.bossColors[enemy.behaviorTimer % 10]
-        : color;
+      // Get proper color for miniboss and anomaly
+      let barColor = color;
+      if (enemy.type === 'miniboss') {
+        barColor = VM_CONFIG.bossColors[enemy.behaviorTimer % 10];
+      } else if (enemy.type === 'anomaly') {
+        const anomalyDna = decodeDNA(enemy.behaviorTimer, state.currentMap);
+        barColor = getAnomalyColor(anomalyDna);
+      }
       
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(barX, barY, barWidth, barHeight);
@@ -1307,6 +1472,20 @@ function renderEnemies(ctx: CanvasRenderingContext2D, state: VectorState): void 
         ctx.shadowColor = barColor;
         ctx.shadowBlur = 8;
         ctx.fillText('MINI-BOSS', enemy.x, barY - 6);
+        ctx.shadowBlur = 0;
+      }
+      
+      // Anomaly label with generated name
+      if (enemy.type === 'anomaly') {
+        const anomalyDna = decodeDNA(enemy.behaviorTimer, state.currentMap);
+        const anomalyName = getAnomalyName(anomalyDna);
+        
+        ctx.fillStyle = getAnomalyColor(anomalyDna);
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = getAnomalyGlowColor(anomalyDna);
+        ctx.shadowBlur = 8;
+        ctx.fillText(anomalyName.toUpperCase(), enemy.x, barY - 5);
         ctx.shadowBlur = 0;
       }
     }

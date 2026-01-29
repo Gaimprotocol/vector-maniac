@@ -108,6 +108,7 @@ export const VM_CONFIG = {
     splitter: 0.30,             // Medium reward
     orbiter: 0.25,              // Annoying to kill
     sniper: 0.35,               // Dangerous
+    anomaly: 0.60,              // Mystery enemies drop more often
   },
   salvageValue: {
     drone: 8,                   // Reduced from 10
@@ -120,6 +121,7 @@ export const VM_CONFIG = {
     splitter: 18,               // Worth more due to difficulty
     orbiter: 14,                // Moderate reward
     sniper: 16,                 // Dangerous enemy
+    anomaly: 30,                // Good reward for unknown threat
   },
   salvageDriftSpeed: 0.3,
   

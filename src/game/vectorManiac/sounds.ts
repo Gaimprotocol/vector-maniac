@@ -81,7 +81,8 @@ loadGameStartSound();
 export type VectorSoundType = 
   | 'shoot' | 'shoot_shoot' | 'shoot_laser' | 'shoot_plasma' | 'shoot_energy' | 'shoot_pulse' | 'shoot_fire' | 'shoot_ice'
   | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged' | 'screenShakeHaptic'
-  | 'hyperspaceEnter' | 'hyperspaceExit' | 'hyperspaceLoop' | 'warpShield' | 'formationBreaker' | 'timeWarp' | 'magnetPulse';
+  | 'hyperspaceEnter' | 'hyperspaceExit' | 'hyperspaceLoop' | 'warpShield' | 'formationBreaker' | 'timeWarp' | 'magnetPulse'
+  | 'anomalySpawn';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -830,6 +831,60 @@ export function playVectorSound(type: VectorSoundType): void {
           ping.start(pingTime);
           ping.stop(pingTime + 0.05);
         }
+        break;
+      }
+      
+      case 'anomalySpawn': {
+        // Eerie glitchy spawn sound - something unknown has appeared
+        const duration = 0.5;
+        
+        // Glitchy warble - random frequency jumps
+        const glitch = ctx.createOscillator();
+        const glitchGain = ctx.createGain();
+        glitch.connect(glitchGain);
+        glitchGain.connect(ctx.destination);
+        glitch.type = 'square';
+        glitch.frequency.setValueAtTime(600, ctx.currentTime);
+        glitch.frequency.setValueAtTime(1200, ctx.currentTime + 0.05);
+        glitch.frequency.setValueAtTime(300, ctx.currentTime + 0.1);
+        glitch.frequency.setValueAtTime(900, ctx.currentTime + 0.15);
+        glitch.frequency.setValueAtTime(450, ctx.currentTime + 0.2);
+        glitch.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + duration);
+        glitchGain.gain.setValueAtTime(0.12, ctx.currentTime);
+        glitchGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        glitch.start(ctx.currentTime);
+        glitch.stop(ctx.currentTime + duration);
+        
+        // Eerie undertone
+        const eerie = ctx.createOscillator();
+        const eerieGain = ctx.createGain();
+        eerie.connect(eerieGain);
+        eerieGain.connect(ctx.destination);
+        eerie.type = 'sine';
+        eerie.frequency.setValueAtTime(80, ctx.currentTime);
+        eerie.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + duration);
+        eerieGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        eerieGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        eerie.start(ctx.currentTime);
+        eerie.stop(ctx.currentTime + duration);
+        
+        // High frequency shimmer
+        const shimmer = ctx.createOscillator();
+        const shimmerGain = ctx.createGain();
+        shimmer.connect(shimmerGain);
+        shimmerGain.connect(ctx.destination);
+        shimmer.type = 'triangle';
+        shimmer.frequency.setValueAtTime(2500, ctx.currentTime);
+        shimmer.frequency.setValueAtTime(3200, ctx.currentTime + 0.1);
+        shimmer.frequency.setValueAtTime(2800, ctx.currentTime + 0.2);
+        shimmer.frequency.exponentialRampToValueAtTime(1500, ctx.currentTime + duration);
+        shimmerGain.gain.setValueAtTime(0.08, ctx.currentTime);
+        shimmerGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        shimmer.start(ctx.currentTime);
+        shimmer.stop(ctx.currentTime + duration);
+        
+        // Light haptic feedback
+        triggerHapticFeedback('light');
         break;
       }
     }
