@@ -7,7 +7,10 @@ import {
   ArenaObstacle,
   ArenaOpponent,
   ArenaReward,
+  ArenaPowerUp,
+  ArenaPowerUpType,
   ARENA_DIFFICULTY_STATS,
+  ARENA_POWERUP_INFO,
 } from './types';
 import { ARENA_CONFIG } from './constants';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
@@ -180,6 +183,9 @@ function createExplosion(x: number, y: number, color: string): ArenaParticle[] {
 function updateOpponentAI(state: ArenaState): ArenaState {
   if (!state.opponent || state.phase !== 'fighting') return state;
   
+  // Skip AI if stunned (EMP)
+  if (state.opponentStunTimer > 0) return state;
+  
   let newState = { ...state };
   let opponent = { ...state.opponent };
   
@@ -313,6 +319,165 @@ function updateParticles(particles: ArenaParticle[]): ArenaParticle[] {
       life: p.life - 1,
     }))
     .filter(p => p.life > 0);
+}
+
+// Spawn a power-up at a random safe location
+function spawnPowerUp(state: ArenaState): ArenaPowerUp | null {
+  const types: ArenaPowerUpType[] = ['emp', 'teleport', 'shield', 'overdrive'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  
+  const padding = 150;
+  let x: number, y: number;
+  let attempts = 0;
+  
+  // Find a safe spawn location
+  do {
+    x = padding + Math.random() * (state.arenaWidth - padding * 2);
+    y = padding + Math.random() * (state.arenaHeight - padding * 2);
+    attempts++;
+    
+    // Check distance from player and opponent
+    const playerDist = distance(x, y, state.playerX, state.playerY);
+    const opponentDist = state.opponent ? distance(x, y, state.opponent.x, state.opponent.y) : 999;
+    
+    if (playerDist > 150 && opponentDist > 150) {
+      // Check obstacle collision
+      let blocked = false;
+      for (const obs of state.obstacles) {
+        if (distance(x, y, obs.x, obs.y) < 80) {
+          blocked = true;
+          break;
+        }
+      }
+      if (!blocked) break;
+    }
+  } while (attempts < 30);
+  
+  if (attempts >= 30) return null;
+  
+  return {
+    id: `powerup_${Date.now()}_${Math.random()}`,
+    x,
+    y,
+    type,
+    bobOffset: Math.random() * Math.PI * 2,
+    spawnTime: state.gameTime,
+  };
+}
+
+// Check power-up collection
+function checkPowerUpCollection(state: ArenaState): ArenaState {
+  if (state.phase !== 'fighting') return state;
+  
+  let newState = { ...state };
+  const remainingPowerUps: ArenaPowerUp[] = [];
+  let newParticles = [...state.particles];
+  
+  for (const powerUp of state.powerUps) {
+    const dist = distance(state.playerX, state.playerY, powerUp.x, powerUp.y);
+    
+    if (dist < 35) {
+      // Collected!
+      const info = ARENA_POWERUP_INFO[powerUp.type];
+      newParticles.push(...createParticles(powerUp.x, powerUp.y, info.color, 15));
+      newState.soundQueue = [...newState.soundQueue, 'powerUp'];
+      newState.lastPowerUpCollected = powerUp.type;
+      newState.powerUpNotificationTimer = 90;
+      
+      // Apply power-up effect
+      switch (powerUp.type) {
+        case 'emp':
+          newState.opponentStunTimer = ARENA_POWERUP_INFO.emp.duration || 180;
+          newState.empFlashTimer = 30;
+          newState.screenShakeIntensity = 10;
+          newParticles.push(...createExplosion(state.playerX, state.playerY, '#00ccff'));
+          break;
+          
+        case 'teleport':
+          // Teleport to a safe location
+          const safeSpot = findSafeTeleportLocation(state);
+          if (safeSpot) {
+            newState.playerX = safeSpot.x;
+            newState.playerY = safeSpot.y;
+            newState.targetX = safeSpot.x;
+            newState.targetY = safeSpot.y;
+            newState.teleportFlashTimer = 20;
+            newParticles.push(...createExplosion(powerUp.x, powerUp.y, '#cc00ff'));
+            newParticles.push(...createExplosion(safeSpot.x, safeSpot.y, '#cc00ff'));
+          }
+          break;
+          
+        case 'shield':
+          newState.playerHealth = Math.min(
+            newState.playerMaxHealth,
+            newState.playerHealth + 30
+          );
+          newState.playerInvulnerable = 60;
+          break;
+          
+        case 'overdrive':
+          newState.overdriveTimer = ARENA_POWERUP_INFO.overdrive.duration || 300;
+          break;
+      }
+    } else {
+      // Check if power-up expired (30 seconds)
+      if (state.gameTime - powerUp.spawnTime < 1800) {
+        remainingPowerUps.push(powerUp);
+      } else {
+        // Fade out particles
+        newParticles.push(...createParticles(powerUp.x, powerUp.y, '#666666', 5));
+      }
+    }
+  }
+  
+  newState.powerUps = remainingPowerUps;
+  newState.particles = newParticles;
+  return newState;
+}
+
+// Find a safe location for teleport
+function findSafeTeleportLocation(state: ArenaState): { x: number; y: number } | null {
+  const padding = 100;
+  
+  for (let attempts = 0; attempts < 20; attempts++) {
+    const x = padding + Math.random() * (state.arenaWidth - padding * 2);
+    const y = padding + Math.random() * (state.arenaHeight - padding * 2);
+    
+    // Check distance from opponent
+    const opponentDist = state.opponent ? distance(x, y, state.opponent.x, state.opponent.y) : 999;
+    if (opponentDist < 200) continue;
+    
+    // Check obstacle collision
+    let blocked = false;
+    for (const obs of state.obstacles) {
+      if (obs.type === 'laserGrid') {
+        if (distance(x, y, obs.x, obs.y) < (obs.laserLength || 100) + 30) {
+          blocked = true;
+          break;
+        }
+      } else if (obs.type === 'phasePlatform' && obs.isVisible) {
+        if (distance(x, y, obs.x, obs.y) < 60) {
+          blocked = true;
+          break;
+        }
+      } else {
+        if (distance(x, y, obs.x, obs.y) < 60) {
+          blocked = true;
+          break;
+        }
+      }
+    }
+    
+    if (!blocked) {
+      return { x, y };
+    }
+  }
+  
+  // Fallback to center-ish location
+  return {
+    x: state.arenaWidth / 2 + (Math.random() - 0.5) * 200,
+    y: state.arenaHeight / 2 + (Math.random() - 0.5) * 200,
+  };
 }
 
 // Update projectiles
@@ -521,6 +686,7 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
     projectiles: [...state.projectiles],
     particles: [...state.particles],
     obstacles: [...state.obstacles],
+    powerUps: [...state.powerUps],
     soundQueue: [],
   };
   
@@ -528,6 +694,13 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
   
   // Always update dynamic obstacles
   newState = updateDynamicObstacles(newState);
+  
+  // Update effect timers
+  if (newState.opponentStunTimer > 0) newState.opponentStunTimer--;
+  if (newState.overdriveTimer > 0) newState.overdriveTimer--;
+  if (newState.teleportFlashTimer > 0) newState.teleportFlashTimer--;
+  if (newState.empFlashTimer > 0) newState.empFlashTimer--;
+  if (newState.powerUpNotificationTimer > 0) newState.powerUpNotificationTimer--;
   
   switch (newState.phase) {
     case 'entering':
@@ -585,6 +758,11 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
       if (newState.playerFireTimer > 0) newState.playerFireTimer--;
       if (newState.playerInvulnerable > 0) newState.playerInvulnerable--;
       
+      // Determine fire rate (affected by overdrive)
+      const fireRate = newState.overdriveTimer > 0 
+        ? Math.floor(ARENA_CONFIG.playerFireRate / 2) 
+        : ARENA_CONFIG.playerFireRate;
+      
       // Player fires when touching and opponent exists
       if (input.isTouching && newState.playerFireTimer <= 0 && newState.opponent) {
         const shipId = getStoredMegaShipId();
@@ -604,9 +782,24 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
         );
         
         newState.projectiles = [...newState.projectiles, projectile];
-        newState.playerFireTimer = ARENA_CONFIG.playerFireRate;
+        newState.playerFireTimer = fireRate;
         newState.soundQueue = [...newState.soundQueue, `shoot_${projectileStyle.sound}`];
       }
+      
+      // Spawn power-ups periodically
+      if (newState.powerUpSpawnTimer > 0) {
+        newState.powerUpSpawnTimer--;
+      } else if (newState.powerUps.length < 2) {
+        const newPowerUp = spawnPowerUp(newState);
+        if (newPowerUp) {
+          newState.powerUps = [...newState.powerUps, newPowerUp];
+          newState.soundQueue = [...newState.soundQueue, 'spawn'];
+        }
+        newState.powerUpSpawnTimer = 480 + Math.floor(Math.random() * 300); // 8-13 seconds
+      }
+      
+      // Check power-up collection
+      newState = checkPowerUpCollection(newState);
       
       // Update opponent AI
       newState = updateOpponentAI(newState);

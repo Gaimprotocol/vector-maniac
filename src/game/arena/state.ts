@@ -232,11 +232,19 @@ export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
     
     // Opponent
     opponent: createOpponent(difficulty),
+    opponentStunTimer: 0,
     
     // Environment
     obstacles: generateObstacles(),
     projectiles: [],
     particles: [],
+    powerUps: [],
+    
+    // Active effects
+    overdriveTimer: 0,
+    powerUpSpawnTimer: 300, // First power-up spawns after 5 seconds
+    lastPowerUpCollected: null,
+    powerUpNotificationTimer: 0,
     
     // Match info
     difficulty,
@@ -245,6 +253,8 @@ export function createArenaState(difficulty: ArenaDifficulty): ArenaState {
     earnedReward: null,
     
     screenShakeIntensity: 0,
+    teleportFlashTimer: 0,
+    empFlashTimer: 0,
     soundQueue: [],
   };
 }

@@ -96,6 +96,53 @@ export interface ArenaReward {
   icon: string;
 }
 
+// Arena-specific power-ups
+export type ArenaPowerUpType = 'emp' | 'teleport' | 'shield' | 'overdrive';
+
+export interface ArenaPowerUp {
+  id: string;
+  x: number;
+  y: number;
+  type: ArenaPowerUpType;
+  bobOffset: number; // For floating animation
+  spawnTime: number;
+}
+
+export const ARENA_POWERUP_INFO: Record<ArenaPowerUpType, {
+  name: string;
+  description: string;
+  color: string;
+  glowColor: string;
+  duration?: number; // Effect duration in frames (if applicable)
+}> = {
+  emp: {
+    name: 'EMP Blast',
+    description: 'Stuns opponent for 3 seconds',
+    color: '#00ccff',
+    glowColor: '#0088ff',
+    duration: 180,
+  },
+  teleport: {
+    name: 'Phase Shift',
+    description: 'Instantly teleport to safety',
+    color: '#cc00ff',
+    glowColor: '#8800cc',
+  },
+  shield: {
+    name: 'Shield Boost',
+    description: 'Restores 30 hull integrity',
+    color: '#00ff88',
+    glowColor: '#00cc66',
+  },
+  overdrive: {
+    name: 'Overdrive',
+    description: 'Double fire rate for 5 seconds',
+    color: '#ffaa00',
+    glowColor: '#ff6600',
+    duration: 300,
+  },
+};
+
 export interface ArenaState {
   phase: ArenaPhase;
   phaseTimer: number;
@@ -118,11 +165,19 @@ export interface ArenaState {
   
   // Opponent
   opponent: ArenaOpponent | null;
+  opponentStunTimer: number; // EMP stun duration
   
   // Environment
   obstacles: ArenaObstacle[];
   projectiles: ArenaProjectile[];
   particles: ArenaParticle[];
+  powerUps: ArenaPowerUp[];
+  
+  // Active effects
+  overdriveTimer: number; // Overdrive active duration
+  powerUpSpawnTimer: number; // Timer until next power-up spawns
+  lastPowerUpCollected: ArenaPowerUpType | null;
+  powerUpNotificationTimer: number;
   
   // Match info
   difficulty: ArenaDifficulty;
@@ -132,6 +187,8 @@ export interface ArenaState {
   
   // Visual effects
   screenShakeIntensity: number;
+  teleportFlashTimer: number;
+  empFlashTimer: number;
   
   // Sound queue
   soundQueue: string[];

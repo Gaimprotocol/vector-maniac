@@ -1,6 +1,6 @@
 // Arena Battle Mode Renderer - High Quality (Matches Main Game)
 
-import { ArenaState, ArenaObstacle } from './types';
+import { ArenaState, ArenaObstacle, ArenaPowerUp, ARENA_POWERUP_INFO } from './types';
 import { ARENA_CONFIG } from './constants';
 import { drawMegaShip } from '../megaShipRenderer';
 import { getShipProjectileStyle, ShipProjectileStyle } from '../vectorManiac/shipProjectiles';
@@ -39,6 +39,7 @@ export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): v
   renderBackground(ctx, state);
   renderPattern(ctx, state);
   renderObstacles(ctx, state);
+  renderPowerUps(ctx, state);
   renderProjectiles(ctx, state);
   renderParticles(ctx, state);
   
@@ -57,6 +58,9 @@ export function renderArena(ctx: CanvasRenderingContext2D, state: ArenaState): v
   
   // Draw phase overlays
   renderPhaseOverlay(ctx, state);
+  
+  // Render effect overlays
+  renderEffectOverlays(ctx, state);
   
   ctx.restore();
 }
@@ -412,6 +416,165 @@ function renderPhasePlatformGhost(ctx: CanvasRenderingContext2D, obs: ArenaObsta
   
   ctx.setLineDash([]);
   ctx.restore();
+}
+
+// Render power-ups
+function renderPowerUps(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  for (const powerUp of state.powerUps) {
+    renderPowerUp(ctx, powerUp, state.gameTime);
+  }
+}
+
+function renderPowerUp(ctx: CanvasRenderingContext2D, powerUp: ArenaPowerUp, gameTime: number): void {
+  const info = ARENA_POWERUP_INFO[powerUp.type];
+  const bobY = Math.sin(gameTime * 0.08 + powerUp.bobOffset) * 6;
+  const pulse = Math.sin(gameTime * 0.1) * 0.2 + 0.8;
+  const rotation = gameTime * 0.03;
+  
+  ctx.save();
+  ctx.translate(powerUp.x, powerUp.y + bobY);
+  
+  // Outer glow ring
+  ctx.strokeStyle = info.glowColor;
+  ctx.lineWidth = 3;
+  ctx.shadowColor = info.glowColor;
+  ctx.shadowBlur = 25 * pulse;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, 28, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Spinning outer ring
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, 24, rotation, rotation + Math.PI);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, 24, rotation + Math.PI, rotation + Math.PI * 2);
+  ctx.stroke();
+  
+  // Main body
+  ctx.globalAlpha = 1;
+  const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 18);
+  gradient.addColorStop(0, info.color);
+  gradient.addColorStop(0.7, info.glowColor);
+  gradient.addColorStop(1, 'rgba(0,0,0,0.5)');
+  
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Inner icon based on type
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowBlur = 0;
+  ctx.font = 'bold 16px Orbitron';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  let icon = '';
+  switch (powerUp.type) {
+    case 'emp': icon = '⚡'; break;
+    case 'teleport': icon = '◊'; break;
+    case 'shield': icon = '+'; break;
+    case 'overdrive': icon = '»'; break;
+  }
+  
+  ctx.fillText(icon, 0, 1);
+  
+  // Pickup indicator particles
+  for (let i = 0; i < 4; i++) {
+    const angle = (gameTime * 0.05) + (i / 4) * Math.PI * 2;
+    const dist = 22 + Math.sin(gameTime * 0.1 + i) * 3;
+    const px = Math.cos(angle) * dist;
+    const py = Math.sin(angle) * dist;
+    
+    ctx.fillStyle = info.color;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(px, py, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  ctx.restore();
+}
+
+// Render effect overlays (EMP flash, teleport flash, etc.)
+function renderEffectOverlays(ctx: CanvasRenderingContext2D, state: ArenaState): void {
+  // EMP flash effect
+  if (state.empFlashTimer > 0) {
+    const alpha = state.empFlashTimer / 30;
+    ctx.fillStyle = `rgba(0, 200, 255, ${alpha * 0.3})`;
+    ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
+  }
+  
+  // Teleport flash effect
+  if (state.teleportFlashTimer > 0) {
+    const alpha = state.teleportFlashTimer / 20;
+    ctx.fillStyle = `rgba(200, 0, 255, ${alpha * 0.4})`;
+    ctx.fillRect(0, 0, state.arenaWidth, state.arenaHeight);
+  }
+  
+  // Power-up notification
+  if (state.powerUpNotificationTimer > 0 && state.lastPowerUpCollected) {
+    const info = ARENA_POWERUP_INFO[state.lastPowerUpCollected];
+    const alpha = Math.min(1, state.powerUpNotificationTimer / 30);
+    const y = state.arenaHeight / 2 - 200 + (90 - state.powerUpNotificationTimer) * 0.5;
+    
+    ctx.fillStyle = info.color;
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold 24px Orbitron';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = info.glowColor;
+    ctx.shadowBlur = 20;
+    ctx.fillText(info.name.toUpperCase(), state.arenaWidth / 2, y);
+    
+    ctx.font = '14px Orbitron';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 0;
+    ctx.fillText(info.description, state.arenaWidth / 2, y + 28);
+    
+    ctx.globalAlpha = 1;
+  }
+  
+  // Overdrive indicator
+  if (state.overdriveTimer > 0) {
+    const pulse = Math.sin(state.gameTime * 0.2) * 0.3 + 0.7;
+    ctx.strokeStyle = `rgba(255, 170, 0, ${pulse * 0.5})`;
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#ffaa00';
+    ctx.shadowBlur = 15;
+    ctx.strokeRect(10, 10, state.arenaWidth - 20, state.arenaHeight - 20);
+    ctx.shadowBlur = 0;
+    
+    // Timer display
+    const secondsLeft = Math.ceil(state.overdriveTimer / 60);
+    ctx.fillStyle = '#ffaa00';
+    ctx.font = 'bold 14px Orbitron';
+    ctx.textAlign = 'left';
+    ctx.fillText(`OVERDRIVE: ${secondsLeft}s`, 25, 80);
+  }
+  
+  // Opponent stun indicator
+  if (state.opponentStunTimer > 0 && state.opponent) {
+    const secondsLeft = Math.ceil(state.opponentStunTimer / 60);
+    ctx.fillStyle = '#00ccff';
+    ctx.font = 'bold 14px Orbitron';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#00ccff';
+    ctx.shadowBlur = 10;
+    ctx.fillText(`STUNNED: ${secondsLeft}s`, state.opponent.x, state.opponent.y - 70);
+    ctx.shadowBlur = 0;
+    
+    // Stun visual on opponent
+    const flickerAlpha = Math.sin(state.gameTime * 0.3) * 0.3 + 0.5;
+    ctx.strokeStyle = `rgba(0, 200, 255, ${flickerAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(state.opponent.x, state.opponent.y, 35, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 }
 
 function renderHexPillar(ctx: CanvasRenderingContext2D, radius: number, pulse: number, destructible: boolean): void {
