@@ -1908,7 +1908,8 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.scale(OMEGA_PRIME_SCALE, OMEGA_PRIME_SCALE);
   }
   
-  drawMegaShip(ctx, 0, 0, megaShipId, state.gameTime * 0.003, skinColors, upgradeState);
+  // Use 'game' quality mode for optimized performance during gameplay
+  drawMegaShip(ctx, 0, 0, megaShipId, state.gameTime * 0.003, skinColors, upgradeState, 'game');
 
   ctx.restore();
   
