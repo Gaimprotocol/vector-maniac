@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePurchases } from '@/hooks/usePurchases';
-import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, CheckIcon, BestiaryIcon } from './VectorIcons';
+import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, CheckIcon, BestiaryIcon, ArenaIcon } from './VectorIcons';
 import { DailyBonusButton } from './DailyBonusButton';
 
 interface MenuScreenProps {
@@ -237,19 +237,34 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
           </button>
         </div>
 
-        {/* Bestiary button */}
-        <button
-          className="text-[9px] border rounded px-5 py-2 mb-4
-                     transition-all duration-300 flex items-center gap-2
-                     text-[#aa88ff]/70 border-[#aa88ff]/30 hover:border-[#aa88ff]/60 hover:text-[#aa88ff] hover:bg-[#aa88ff]/10"
-          style={{ 
-            fontFamily: 'Orbitron, monospace',
-            boxShadow: '0 0 10px rgba(170, 136, 255, 0.1)',
-          }}
-          onClick={() => navigate('/bestiary')}
-        >
-          <BestiaryIcon size={12} /> BESTIARY
-        </button>
+        {/* Arena and Bestiary buttons row */}
+        <div className="flex gap-3 mb-4">
+          <button
+            className="text-[9px] border rounded px-4 py-2
+                       transition-all duration-300 flex items-center gap-2
+                       text-[#ff4466]/70 border-[#ff4466]/30 hover:border-[#ff4466]/60 hover:text-[#ff4466] hover:bg-[#ff4466]/10"
+            style={{ 
+              fontFamily: 'Orbitron, monospace',
+              boxShadow: '0 0 10px rgba(255, 68, 102, 0.1)',
+            }}
+            onClick={() => navigate('/arena')}
+          >
+            <ArenaIcon size={12} /> ARENA
+          </button>
+          
+          <button
+            className="text-[9px] border rounded px-4 py-2
+                       transition-all duration-300 flex items-center gap-2
+                       text-[#aa88ff]/70 border-[#aa88ff]/30 hover:border-[#aa88ff]/60 hover:text-[#aa88ff] hover:bg-[#aa88ff]/10"
+            style={{ 
+              fontFamily: 'Orbitron, monospace',
+              boxShadow: '0 0 10px rgba(170, 136, 255, 0.1)',
+            }}
+            onClick={() => navigate('/bestiary')}
+          >
+            <BestiaryIcon size={12} /> BESTIARY
+          </button>
+        </div>
 
         {/* Bonus Maps Toggle */}
         <button
