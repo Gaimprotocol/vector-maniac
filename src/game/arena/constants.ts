@@ -1,5 +1,5 @@
 // Arena Battle Mode Constants
-// Scaled down 50% for tighter, more intense combat
+// Scaled down 50% with slower, more tactical combat
 
 import { VM_CONFIG } from '../vectorManiac/constants';
 
@@ -7,29 +7,29 @@ export const ARENA_CONFIG = {
   // 50% scaled dimensions for tighter combat
   arenaWidth: Math.floor(VM_CONFIG.arenaWidth * 0.5),   // 390
   arenaHeight: Math.floor(VM_CONFIG.arenaHeight * 0.5), // 844
-  arenaPadding: Math.floor(VM_CONFIG.arenaPadding * 0.5), // 30
+  arenaPadding: 25,
   
-  // Player stats - scaled for smaller arena
+  // Player stats - MUCH slower for tactical combat
   playerMaxHealth: 100,
-  playerSpeed: Math.floor(VM_CONFIG.playerSpeed * 0.6), // Slower in smaller arena
+  playerSpeed: 2.5, // Very slow, tactical movement
   playerFireRate: VM_CONFIG.baseFireRate,
   playerDamage: VM_CONFIG.baseDamage,
-  playerBulletSpeed: Math.floor(VM_CONFIG.baseBulletSpeed * 0.7),
-  playerSize: Math.floor(VM_CONFIG.playerSize * 0.65), // Smaller ships
+  playerBulletSpeed: 6, // Slower bullets
+  playerSize: 14, // Smaller ships
   
   // Ship offset (scaled down)
-  shipOffsetY: 120,
+  shipOffsetY: 100,
   
   // Combat
   invulnerabilityFrames: 60,
-  projectileSize: 4,
+  projectileSize: 3,
   
   // Obstacles - scaled for smaller arena
-  minObstacles: 3,
-  maxObstacles: 5,
-  pillarSize: 25,
-  wallWidth: 60,
-  wallHeight: 12,
+  minObstacles: 2,
+  maxObstacles: 4,
+  pillarSize: 20,
+  wallWidth: 50,
+  wallHeight: 10,
   
   // Timing
   countdownDuration: 180,
@@ -37,13 +37,13 @@ export const ARENA_CONFIG = {
   victoryDuration: 180,
   defeatDuration: 180,
   
-  // Colors - cyberpunk neon palette
-  playerColor: '#00ff88',
-  opponentColor: '#ff4466',
-  obstacleColor: '#0066ff',
-  arenaBackgroundColor: '#030308',
-  gridColor: '#0a1428',
-  accentCyan: '#00d4ff',
-  accentMagenta: '#ff00aa',
-  accentPurple: '#8844ff',
+  // Colors - Clean minimalist palette
+  playerColor: '#00ffaa',
+  opponentColor: '#ff5577',
+  obstacleColor: '#3366ff',
+  arenaBackgroundColor: '#05080c',
+  gridColor: '#0d1520',
+  accentCyan: '#00ccff',
+  accentMagenta: '#ff0088',
+  accentPurple: '#6633ff',
 };
