@@ -997,27 +997,204 @@ function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void
     ctx.closePath();
     ctx.stroke();
     
-    // Icon in center
+    // Draw icon in center based on type
     ctx.globalAlpha = 1;
+    ctx.strokeStyle = color;
     ctx.fillStyle = color;
-    ctx.font = 'bold 14px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     
-    let icon = '?';
+    const iconSize = size * 0.7;
+    
     switch (powerUp.type) {
-      case 'shield': icon = 'S'; break;
-      case 'nuke': icon = 'N'; break;
-      case 'doublePoints': icon = '×2'; break;
-      case 'doubleShot': icon = 'D'; break;
-      case 'speedBoost': icon = '>'; break;
-      // Hyperspace power-ups
-      case 'warpShield': icon = 'W'; break;
-      case 'formationBreaker': icon = 'F'; break;
-      case 'timeWarp': icon = 'T'; break;
-      case 'magnetPulse': icon = 'M'; break;
+      case 'shield':
+        // Shield icon - protective shape with center mark
+        ctx.beginPath();
+        ctx.moveTo(0, -iconSize);
+        ctx.quadraticCurveTo(iconSize, -iconSize * 0.5, iconSize, 0);
+        ctx.quadraticCurveTo(iconSize, iconSize * 0.8, 0, iconSize);
+        ctx.quadraticCurveTo(-iconSize, iconSize * 0.8, -iconSize, 0);
+        ctx.quadraticCurveTo(-iconSize, -iconSize * 0.5, 0, -iconSize);
+        ctx.stroke();
+        // Center mark
+        ctx.beginPath();
+        ctx.moveTo(0, -iconSize * 0.4);
+        ctx.lineTo(0, iconSize * 0.2);
+        ctx.moveTo(0, iconSize * 0.5);
+        ctx.arc(0, iconSize * 0.5, 1, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+        
+      case 'nuke':
+        // Nuclear symbol - concentric circles with crosshairs
+        ctx.beginPath();
+        ctx.arc(0, 0, iconSize, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, iconSize * 0.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, iconSize * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Crosshairs
+        ctx.beginPath();
+        ctx.moveTo(0, -iconSize);
+        ctx.lineTo(0, -iconSize * 0.6);
+        ctx.moveTo(0, iconSize * 0.6);
+        ctx.lineTo(0, iconSize);
+        ctx.moveTo(-iconSize, 0);
+        ctx.lineTo(-iconSize * 0.6, 0);
+        ctx.moveTo(iconSize * 0.6, 0);
+        ctx.lineTo(iconSize, 0);
+        ctx.stroke();
+        break;
+        
+      case 'doublePoints':
+        // ×2 symbol with frame
+        ctx.strokeRect(-iconSize, -iconSize * 0.7, iconSize * 2, iconSize * 1.4);
+        ctx.font = `bold ${iconSize * 1.4}px Orbitron, monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('×2', 0, 1);
+        break;
+        
+      case 'doubleShot':
+        // Two parallel arrows/missiles
+        const arrowOffset = iconSize * 0.4;
+        // Left arrow
+        ctx.beginPath();
+        ctx.moveTo(-arrowOffset, iconSize);
+        ctx.lineTo(-arrowOffset, -iconSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-arrowOffset, -iconSize);
+        ctx.lineTo(-arrowOffset - iconSize * 0.4, -iconSize * 0.3);
+        ctx.moveTo(-arrowOffset, -iconSize);
+        ctx.lineTo(-arrowOffset + iconSize * 0.4, -iconSize * 0.3);
+        ctx.stroke();
+        // Right arrow
+        ctx.beginPath();
+        ctx.moveTo(arrowOffset, iconSize);
+        ctx.lineTo(arrowOffset, -iconSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(arrowOffset, -iconSize);
+        ctx.lineTo(arrowOffset - iconSize * 0.4, -iconSize * 0.3);
+        ctx.moveTo(arrowOffset, -iconSize);
+        ctx.lineTo(arrowOffset + iconSize * 0.4, -iconSize * 0.3);
+        ctx.stroke();
+        break;
+        
+      case 'speedBoost':
+        // Lightning bolt
+        ctx.beginPath();
+        ctx.moveTo(iconSize * 0.2, -iconSize);
+        ctx.lineTo(-iconSize * 0.6, 0);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(-iconSize * 0.2, iconSize);
+        ctx.lineTo(iconSize * 0.6, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.stroke();
+        // Speed lines
+        ctx.beginPath();
+        ctx.moveTo(-iconSize, -iconSize * 0.5);
+        ctx.lineTo(-iconSize * 0.5, -iconSize * 0.5);
+        ctx.moveTo(-iconSize * 1.1, 0);
+        ctx.lineTo(-iconSize * 0.7, 0);
+        ctx.moveTo(-iconSize, iconSize * 0.5);
+        ctx.lineTo(-iconSize * 0.5, iconSize * 0.5);
+        ctx.stroke();
+        break;
+        
+      case 'warpShield':
+        // Shield with cross/plus
+        ctx.beginPath();
+        ctx.moveTo(0, -iconSize);
+        ctx.quadraticCurveTo(iconSize, -iconSize * 0.5, iconSize, 0);
+        ctx.quadraticCurveTo(iconSize, iconSize * 0.8, 0, iconSize);
+        ctx.quadraticCurveTo(-iconSize, iconSize * 0.8, -iconSize, 0);
+        ctx.quadraticCurveTo(-iconSize, -iconSize * 0.5, 0, -iconSize);
+        ctx.stroke();
+        // Cross inside
+        ctx.beginPath();
+        ctx.moveTo(-iconSize * 0.5, 0);
+        ctx.lineTo(iconSize * 0.5, 0);
+        ctx.moveTo(0, -iconSize * 0.5);
+        ctx.lineTo(0, iconSize * 0.5);
+        ctx.stroke();
+        break;
+        
+      case 'formationBreaker':
+        // Explosion/burst pattern
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const inner = iconSize * 0.3;
+          const outer = iconSize;
+          ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+          ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+        }
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, iconSize * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'timeWarp':
+        // Clock face
+        ctx.beginPath();
+        ctx.arc(0, 0, iconSize, 0, Math.PI * 2);
+        ctx.stroke();
+        // Clock hands
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -iconSize * 0.6);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(iconSize * 0.4, iconSize * 0.2);
+        ctx.stroke();
+        // Time effect markers
+        ctx.beginPath();
+        ctx.moveTo(-iconSize * 0.9, -iconSize * 0.9);
+        ctx.lineTo(-iconSize * 0.6, -iconSize * 0.6);
+        ctx.moveTo(iconSize * 0.9, -iconSize * 0.9);
+        ctx.lineTo(iconSize * 0.6, -iconSize * 0.6);
+        ctx.stroke();
+        break;
+        
+      case 'magnetPulse':
+        // Magnet shape with attraction lines
+        ctx.beginPath();
+        ctx.arc(0, -iconSize * 0.3, iconSize * 0.8, Math.PI, 0);
+        ctx.stroke();
+        // Magnet poles
+        ctx.beginPath();
+        ctx.moveTo(-iconSize * 0.8, -iconSize * 0.3);
+        ctx.lineTo(-iconSize * 0.8, iconSize * 0.5);
+        ctx.moveTo(iconSize * 0.8, -iconSize * 0.3);
+        ctx.lineTo(iconSize * 0.8, iconSize * 0.5);
+        ctx.stroke();
+        // Pole caps
+        ctx.beginPath();
+        ctx.moveTo(-iconSize * 0.8, iconSize * 0.3);
+        ctx.lineTo(-iconSize * 0.5, iconSize * 0.3);
+        ctx.moveTo(iconSize * 0.5, iconSize * 0.3);
+        ctx.lineTo(iconSize * 0.8, iconSize * 0.3);
+        ctx.stroke();
+        // Center attraction point
+        ctx.beginPath();
+        ctx.arc(0, iconSize * 0.4, iconSize * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      default:
+        // Fallback - question mark
+        ctx.font = `bold ${iconSize * 1.5}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', 0, 0);
     }
-    ctx.fillText(icon, 0, 0);
     
     ctx.restore();
     
