@@ -5,6 +5,7 @@ import {
   ArenaState,
   ArenaMode,
   ARENA_ENTRY_COSTS,
+  ARENA_SCRAP_REWARDS,
   ARENA_DIFFICULTY_STATS,
 } from '@/game/arena/types';
 import { createArenaState, canAffordArena } from '@/game/arena/state';
@@ -382,7 +383,12 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
             Potential Rewards
           </p>
           <p className="text-xs" style={{ color: '#00ff88' }}>
-            {ARENA_DIFFICULTY_STATS[selectedDifficulty].rewardMultiplier * 50} Scraps + Rare Loot
+            +{ARENA_SCRAP_REWARDS[selectedDifficulty]} Scraps
+          </p>
+          <p className="text-[9px] mt-1" style={{ color: 'rgba(255, 215, 0, 0.7)' }}>
+            {selectedDifficulty === 'diamond' ? '95% Unique Loot' :
+             selectedDifficulty === 'gold' ? '95% Rare+ Loot' :
+             selectedDifficulty === 'silver' ? '85% Rare+ Loot' : '85% Bonus Loot'}
           </p>
         </div>
         
