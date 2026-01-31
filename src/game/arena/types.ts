@@ -235,7 +235,7 @@ export const ARENA_OPPONENT_NAMES: Record<ArenaDifficulty, string[]> = {
   diamond: ['Legendary Void', 'Apex Predator', 'The Annihilator', 'Death Vector'],
 };
 
-// Difficulty multipliers - Higher health, better AI (HARD MODE)
+// Difficulty multipliers - 10% easier across the board
 export const ARENA_DIFFICULTY_STATS: Record<ArenaDifficulty, {
   health: number;
   damage: number;
@@ -244,8 +244,8 @@ export const ARENA_DIFFICULTY_STATS: Record<ArenaDifficulty, {
   accuracy: number;
   rewardMultiplier: number;
 }> = {
-  bronze: { health: 180, damage: 10, speed: 3.5, fireRate: 28, accuracy: 0.55, rewardMultiplier: 1 },
-  silver: { health: 260, damage: 14, speed: 4.2, fireRate: 22, accuracy: 0.7, rewardMultiplier: 2 },
-  gold: { health: 380, damage: 18, speed: 5.0, fireRate: 16, accuracy: 0.85, rewardMultiplier: 4 },
-  diamond: { health: 550, damage: 24, speed: 6.0, fireRate: 12, accuracy: 0.95, rewardMultiplier: 8 },
+  bronze: { health: 162, damage: 9, speed: 3.15, fireRate: 31, accuracy: 0.50, rewardMultiplier: 1 },
+  silver: { health: 234, damage: 13, speed: 3.8, fireRate: 24, accuracy: 0.63, rewardMultiplier: 2 },
+  gold: { health: 342, damage: 16, speed: 4.5, fireRate: 18, accuracy: 0.77, rewardMultiplier: 4 },
+  diamond: { health: 495, damage: 22, speed: 5.4, fireRate: 13, accuracy: 0.86, rewardMultiplier: 8 },
 };
