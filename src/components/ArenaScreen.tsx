@@ -4,6 +4,7 @@ import {
   ArenaDifficulty, 
   ArenaState,
   ArenaMode,
+  ArenaBoosts,
   ARENA_ENTRY_COSTS,
   ARENA_SCRAP_REWARDS,
   ARENA_DIFFICULTY_STATS,
@@ -12,6 +13,15 @@ import { createArenaState, canAffordArena } from '@/game/arena/state';
 import { updateArenaState } from '@/game/arena/gameLogic';
 import { renderArena } from '@/game/arena/renderer';
 import { getStoredScraps, addStoredScraps, subtractStoredScraps } from '@/hooks/useScrapCurrency';
+import { 
+  useArenaConsumables, 
+  ArenaConsumable, 
+  calculateBoosts,
+  addConsumable,
+  rewardToConsumable,
+  ConsumableType,
+} from '@/hooks/useArenaConsumables';
+import { BoosterSelectionModal } from './arena/BoosterSelectionModal';
 import { ShipIcon, ScrapIcon, TargetIcon } from './VectorIcons';
 import { triggerHapticFeedback } from '@/utils/popSound';
 
@@ -21,7 +31,7 @@ interface ArenaScreenProps {
 
 export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
   const navigate = useNavigate();
-  const [screen, setScreen] = useState<'lobby' | 'battle' | 'result'>('lobby');
+  const [screen, setScreen] = useState<'lobby' | 'booster_select' | 'battle' | 'result'>('lobby');
   const [selectedDifficulty, setSelectedDifficulty] = useState<ArenaDifficulty>('bronze');
   const [selectedMode, setSelectedMode] = useState<ArenaMode>('multiplayer');
   const [scraps, setScraps] = useState(getStoredScraps());
@@ -29,6 +39,11 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
   const [battleResult, setBattleResult] = useState<'won' | 'lost' | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchProgress, setSearchProgress] = useState(0);
+  
+  // Booster selection state
+  const { consumables, consumeAll } = useArenaConsumables();
+  const [selectedBoosterIds, setSelectedBoosterIds] = useState<string[]>([]);
+  const [activeBoosts, setActiveBoosts] = useState<ArenaBoosts | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<number>();
@@ -48,8 +63,8 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
     diamond: '#b9f2ff',
   };
   
-  // Fake matchmaking animation
-  const startMatchmaking = () => {
+  // Open booster selection before matchmaking
+  const handleEnterArena = () => {
     const cost = ARENA_ENTRY_COSTS[selectedDifficulty];
     
     if (scraps < cost) {
@@ -57,12 +72,41 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
       return;
     }
     
+    // Show booster selection screen
+    setSelectedBoosterIds([]);
+    setScreen('booster_select');
+    triggerHapticFeedback('light');
+  };
+  
+  // Toggle a booster selection
+  const handleToggleBooster = (id: string) => {
+    setSelectedBoosterIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
+    );
+    triggerHapticFeedback('light');
+  };
+  
+  // Confirm booster selection and start matchmaking
+  const handleConfirmBoosters = () => {
+    // Calculate boosts from selected consumables
+    const selectedConsumables = consumables.filter(c => selectedBoosterIds.includes(c.id));
+    const boosts = calculateBoosts(selectedConsumables);
+    setActiveBoosts(boosts);
+    
+    // Consume the selected boosters now (they're used regardless of outcome)
+    if (selectedBoosterIds.length > 0) {
+      consumeAll(selectedBoosterIds);
+    }
+    
+    // Start matchmaking
     if (selectedMode === 'multiplayer') {
-      // Fake matchmaking delay
+      setScreen('lobby'); // Temporarily go back to lobby for matchmaking animation
       setIsSearching(true);
       setSearchProgress(0);
       
-      const searchDuration = 2000 + Math.random() * 2000; // 2-4 seconds
+      const searchDuration = 2000 + Math.random() * 2000;
       const startTime = Date.now();
       
       const updateProgress = () => {
@@ -74,25 +118,30 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           requestAnimationFrame(updateProgress);
         } else {
           setIsSearching(false);
-          startBattle();
+          startBattle(boosts);
         }
       };
       
       requestAnimationFrame(updateProgress);
     } else {
-      startBattle();
+      startBattle(boosts);
     }
   };
   
-  const startBattle = () => {
+  const handleCancelBoosters = () => {
+    setSelectedBoosterIds([]);
+    setScreen('lobby');
+  };
+  
+  const startBattle = (boosts?: ArenaBoosts) => {
     const cost = ARENA_ENTRY_COSTS[selectedDifficulty];
     
     // Deduct entry cost
     subtractStoredScraps(cost);
     setScraps(getStoredScraps());
     
-    // Create arena state with selected mode
-    const newState = createArenaState(selectedDifficulty, selectedMode);
+    // Create arena state with selected mode and boosts
+    const newState = createArenaState(selectedDifficulty, selectedMode, boosts || activeBoosts || undefined);
     setArenaState(newState);
     setScreen('battle');
     
@@ -182,14 +231,26 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           const won = prev.phase === 'playerWon';
           setBattleResult(won ? 'won' : 'lost');
           
-          // Award scraps if won (check all earned rewards)
+          // Award scraps and convert unique rewards to consumables if won
           if (won && newState.earnedRewards) {
             const scrapsReward = newState.earnedRewards.find(r => r.type === 'scraps');
             if (scrapsReward?.value) {
               addStoredScraps(scrapsReward.value);
               setScraps(getStoredScraps());
             }
+            
+            // Convert unique rewards to consumables
+            const uniqueRewards = newState.earnedRewards.filter(r => r.type !== 'scraps');
+            for (const reward of uniqueRewards) {
+              const consumableType = rewardToConsumable(reward.name);
+              if (consumableType) {
+                addConsumable(consumableType);
+              }
+            }
           }
+          
+          // Clear active boosts
+          setActiveBoosts(null);
           
           // Delay transition to result screen
           setTimeout(() => setScreen('result'), 500);
@@ -216,6 +277,20 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
       }
     };
   }, [screen, arenaState]);
+  
+  // Booster selection screen
+  if (screen === 'booster_select') {
+    return (
+      <BoosterSelectionModal
+        consumables={consumables}
+        selectedIds={selectedBoosterIds}
+        onToggle={handleToggleBooster}
+        onConfirm={handleConfirmBoosters}
+        onCancel={handleCancelBoosters}
+        maxSelections={3}
+      />
+    );
+  }
   
   // Lobby screen
   if (screen === 'lobby') {
@@ -372,7 +447,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
         
         {/* Reward preview */}
         <div 
-          className="mb-6 px-4 py-3 rounded border text-center"
+          className="mb-4 px-4 py-3 rounded border text-center"
           style={{
             fontFamily: 'Rajdhani, sans-serif',
             borderColor: 'rgba(0, 255, 136, 0.2)',
@@ -391,6 +466,22 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
              selectedDifficulty === 'silver' ? '85% Rare+ Loot' : '85% Bonus Loot'}
           </p>
         </div>
+        
+        {/* Booster inventory preview */}
+        {consumables.length > 0 && (
+          <div 
+            className="mb-6 px-4 py-2 rounded border text-center"
+            style={{
+              fontFamily: 'Rajdhani, sans-serif',
+              borderColor: 'rgba(170, 102, 255, 0.3)',
+              background: 'rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(170, 102, 255, 0.7)' }}>
+              ✦ {consumables.length} Booster{consumables.length !== 1 ? 's' : ''} Available
+            </p>
+          </div>
+        )}
         
         {/* Matchmaking overlay */}
         {isSearching && (
@@ -438,7 +529,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
         {/* Buttons */}
         <div className="space-y-2 w-full max-w-xs px-4">
           <button
-            onClick={startMatchmaking}
+            onClick={handleEnterArena}
             disabled={!canAffordArena(selectedDifficulty, scraps) || isSearching}
             className="text-sm border-2 rounded w-full px-6 py-3
                        transition-all duration-300 hover:bg-[#ff4466]/10 active:scale-95 uppercase tracking-wider
@@ -574,6 +665,9 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
                 </p>
                 <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   {reward.description}
+                </p>
+                <p className="text-[8px] mt-2" style={{ color: 'rgba(170, 102, 255, 0.8)' }}>
+                  ✦ Added to boosters
                 </p>
               </div>
             ))}
