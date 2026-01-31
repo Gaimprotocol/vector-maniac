@@ -29,14 +29,14 @@ export type ConsumableType =
   | 'extended_powerups'
   | 'double_scraps';
 
-// All possible consumable definitions
+// All possible consumable definitions - using geometric symbols, NO emojis
 export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable, 'id'>> = {
   health_boost: {
     type: 'health_boost',
     name: 'Hull Reinforcement',
     description: '+50 Max HP for this battle',
     rarity: 'common',
-    icon: '❤',
+    icon: '◇',
     healthBoost: 50,
   },
   damage_boost: {
@@ -44,7 +44,7 @@ export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable
     name: 'Overcharged Cannons',
     description: '+25% damage for this battle',
     rarity: 'rare',
-    icon: '⚡',
+    icon: '◈',
     damageBoost: 25,
   },
   speed_boost: {
@@ -52,7 +52,7 @@ export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable
     name: 'Turbo Thrusters',
     description: '+20% speed for this battle',
     rarity: 'rare',
-    icon: '➤',
+    icon: '▷',
     speedBoost: 20,
   },
   fire_rate_boost: {
@@ -60,7 +60,7 @@ export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable
     name: 'Rapid Fire Module',
     description: '+30% fire rate for this battle',
     rarity: 'epic',
-    icon: '◉',
+    icon: '⊕',
     fireRateBoost: 30,
   },
   starting_shield: {
@@ -68,7 +68,7 @@ export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable
     name: 'Energy Shield',
     description: 'Start with invulnerability (3s)',
     rarity: 'epic',
-    icon: '◈',
+    icon: '⬡',
     startingShield: true,
   },
   extended_powerups: {
