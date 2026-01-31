@@ -94,9 +94,10 @@ export interface ArenaParticle {
 
 export type ArenaRewardType = 
   | 'scraps'
-  | 'unique_ship'
-  | 'rare_ally'
-  | 'power_upgrade';
+  | 'consumable'      // Arena booster (one-time use)
+  | 'ship_unlock'     // Permanent ship for main game
+  | 'skin_unlock'     // Permanent skin for main game
+  | 'companion_unlock'; // Permanent companion for main game
 
 export interface ArenaReward {
   type: ArenaRewardType;
@@ -106,6 +107,17 @@ export interface ArenaReward {
   value?: number; // For scraps
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   icon: string;
+  // For permanent unlocks
+  unlockData?: {
+    shipId?: string;
+    skinId?: string;
+    companionData?: {
+      name: string;
+      color: string;
+      shape: string;
+      level: number;
+    };
+  };
 }
 
 // Arena-specific power-ups
