@@ -199,7 +199,8 @@ export interface ArenaState {
   difficulty: ArenaDifficulty;
   entryCost: number;
   potentialRewards: ArenaReward[];
-  earnedReward: ArenaReward | null;
+  earnedReward: ArenaReward | null; // Deprecated, use earnedRewards
+  earnedRewards: ArenaReward[]; // New: supports multiple rewards
   
   // Visual effects
   screenShakeIntensity: number;
