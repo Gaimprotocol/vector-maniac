@@ -7,7 +7,7 @@ import {
   TouchIcon, AimIcon, PauseIcon, GridIcon, ShipIcon 
 } from './VectorIcons';
 
-type TabType = 'about' | 'objectives' | 'powerups' | 'controls';
+type TabType = 'about' | 'objectives' | 'powerups' | 'arena' | 'bestiary' | 'controls';
 
 // Custom power-up icons in green vector style
 const ShieldPowerUpIcon = () => (
@@ -219,6 +219,8 @@ export const InfoScreen: React.FC = () => {
     { id: 'about', label: 'ABOUT' },
     { id: 'objectives', label: 'MISSION' },
     { id: 'powerups', label: 'POWER-UPS' },
+    { id: 'arena', label: 'ARENA' },
+    { id: 'bestiary', label: 'BESTIARY' },
     { id: 'controls', label: 'CONTROLS' },
   ];
 
@@ -516,9 +518,180 @@ export const InfoScreen: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'controls' && (
+        {activeTab === 'arena' && (
           <div className="space-y-4">
             <h2 
+              className="text-[12px] text-[#ff4466] mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              ARENA BATTLE MODE
+            </h2>
+            <p 
+              className="text-[9px] text-[#00ff88]/60 leading-relaxed"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              Enter the Arena and face off in tactical 1v1 ship battles against 
+              AI opponents of increasing skill. Test your piloting abilities in 
+              intense close-quarters combat!
+            </p>
+            
+            <h3 
+              className="text-[10px] text-[#00ff88] mt-4 mb-2"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              DIFFICULTY TIERS
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-2 rounded border border-[#cd7f32]/30 bg-[#cd7f32]/5">
+                <div className="w-3 h-3 rounded-full bg-[#cd7f32]" />
+                <div>
+                  <span className="text-[9px] text-[#cd7f32]" style={{ fontFamily: 'Orbitron, monospace' }}>BRONZE</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Entry level - 50 scraps to enter</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded border border-[#c0c0c0]/30 bg-[#c0c0c0]/5">
+                <div className="w-3 h-3 rounded-full bg-[#c0c0c0]" />
+                <div>
+                  <span className="text-[9px] text-[#c0c0c0]" style={{ fontFamily: 'Orbitron, monospace' }}>SILVER</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Intermediate - 150 scraps to enter</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded border border-[#ffd700]/30 bg-[#ffd700]/5">
+                <div className="w-3 h-3 rounded-full bg-[#ffd700]" />
+                <div>
+                  <span className="text-[9px] text-[#ffd700]" style={{ fontFamily: 'Orbitron, monospace' }}>GOLD</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Advanced - 400 scraps to enter</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded border border-[#b9f2ff]/30 bg-[#b9f2ff]/5">
+                <div className="w-3 h-3 rounded-full bg-[#b9f2ff]" />
+                <div>
+                  <span className="text-[9px] text-[#b9f2ff]" style={{ fontFamily: 'Orbitron, monospace' }}>DIAMOND</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Expert - 1000 scraps to enter</p>
+                </div>
+              </div>
+            </div>
+
+            <h3 
+              className="text-[10px] text-[#00ff88] mt-4 mb-2"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              ARENA POWER-UPS
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded border border-[#00ccff]/30 bg-[#00ccff]/5">
+                <span className="text-[8px] text-[#00ccff]" style={{ fontFamily: 'Orbitron, monospace' }}>EMP BLAST</span>
+                <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Stuns opponent for 3 sec</p>
+              </div>
+              <div className="p-2 rounded border border-[#cc00ff]/30 bg-[#cc00ff]/5">
+                <span className="text-[8px] text-[#cc00ff]" style={{ fontFamily: 'Orbitron, monospace' }}>PHASE SHIFT</span>
+                <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Teleport to safety</p>
+              </div>
+              <div className="p-2 rounded border border-[#00ff88]/30 bg-[#00ff88]/5">
+                <span className="text-[8px] text-[#00ff88]" style={{ fontFamily: 'Orbitron, monospace' }}>SHIELD BOOST</span>
+                <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>Restores 30 hull</p>
+              </div>
+              <div className="p-2 rounded border border-[#ffaa00]/30 bg-[#ffaa00]/5">
+                <span className="text-[8px] text-[#ffaa00]" style={{ fontFamily: 'Orbitron, monospace' }}>OVERDRIVE</span>
+                <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>2x fire rate for 5 sec</p>
+              </div>
+            </div>
+
+            <p 
+              className="text-[8px] text-[#ff4466]/60 mt-4 p-2 rounded border border-[#ff4466]/20"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              ⚠ FAIR PLAY: Ship upgrades are disabled in Arena. Both combatants 
+              have equal base stats for balanced competition.
+            </p>
+          </div>
+        )}
+
+        {activeTab === 'bestiary' && (
+          <div className="space-y-4">
+            <h2 
+              className="text-[12px] text-[#aa88ff] mb-3"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              ANOMALY BESTIARY
+            </h2>
+            <p 
+              className="text-[9px] text-[#00ff88]/60 leading-relaxed"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              The Bestiary catalogs all procedurally generated anomalies you've 
+              discovered during your journeys through the Vector Grid. Each 
+              encounter is unique!
+            </p>
+            
+            <h3 
+              className="text-[10px] text-[#00ff88] mt-4 mb-2"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              DISCOVERY CATEGORIES
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-start gap-3 p-2 rounded border border-[#aa88ff]/20 bg-[#aa88ff]/5">
+                <AnomalyIcon />
+                <div>
+                  <span className="text-[9px] text-[#aa88ff]" style={{ fontFamily: 'Orbitron, monospace' }}>CREATURES</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    Unique procedural enemies with random shapes, behaviors and abilities. 
+                    Each has a unique DNA seed that defines its characteristics.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-2 rounded border border-[#00ff88]/20 bg-[#00ff88]/5">
+                <ShipIcon size={24} />
+                <div>
+                  <span className="text-[9px] text-[#00ff88]" style={{ fontFamily: 'Orbitron, monospace' }}>ALLIES</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    Companions you've recruited to fight alongside you. They can be 
+                    evolved to increase their power and abilities.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-2 rounded border border-[#00ccff]/20 bg-[#00ccff]/5">
+                <GridIcon size={24} />
+                <div>
+                  <span className="text-[9px] text-[#00ccff]" style={{ fontFamily: 'Orbitron, monospace' }}>REALMS</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    Procedural backgrounds with unique patterns like vortex, circuit, 
+                    and glitch effects. Discovered as you progress.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-2 rounded border border-[#ff00ff]/20 bg-[#ff00ff]/5">
+                <ZapIcon size={24} />
+                <div>
+                  <span className="text-[9px] text-[#ff00ff]" style={{ fontFamily: 'Orbitron, monospace' }}>WARP ZONES</span>
+                  <p className="text-[7px] text-[#00ff88]/40" style={{ fontFamily: 'Rajdhani, sans-serif' }}>
+                    Unique hyperspace visual effects including wormholes, auroras, 
+                    and data streams discovered during warp travel.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <h3 
+              className="text-[10px] text-[#ffd700] mt-4 mb-2"
+              style={{ fontFamily: 'Orbitron, monospace' }}
+            >
+              BOUNTY SYSTEM
+            </h3>
+            <p 
+              className="text-[8px] text-[#00ff88]/50"
+              style={{ fontFamily: 'Rajdhani, sans-serif' }}
+            >
+              Each newly discovered anomaly has a bounty reward! Collect 15-80 scraps 
+              for each unique creature you catalog. Rarer anomalies yield higher bounties.
+            </p>
+          </div>
+        )}
+
+        {activeTab === 'controls' && (
+          <div className="space-y-4">
+            <h2
               className="text-[12px] text-[#00ff88] mb-3"
               style={{ fontFamily: 'Orbitron, monospace' }}
             >
