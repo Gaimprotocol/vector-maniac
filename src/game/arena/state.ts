@@ -7,6 +7,7 @@ import {
   ArenaDifficulty,
   ArenaMode,
   ArenaReward,
+  ArenaBoosts,
   ARENA_ENTRY_COSTS,
   ARENA_SCRAP_REWARDS,
   ARENA_OPPONENT_NAMES,
@@ -355,12 +356,39 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
   return rewards;
 }
 
-export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 'ai'): ArenaState {
+// Default boosts (no consumables)
+const DEFAULT_BOOSTS: ArenaBoosts = {
+  healthBoost: 0,
+  damageMultiplier: 1,
+  speedMultiplier: 1,
+  fireRateMultiplier: 1,
+  hasStartingShield: false,
+  powerUpDurationMultiplier: 1,
+  doubleScrapReward: false,
+};
+
+export function createArenaState(
+  difficulty: ArenaDifficulty, 
+  mode: ArenaMode = 'ai',
+  boosts: ArenaBoosts = DEFAULT_BOOSTS
+): ArenaState {
   const centerX = ARENA_CONFIG.arenaWidth / 2;
   const playerY = ARENA_CONFIG.arenaHeight - 125; // Scaled down
   
-  // Use base stats only - no upgrades in arena for fair matches
-  const playerMaxHealth = ARENA_CONFIG.playerMaxHealth;
+  // Use base stats with boosts applied
+  const baseHealth = ARENA_CONFIG.playerMaxHealth;
+  const playerMaxHealth = baseHealth + boosts.healthBoost;
+  
+  // Base player stats (before boosts)
+  const baseDamage = 10;
+  const baseSpeed = 5;
+  const baseFireRate = 14; // Lower = faster
+  
+  // Apply multipliers from consumables
+  const playerDamage = baseDamage * boosts.damageMultiplier;
+  const playerSpeed = baseSpeed * boosts.speedMultiplier;
+  // For fire rate, lower is faster, so we divide
+  const playerFireRate = Math.max(8, baseFireRate / boosts.fireRateMultiplier);
   
   // Select random arena
   const arena = getRandomArena();
@@ -386,7 +414,10 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
     playerHealth: playerMaxHealth,
     playerMaxHealth: playerMaxHealth,
     playerFireTimer: 0,
-    playerInvulnerable: 0,
+    playerInvulnerable: boosts.hasStartingShield ? 180 : 0, // 3 seconds of invulnerability
+    playerDamage,
+    playerSpeed,
+    playerFireRate,
     
     // Opponent
     opponent: createOpponent(difficulty, mode),
@@ -401,6 +432,7 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
     // Active effects
     overdriveTimer: 0,
     powerUpSpawnTimer: 300,
+    powerUpDurationMultiplier: boosts.powerUpDurationMultiplier,
     lastPowerUpCollected: null,
     powerUpNotificationTimer: 0,
     
@@ -410,6 +442,7 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
     potentialRewards: generatePotentialRewards(difficulty),
     earnedReward: null, // Deprecated
     earnedRewards: [], // New: supports multiple rewards
+    doubleScrapReward: boosts.doubleScrapReward,
     
     screenShakeIntensity: 0,
     teleportFlashTimer: 0,

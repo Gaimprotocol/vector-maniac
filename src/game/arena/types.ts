@@ -155,6 +155,17 @@ export const ARENA_POWERUP_INFO: Record<ArenaPowerUpType, {
   },
 };
 
+// Consumable boosts applied to player for this match
+export interface ArenaBoosts {
+  healthBoost: number;
+  damageMultiplier: number;
+  speedMultiplier: number;
+  fireRateMultiplier: number;
+  hasStartingShield: boolean;
+  powerUpDurationMultiplier: number;
+  doubleScrapReward: boolean;
+}
+
 export interface ArenaState {
   phase: ArenaPhase;
   phaseTimer: number;
@@ -178,6 +189,9 @@ export interface ArenaState {
   playerMaxHealth: number;
   playerFireTimer: number;
   playerInvulnerable: number;
+  playerDamage: number; // Base damage with boosts applied
+  playerSpeed: number; // Base speed with boosts applied
+  playerFireRate: number; // Base fire rate with boosts applied
   
   // Opponent
   opponent: ArenaOpponent | null;
@@ -192,6 +206,7 @@ export interface ArenaState {
   // Active effects
   overdriveTimer: number; // Overdrive active duration
   powerUpSpawnTimer: number; // Timer until next power-up spawns
+  powerUpDurationMultiplier: number; // From consumables
   lastPowerUpCollected: ArenaPowerUpType | null;
   powerUpNotificationTimer: number;
   
@@ -201,6 +216,7 @@ export interface ArenaState {
   potentialRewards: ArenaReward[];
   earnedReward: ArenaReward | null; // Deprecated, use earnedRewards
   earnedRewards: ArenaReward[]; // New: supports multiple rewards
+  doubleScrapReward: boolean; // From consumables
   
   // Visual effects
   screenShakeIntensity: number;

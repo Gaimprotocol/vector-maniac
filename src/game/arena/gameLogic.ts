@@ -452,10 +452,11 @@ function checkPowerUpCollection(state: ArenaState): ArenaState {
       newState.lastPowerUpCollected = powerUp.type;
       newState.powerUpNotificationTimer = 90;
       
-      // Apply power-up effect to player
+      // Apply power-up effect to player (duration boosted by consumables)
       switch (powerUp.type) {
         case 'emp':
-          newState.opponentStunTimer = ARENA_POWERUP_INFO.emp.duration || 180;
+          const empDuration = ARENA_POWERUP_INFO.emp.duration || 180;
+          newState.opponentStunTimer = Math.floor(empDuration * state.powerUpDurationMultiplier);
           newState.empFlashTimer = 30;
           newState.screenShakeIntensity = 10;
           newParticles.push(...createExplosion(state.playerX, state.playerY, '#00ccff'));
@@ -483,7 +484,9 @@ function checkPowerUpCollection(state: ArenaState): ArenaState {
           break;
           
         case 'overdrive':
-          newState.overdriveTimer = ARENA_POWERUP_INFO.overdrive.duration || 300;
+          // Apply powerUpDurationMultiplier from consumables
+          const baseDuration = ARENA_POWERUP_INFO.overdrive.duration || 300;
+          newState.overdriveTimer = Math.floor(baseDuration * state.powerUpDurationMultiplier);
           break;
       }
     }
@@ -689,10 +692,16 @@ function checkCombatCollisions(state: ArenaState): ArenaState {
           // Award rewards - player gets scraps PLUS potential unique reward
           const rewards: typeof state.potentialRewards = [];
           
-          // Always award scraps
+          // Always award scraps (double if consumable active)
           const scrapsReward = state.potentialRewards.find(r => r.type === 'scraps');
           if (scrapsReward) {
-            rewards.push(scrapsReward);
+            const finalScrapReward = state.doubleScrapReward ? {
+              ...scrapsReward,
+              value: (scrapsReward.value || 0) * 2,
+              name: 'Double Bounty!',
+              description: `+${(scrapsReward.value || 0) * 2} scraps (2x bonus!)`,
+            } : scrapsReward;
+            rewards.push(finalScrapReward);
           }
           
           // Also award unique reward if rolled
@@ -703,7 +712,7 @@ function checkCombatCollisions(state: ArenaState): ArenaState {
           
           newState.earnedRewards = rewards;
           // Keep earnedReward for backwards compatibility (first unique or scraps)
-          newState.earnedReward = uniqueRewards.length > 0 ? uniqueRewards[0] : scrapsReward || null;
+          newState.earnedReward = uniqueRewards.length > 0 ? uniqueRewards[0] : (rewards[0] || null);
         }
       }
     } else if (!proj.isPlayer && state.playerInvulnerable <= 0) {
@@ -880,7 +889,8 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
       const dist = Math.sqrt(dx * dx + dy * dy);
       
       if (dist > 2) {
-        const moveSpeed = Math.min(ARENA_CONFIG.playerSpeed * 3, dist * 0.5);
+        // Use player's boosted speed stat
+        const moveSpeed = Math.min(newState.playerSpeed * 3, dist * 0.5);
         const dir = normalize(dx, dy);
         let newX = newState.playerX + dir.x * moveSpeed;
         let newY = newState.playerY + dir.y * moveSpeed;
@@ -906,10 +916,11 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
       if (newState.playerFireTimer > 0) newState.playerFireTimer--;
       if (newState.playerInvulnerable > 0) newState.playerInvulnerable--;
       
-      // Determine fire rate (affected by overdrive)
+      // Determine fire rate (affected by overdrive + consumable boosts)
+      const baseFireRate = newState.playerFireRate;
       const fireRate = newState.overdriveTimer > 0 
-        ? Math.floor(ARENA_CONFIG.playerFireRate / 2) 
-        : ARENA_CONFIG.playerFireRate;
+        ? Math.floor(baseFireRate / 2) 
+        : baseFireRate;
       
       // Player fires when touching and opponent exists
       if (input.isTouching && newState.playerFireTimer <= 0 && newState.opponent) {
@@ -920,11 +931,12 @@ export function updateArenaState(state: ArenaState, input: ArenaInput): ArenaSta
         const spawnX = newState.playerX + Math.cos(newState.playerAngle) * tipOffset;
         const spawnY = newState.playerY + Math.sin(newState.playerAngle) * tipOffset;
         
+        // Use player's boosted damage stat
         const projectile = createProjectile(
           spawnX, spawnY,
           newState.playerAngle,
           ARENA_CONFIG.playerBulletSpeed,
-          ARENA_CONFIG.playerDamage,
+          newState.playerDamage,
           true,
           shipId
         );
