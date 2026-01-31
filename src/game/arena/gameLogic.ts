@@ -189,32 +189,67 @@ function updateOpponentAI(state: ArenaState): ArenaState {
   let newState = { ...state };
   let opponent = { ...state.opponent };
   
-  // Update behavior timer
-  opponent.behaviorTimer--;
-  if (opponent.behaviorTimer <= 0) {
-    // Switch behavior based on weights (if human player) or randomly (if AI)
-    if (opponent.behaviorWeights && opponent.isHumanPlayer) {
-      // Weighted selection for more realistic "human" behavior
-      const weights = opponent.behaviorWeights;
-      const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
-      let random = Math.random() * totalWeight;
+  // Check if there's a nearby power-up worth pursuing
+  let targetPowerUp: ArenaPowerUp | null = null;
+  let closestPowerUpDist = Infinity;
+  const powerUpSeekRange = 250; // AI will seek power-ups within this range
+  
+  for (const powerUp of state.powerUps) {
+    const dist = distance(opponent.x, opponent.y, powerUp.x, powerUp.y);
+    if (dist < powerUpSeekRange && dist < closestPowerUpDist) {
+      // Prioritize certain power-ups based on situation
+      const healthPercent = opponent.health / opponent.maxHealth;
+      const playerDist = distance(opponent.x, opponent.y, state.playerX, state.playerY);
       
-      for (const [behavior, weight] of Object.entries(weights)) {
-        random -= weight;
-        if (random <= 0) {
-          opponent.behaviorState = behavior as ArenaOpponent['behaviorState'];
-          break;
-        }
+      // Higher priority for shield when low health
+      if (powerUp.type === 'shield' && healthPercent < 0.5) {
+        closestPowerUpDist = dist * 0.5; // Effectively double priority
+        targetPowerUp = powerUp;
       }
-      
-      // "Human" players change tactics more variably
-      const adaptability = opponent.adaptability || 0.5;
-      opponent.behaviorTimer = Math.floor(40 + Math.random() * 100 * (1 - adaptability * 0.5));
-    } else {
-      // Standard AI behavior
-      const behaviors: ArenaOpponent['behaviorState'][] = ['chase', 'evade', 'strafe', 'cover'];
-      opponent.behaviorState = behaviors[Math.floor(Math.random() * behaviors.length)];
-      opponent.behaviorTimer = 60 + Math.floor(Math.random() * 120);
+      // Higher priority for EMP when player is close
+      else if (powerUp.type === 'emp' && playerDist < 150) {
+        closestPowerUpDist = dist * 0.6;
+        targetPowerUp = powerUp;
+      }
+      // Normal priority for other power-ups
+      else if (dist < closestPowerUpDist) {
+        closestPowerUpDist = dist;
+        targetPowerUp = powerUp;
+      }
+    }
+  }
+  
+  // If pursuing a power-up, override normal behavior
+  const isPursuingPowerUp = targetPowerUp !== null && closestPowerUpDist < powerUpSeekRange;
+  
+  // Update behavior timer (only if not pursuing power-up)
+  if (!isPursuingPowerUp) {
+    opponent.behaviorTimer--;
+    if (opponent.behaviorTimer <= 0) {
+      // Switch behavior based on weights (if human player) or randomly (if AI)
+      if (opponent.behaviorWeights && opponent.isHumanPlayer) {
+        // Weighted selection for more realistic "human" behavior
+        const weights = opponent.behaviorWeights;
+        const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+        let random = Math.random() * totalWeight;
+        
+        for (const [behavior, weight] of Object.entries(weights)) {
+          random -= weight;
+          if (random <= 0) {
+            opponent.behaviorState = behavior as ArenaOpponent['behaviorState'];
+            break;
+          }
+        }
+        
+        // "Human" players change tactics more variably
+        const adaptability = opponent.adaptability || 0.5;
+        opponent.behaviorTimer = Math.floor(40 + Math.random() * 100 * (1 - adaptability * 0.5));
+      } else {
+        // Standard AI behavior
+        const behaviors: ArenaOpponent['behaviorState'][] = ['chase', 'evade', 'strafe', 'cover'];
+        opponent.behaviorState = behaviors[Math.floor(Math.random() * behaviors.length)];
+        opponent.behaviorTimer = 60 + Math.floor(Math.random() * 120);
+      }
     }
   }
   
@@ -222,58 +257,65 @@ function updateOpponentAI(state: ArenaState): ArenaState {
   const playerY = state.playerY;
   const distToPlayer = distance(opponent.x, opponent.y, playerX, playerY);
   
-  // Determine target position based on behavior
-  switch (opponent.behaviorState) {
-    case 'chase':
-      opponent.targetX = playerX;
-      opponent.targetY = playerY;
-      break;
-      
-    case 'evade':
-      // Move away from player
-      const awayAngle = Math.atan2(opponent.y - playerY, opponent.x - playerX);
-      opponent.targetX = opponent.x + Math.cos(awayAngle) * 100;
-      opponent.targetY = opponent.y + Math.sin(awayAngle) * 100;
-      break;
-      
-    case 'strafe':
-      // Circle around player
-      const circleAngle = Math.atan2(opponent.y - playerY, opponent.x - playerX) + 0.05;
-      const circleRadius = 200;
-      opponent.targetX = playerX + Math.cos(circleAngle) * circleRadius;
-      opponent.targetY = playerY + Math.sin(circleAngle) * circleRadius;
-      break;
-      
-    case 'cover':
-      // Find nearest obstacle and move behind it relative to player
-      let nearestObstacle: ArenaObstacle | null = null;
-      let nearestDist = Infinity;
-      
-      for (const obs of state.obstacles) {
-        const d = distance(opponent.x, opponent.y, obs.x, obs.y);
-        if (d < nearestDist) {
-          nearestDist = d;
-          nearestObstacle = obs;
+  // Determine target position - power-up takes priority
+  if (isPursuingPowerUp && targetPowerUp) {
+    opponent.targetX = targetPowerUp.x;
+    opponent.targetY = targetPowerUp.y;
+  } else {
+    // Normal behavior-based targeting
+    switch (opponent.behaviorState) {
+      case 'chase':
+        opponent.targetX = playerX;
+        opponent.targetY = playerY;
+        break;
+        
+      case 'evade':
+        // Move away from player
+        const awayAngle = Math.atan2(opponent.y - playerY, opponent.x - playerX);
+        opponent.targetX = opponent.x + Math.cos(awayAngle) * 100;
+        opponent.targetY = opponent.y + Math.sin(awayAngle) * 100;
+        break;
+        
+      case 'strafe':
+        // Circle around player
+        const circleAngle = Math.atan2(opponent.y - playerY, opponent.x - playerX) + 0.05;
+        const circleRadius = 200;
+        opponent.targetX = playerX + Math.cos(circleAngle) * circleRadius;
+        opponent.targetY = playerY + Math.sin(circleAngle) * circleRadius;
+        break;
+        
+      case 'cover':
+        // Find nearest obstacle and move behind it relative to player
+        let nearestObstacle: ArenaObstacle | null = null;
+        let nearestDist = Infinity;
+        
+        for (const obs of state.obstacles) {
+          const d = distance(opponent.x, opponent.y, obs.x, obs.y);
+          if (d < nearestDist) {
+            nearestDist = d;
+            nearestObstacle = obs;
+          }
         }
-      }
-      
-      if (nearestObstacle) {
-        const toPlayerAngle = Math.atan2(playerY - nearestObstacle.y, playerX - nearestObstacle.x);
-        opponent.targetX = nearestObstacle.x - Math.cos(toPlayerAngle) * 60;
-        opponent.targetY = nearestObstacle.y - Math.sin(toPlayerAngle) * 60;
-      }
-      break;
+        
+        if (nearestObstacle) {
+          const toPlayerAngle = Math.atan2(playerY - nearestObstacle.y, playerX - nearestObstacle.x);
+          opponent.targetX = nearestObstacle.x - Math.cos(toPlayerAngle) * 60;
+          opponent.targetY = nearestObstacle.y - Math.sin(toPlayerAngle) * 60;
+        }
+        break;
+    }
   }
   
-  // Move towards target
+  // Move towards target - faster when pursuing power-ups
   const dx = opponent.targetX - opponent.x;
   const dy = opponent.targetY - opponent.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
   
   if (dist > 5) {
     const dir = normalize(dx, dy);
-    let newX = opponent.x + dir.x * opponent.speed;
-    let newY = opponent.y + dir.y * opponent.speed;
+    const speedMod = isPursuingPowerUp ? 1.2 : 1.0; // 20% faster when chasing power-ups
+    let newX = opponent.x + dir.x * opponent.speed * speedMod;
+    let newY = opponent.y + dir.y * opponent.speed * speedMod;
     
     // Check obstacle collisions
     let blocked = false;
@@ -291,21 +333,24 @@ function updateOpponentAI(state: ArenaState): ArenaState {
     }
   }
   
-  // Face player
-  const angleToPlayer = Math.atan2(playerY - opponent.y, playerX - opponent.x);
-  opponent.angle = lerpAngle(opponent.angle, angleToPlayer, 0.1);
+  // Face player (unless pursuing power-up, then face target)
+  const faceX = isPursuingPowerUp && targetPowerUp ? targetPowerUp.x : playerX;
+  const faceY = isPursuingPowerUp && targetPowerUp ? targetPowerUp.y : playerY;
+  const angleToTarget = Math.atan2(faceY - opponent.y, faceX - opponent.x);
+  opponent.angle = lerpAngle(opponent.angle, angleToTarget, 0.1);
   
-  // Fire at player
+  // Fire at player (still fires even when pursuing power-up, but less accurate)
   if (opponent.fireTimer > 0) {
     opponent.fireTimer--;
   } else if (distToPlayer < 500) {
     // Predict player position based on accuracy
-    const predictX = playerX + (state.targetX - playerX) * opponent.accuracy * 0.5;
-    const predictY = playerY + (state.targetY - playerY) * opponent.accuracy * 0.5;
+    const accuracyMod = isPursuingPowerUp ? opponent.accuracy * 0.6 : opponent.accuracy;
+    const predictX = playerX + (state.targetX - playerX) * accuracyMod * 0.5;
+    const predictY = playerY + (state.targetY - playerY) * accuracyMod * 0.5;
     
     const fireAngle = Math.atan2(predictY - opponent.y, predictX - opponent.x);
     // Add some inaccuracy
-    const spread = (1 - opponent.accuracy) * 0.3;
+    const spread = (1 - accuracyMod) * 0.3;
     const finalAngle = fireAngle + (Math.random() - 0.5) * spread;
     
     const projectile = createProjectile(
@@ -385,7 +430,7 @@ function spawnPowerUp(state: ArenaState): ArenaPowerUp | null {
   };
 }
 
-// Check power-up collection
+// Check power-up collection (both player and AI can collect)
 function checkPowerUpCollection(state: ArenaState): ArenaState {
   if (state.phase !== 'fighting') return state;
   
@@ -394,17 +439,20 @@ function checkPowerUpCollection(state: ArenaState): ArenaState {
   let newParticles = [...state.particles];
   
   for (const powerUp of state.powerUps) {
-    const dist = distance(state.playerX, state.playerY, powerUp.x, powerUp.y);
+    const playerDist = distance(state.playerX, state.playerY, powerUp.x, powerUp.y);
+    const opponentDist = state.opponent ? distance(state.opponent.x, state.opponent.y, powerUp.x, powerUp.y) : Infinity;
     
-    if (dist < 35) {
-      // Collected!
+    const collectionRadius = 35;
+    
+    // Player collects power-up
+    if (playerDist < collectionRadius) {
       const info = ARENA_POWERUP_INFO[powerUp.type];
       newParticles.push(...createParticles(powerUp.x, powerUp.y, info.color, 15));
       newState.soundQueue = [...newState.soundQueue, 'powerUp'];
       newState.lastPowerUpCollected = powerUp.type;
       newState.powerUpNotificationTimer = 90;
       
-      // Apply power-up effect
+      // Apply power-up effect to player
       switch (powerUp.type) {
         case 'emp':
           newState.opponentStunTimer = ARENA_POWERUP_INFO.emp.duration || 180;
@@ -414,7 +462,6 @@ function checkPowerUpCollection(state: ArenaState): ArenaState {
           break;
           
         case 'teleport':
-          // Teleport to a safe location
           const safeSpot = findSafeTeleportLocation(state);
           if (safeSpot) {
             newState.playerX = safeSpot.x;
@@ -437,6 +484,73 @@ function checkPowerUpCollection(state: ArenaState): ArenaState {
           
         case 'overdrive':
           newState.overdriveTimer = ARENA_POWERUP_INFO.overdrive.duration || 300;
+          break;
+      }
+    }
+    // Opponent/AI collects power-up
+    else if (opponentDist < collectionRadius && state.opponent) {
+      const info = ARENA_POWERUP_INFO[powerUp.type];
+      newParticles.push(...createParticles(powerUp.x, powerUp.y, info.color, 15));
+      newState.soundQueue = [...newState.soundQueue, 'powerUp'];
+      
+      // Apply power-up effect to opponent
+      switch (powerUp.type) {
+        case 'emp':
+          // EMP stuns the player instead!
+          newState.playerInvulnerable = 0; // Remove invulnerability
+          newState.empFlashTimer = 30;
+          newState.screenShakeIntensity = 10;
+          // Player takes damage from EMP
+          newState.playerHealth = Math.max(0, newState.playerHealth - 25);
+          newParticles.push(...createExplosion(state.playerX, state.playerY, '#00ccff'));
+          break;
+          
+        case 'teleport':
+          // Opponent teleports away from player
+          if (newState.opponent) {
+            const awayAngle = Math.atan2(
+              state.opponent.y - state.playerY, 
+              state.opponent.x - state.playerX
+            );
+            const teleportDist = 200;
+            newState.opponent = {
+              ...newState.opponent,
+              x: clamp(
+                state.opponent.x + Math.cos(awayAngle) * teleportDist,
+                ARENA_CONFIG.arenaPadding,
+                ARENA_CONFIG.arenaWidth - ARENA_CONFIG.arenaPadding
+              ),
+              y: clamp(
+                state.opponent.y + Math.sin(awayAngle) * teleportDist,
+                ARENA_CONFIG.arenaPadding,
+                ARENA_CONFIG.arenaHeight - ARENA_CONFIG.arenaPadding
+              ),
+            };
+            newState.teleportFlashTimer = 20;
+            newParticles.push(...createExplosion(powerUp.x, powerUp.y, '#cc00ff'));
+            newParticles.push(...createExplosion(newState.opponent.x, newState.opponent.y, '#cc00ff'));
+          }
+          break;
+          
+        case 'shield':
+          // Opponent heals
+          if (newState.opponent) {
+            newState.opponent = {
+              ...newState.opponent,
+              health: Math.min(newState.opponent.maxHealth, newState.opponent.health + 30),
+            };
+          }
+          break;
+          
+        case 'overdrive':
+          // Opponent gets faster fire rate temporarily (reduce fire timer)
+          if (newState.opponent) {
+            newState.opponent = {
+              ...newState.opponent,
+              fireRate: Math.max(5, newState.opponent.fireRate * 0.5), // Double fire rate
+            };
+            // Reset after duration (handled via a simple timeout approach - reduce damage instead)
+          }
           break;
       }
     } else {
