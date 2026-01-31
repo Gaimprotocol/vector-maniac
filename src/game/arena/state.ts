@@ -28,6 +28,11 @@ function generateObstacles(): ArenaObstacle[] {
   return [];
 }
 
+// Random difficulty variance: 80-100% of base stats
+function getDifficultyVariance(): number {
+  return 0.8 + Math.random() * 0.2;
+}
+
 // Create AI opponent (original behavior)
 function createAIOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   const stats = ARENA_DIFFICULTY_STATS[difficulty];
@@ -41,13 +46,22 @@ function createAIOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   const spawnX = ARENA_CONFIG.arenaWidth / 2;
   const spawnY = 100; // Scaled down
   
+  // Apply random variance (80-100% of base stats)
+  const variance = getDifficultyVariance();
+  const variedHealth = Math.floor(stats.health * variance);
+  const variedDamage = Math.floor(stats.damage * variance);
+  const variedSpeed = stats.speed * variance;
+  const variedAccuracy = stats.accuracy * variance;
+  // For fire rate, lower = faster, so we inverse the variance
+  const variedFireRate = Math.ceil(stats.fireRate / variance);
+  
   return {
     id: 'opponent_1',
     x: spawnX,
     y: spawnY,
     angle: Math.PI / 2,
-    health: stats.health,
-    maxHealth: stats.health,
+    health: variedHealth,
+    maxHealth: variedHealth,
     shipId,
     name,
     difficulty,
@@ -57,10 +71,10 @@ function createAIOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     fireTimer: 0,
     behaviorTimer: 0,
     behaviorState: 'chase',
-    damage: stats.damage,
-    fireRate: stats.fireRate, // Full fire rate
-    speed: stats.speed * 0.85, // Fast AI movement
-    accuracy: stats.accuracy,
+    damage: variedDamage,
+    fireRate: variedFireRate,
+    speed: variedSpeed * 0.85, // Fast AI movement
+    accuracy: variedAccuracy,
   };
 }
 
@@ -78,6 +92,9 @@ function createHumanOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
   
   const stats = ARENA_DIFFICULTY_STATS[difficulty];
   
+  // Apply random variance (80-100% of base stats)
+  const variance = getDifficultyVariance();
+  
   // Pick ship - use preference or random
   const shipIds = Object.keys(SHIP_MODELS);
   const shipId = profile.shipPreference.length > 0 
@@ -92,18 +109,20 @@ function createHumanOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     ? getPlayStyleBehaviorWeights(profile.playStyle as any)
     : { chase: 0.25, evade: 0.25, strafe: 0.25, cover: 0.25 };
   
-  // Calculate modified stats based on player profile - challenging
-  const modifiedAccuracy = Math.min(1, stats.accuracy * 0.9 + profile.accuracy * 0.2);
-  const modifiedSpeed = stats.speed * 0.85 * (0.9 + profile.aggressiveness * 0.2);
-  const modifiedFireRate = Math.max(10, stats.fireRate * (0.8 + profile.patience * 0.3));
+  // Calculate modified stats based on player profile with variance
+  const variedHealth = Math.floor(stats.health * variance);
+  const modifiedAccuracy = Math.min(1, (stats.accuracy * 0.9 + profile.accuracy * 0.2) * variance);
+  const modifiedSpeed = stats.speed * 0.85 * (0.9 + profile.aggressiveness * 0.2) * variance;
+  const modifiedFireRate = Math.max(10, Math.ceil(stats.fireRate * (0.8 + profile.patience * 0.3) / variance));
+  const variedDamage = Math.floor(stats.damage * variance);
   
   return {
     id: 'opponent_1',
     x: spawnX,
     y: spawnY,
     angle: Math.PI / 2,
-    health: stats.health,
-    maxHealth: stats.health,
+    health: variedHealth,
+    maxHealth: variedHealth,
     shipId,
     name: getDisplayName(profile),
     difficulty,
@@ -118,7 +137,7 @@ function createHumanOpponent(difficulty: ArenaDifficulty): ArenaOpponent {
     behaviorTimer: 0,
     behaviorState: 'chase',
     behaviorWeights,
-    damage: stats.damage,
+    damage: variedDamage,
     fireRate: modifiedFireRate,
     speed: modifiedSpeed,
     accuracy: modifiedAccuracy,
