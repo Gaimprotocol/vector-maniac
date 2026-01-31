@@ -9,24 +9,195 @@ import {
 
 type TabType = 'about' | 'objectives' | 'powerups' | 'controls';
 
-const POWERUPS = [
-  { name: 'FORCE FIELD', description: 'Destroys enemies on contact for 4 seconds' },
-  { name: 'HEALTH', description: 'Repairs hull damage' },
-  { name: 'HOMING MISSILES', description: 'Auto-targeting missiles for 6 seconds' },
-  { name: 'SHIELD', description: 'Invincibility for 8 seconds' },
-  { name: 'MEGA BOMB', description: 'Destroys all enemies on screen' },
-  { name: 'TRIPLE SHOT', description: 'Three projectiles for 5 seconds' },
-  { name: 'ELECTRIC PULSE', description: 'Damages all visible enemies' },
-  { name: 'ESCORT PLANES', description: 'Allied ships assist you for 6 seconds' },
+// Custom power-up icons in green vector style
+const ShieldPowerUpIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M12 8v4M12 16h.01" stroke="#00ff88" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const NukePowerUpIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="2" fill="#00ff88" />
+    <line x1="12" y1="2" x2="12" y2="5" />
+    <line x1="12" y1="19" x2="12" y2="22" />
+    <line x1="2" y1="12" x2="5" y2="12" />
+    <line x1="19" y1="12" x2="22" y2="12" />
+  </svg>
+);
+
+const DoublePointsIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <text x="12" y="16" textAnchor="middle" fill="#00ff88" fontSize="14" fontFamily="Orbitron" stroke="none">×2</text>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+  </svg>
+);
+
+const DoubleShotIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <line x1="8" y1="20" x2="8" y2="4" />
+    <polygon points="8 4 5 10 8 8 11 10 8 4" fill="#00ff88" />
+    <line x1="16" y1="20" x2="16" y2="4" />
+    <polygon points="16 4 13 10 16 8 19 10 16 4" fill="#00ff88" />
+  </svg>
+);
+
+const SpeedBoostIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" />
+    <line x1="3" y1="6" x2="7" y2="6" strokeLinecap="round" />
+    <line x1="2" y1="10" x2="5" y2="10" strokeLinecap="round" />
+    <line x1="3" y1="18" x2="7" y2="18" strokeLinecap="round" />
+  </svg>
+);
+
+const WarpShieldIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M8 12h8M12 8v8" strokeLinecap="round" />
+  </svg>
+);
+
+const TimeWarpIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4 4l2 2M20 4l-2 2" strokeLinecap="round" />
+  </svg>
+);
+
+const MagnetPulseIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <path d="M4 12a8 8 0 0 1 16 0" />
+    <line x1="4" y1="12" x2="4" y2="18" />
+    <line x1="20" y1="12" x2="20" y2="18" />
+    <line x1="4" y1="15" x2="6" y2="15" />
+    <line x1="18" y1="15" x2="20" y2="15" />
+    <circle cx="12" cy="16" r="2" fill="#00ff88" />
+  </svg>
+);
+
+// Enemy icons in green vector style
+const DroneIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <polygon points="12 4 20 16 12 14 4 16 12 4" />
+  </svg>
+);
+
+const ShooterIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <polygon points="12 4 18 12 12 20 6 12 12 4" />
+    <circle cx="12" cy="12" r="2" fill="#00ff88" />
+  </svg>
+);
+
+const EliteIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <polygon points="12 2 15 9 22 9 17 14 19 22 12 17 5 22 7 14 2 9 9 9 12 2" />
+  </svg>
+);
+
+const DasherIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <polygon points="20 12 8 6 12 12 8 18 20 12" fill="none" />
+    <line x1="2" y1="10" x2="6" y2="12" strokeLinecap="round" />
+    <line x1="2" y1="14" x2="6" y2="12" strokeLinecap="round" />
+  </svg>
+);
+
+const SplitterIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <circle cx="12" cy="8" r="4" />
+    <circle cx="8" cy="18" r="3" />
+    <circle cx="16" cy="18" r="3" />
+    <line x1="12" y1="12" x2="8" y2="15" />
+    <line x1="12" y1="12" x2="16" y2="15" />
+  </svg>
+);
+
+const OrbiterIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <circle cx="12" cy="12" r="3" fill="#00ff88" />
+    <circle cx="12" cy="12" r="8" strokeDasharray="4 2" />
+    <circle cx="12" cy="4" r="2" />
+  </svg>
+);
+
+const SniperIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <rect x="8" y="8" width="8" height="8" />
+    <line x1="12" y1="2" x2="12" y2="6" />
+    <line x1="12" y1="18" x2="12" y2="22" />
+    <line x1="2" y1="12" x2="6" y2="12" />
+    <line x1="18" y1="12" x2="22" y2="12" />
+    <circle cx="12" cy="12" r="2" fill="#00ff88" />
+  </svg>
+);
+
+const AnomalyIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <polygon points="12 3 19 7 19 15 12 19 5 15 5 7 12 3" />
+    <text x="12" y="14" textAnchor="middle" fill="#00ff88" fontSize="8" fontFamily="Orbitron" stroke="none">?</text>
+  </svg>
+);
+
+// Power-ups that actually exist in Vector Maniac (from types.ts)
+const POWERUPS: { name: string; description: string; icon: React.ReactNode }[] = [
+  { 
+    name: 'SHIELD', 
+    description: 'Absorbs one hit of damage',
+    icon: <ShieldPowerUpIcon />
+  },
+  { 
+    name: 'NUKE', 
+    description: 'Destroys all enemies on screen',
+    icon: <NukePowerUpIcon />
+  },
+  { 
+    name: 'DOUBLE POINTS', 
+    description: 'Doubles score for a limited time',
+    icon: <DoublePointsIcon />
+  },
+  { 
+    name: 'DOUBLE SHOT', 
+    description: 'Fires two projectiles at once',
+    icon: <DoubleShotIcon />
+  },
+  { 
+    name: 'SPEED BOOST', 
+    description: 'Increases movement speed',
+    icon: <SpeedBoostIcon />
+  },
+  { 
+    name: 'WARP SHIELD', 
+    description: 'Absorbs 3 hits during hyperspace',
+    icon: <WarpShieldIcon />
+  },
+  { 
+    name: 'TIME WARP', 
+    description: 'Slows all enemies temporarily',
+    icon: <TimeWarpIcon />
+  },
+  { 
+    name: 'MAGNET PULSE', 
+    description: 'Pulls all salvage towards you',
+    icon: <MagnetPulseIcon />
+  },
 ];
 
-const ENEMIES = [
-  { name: 'TURRETS', description: 'Stationary defenses on terrain' },
-  { name: 'DRONES', description: 'Flying enemies with erratic movement' },
-  { name: 'BOMBERS', description: 'Drop explosives from above' },
-  { name: 'SNIPERS', description: 'Precise long-range attackers' },
-  { name: 'TANKS', description: 'Heavy ground units with big guns' },
-  { name: 'LEECHES', description: 'Attach to civilians - rescue quickly!' },
+// Enemies that exist in Vector Maniac (from types.ts VectorEnemy type)
+const ENEMIES: { name: string; description: string; icon: React.ReactNode }[] = [
+  { name: 'DRONE', description: 'Basic flying enemy with erratic movement', icon: <DroneIcon /> },
+  { name: 'SHOOTER', description: 'Fires projectiles at the player', icon: <ShooterIcon /> },
+  { name: 'ELITE', description: 'Stronger enemy with more health', icon: <EliteIcon /> },
+  { name: 'DASHER', description: 'Fast enemy that charges in zigzag patterns', icon: <DasherIcon /> },
+  { name: 'SPLITTER', description: 'Splits into two smaller enemies when destroyed', icon: <SplitterIcon /> },
+  { name: 'ORBITER', description: 'Circles around the player at a distance', icon: <OrbiterIcon /> },
+  { name: 'SNIPER', description: 'Stops and aims with a laser before firing', icon: <SniperIcon /> },
+  { name: 'ANOMALY', description: 'Procedurally generated with unique abilities', icon: <AnomalyIcon /> },
 ];
 
 export const InfoScreen: React.FC = () => {
@@ -170,7 +341,7 @@ export const InfoScreen: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               {ENEMIES.map((enemy) => (
                 <div key={enemy.name} className="flex items-center gap-2">
-                  <TargetIcon size={24} />
+                  {enemy.icon}
                   <div>
                     <span 
                       className="text-[9px] text-[#00ff88]"
@@ -324,7 +495,7 @@ export const InfoScreen: React.FC = () => {
                   className="flex items-center gap-3 p-2 rounded border border-[#00ff88]/20"
                   style={{ background: 'rgba(0, 255, 136, 0.03)' }}
                 >
-                  <ZapIcon size={24} />
+                  {powerup.icon}
                   <div>
                     <span 
                       className="text-[9px] text-[#00ff88]"
