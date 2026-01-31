@@ -495,11 +495,11 @@ function renderAnomalyBackgroundEffects(ctx: CanvasRenderingContext2D, state: Ve
       // Soft cosmic clouds
       for (let i = 0; i < 5; i++) {
         const seed = i * 237.5 + dna.seed;
-        const x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
-        const y = ((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
-        const r = 100 + ((Math.sin(seed + 2) * 10000) % 1) * 200;
+        const x = Math.abs((Math.sin(seed) * 10000) % 1) * arenaWidth;
+        const y = Math.abs((Math.sin(seed + 1) * 10000) % 1) * arenaHeight;
+        const r = 100 + Math.abs((Math.sin(seed + 2) * 10000) % 1) * 200;
         
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, Math.max(1, r));
         const hue = dna.primaryHue + i * 30;
         gradient.addColorStop(0, `hsla(${hue}, ${dna.saturation}%, 40%, 0.08)`);
         gradient.addColorStop(0.5, `hsla(${hue}, ${dna.saturation}%, 30%, 0.04)`);
