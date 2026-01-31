@@ -541,10 +541,6 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   drawMegaShip(ctx, 0, 0, getStoredMegaShipId(), animTime);
   
   ctx.restore();
-  
-  // Health bar
-  renderHealthBar(ctx, state.playerX, state.playerY + 18, 28, 3, 
-    state.playerHealth / state.playerMaxHealth, COLORS.player);
 }
 
 function renderOpponent(ctx: CanvasRenderingContext2D, state: ArenaState): void {
@@ -568,22 +564,6 @@ function renderOpponent(ctx: CanvasRenderingContext2D, state: ArenaState): void 
   ctx.restore();
   
   ctx.restore();
-  
-  // Health bar
-  renderHealthBar(ctx, opp.x, opp.y - 22, 32, 3, 
-    opp.health / opp.maxHealth, COLORS.opponent);
-  
-  // Name
-  ctx.fillStyle = COLORS.opponent;
-  ctx.font = '8px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(opp.name, opp.x, opp.y - 28);
-  
-  if (opp.isHumanPlayer && opp.playerLevel) {
-    ctx.fillStyle = '#668';
-    ctx.font = '6px sans-serif';
-    ctx.fillText(`LV${opp.playerLevel}`, opp.x, opp.y - 35);
-  }
 }
 
 function renderHealthBar(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, pct: number, color: string): void {
@@ -604,7 +584,7 @@ function renderHealthBar(ctx: CanvasRenderingContext2D, x: number, y: number, w:
 }
 
 function renderHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
-  const { arenaWidth: w } = state;
+  const { arenaWidth: w, arenaHeight: h } = state;
   
   const diffColors: Record<string, string> = {
     bronze: '#cd7f32', silver: '#c0c0c0', gold: '#ffd700', diamond: '#b9f2ff'
@@ -621,7 +601,7 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
   ctx.font = '7px sans-serif';
   ctx.fillText(`◆ ${state.difficulty.toUpperCase()}`, 10, 30);
   
-  // Timer
+  // Timer (top center)
   if (state.phase === 'fighting') {
     const secs = Math.floor(state.gameTime / 60);
     const mins = Math.floor(secs / 60);
@@ -632,15 +612,34 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: ArenaState): void {
     ctx.fillText(`${mins}:${s.toString().padStart(2, '0')}`, w / 2, 18);
   }
   
-  // Health %
-  ctx.textAlign = 'right';
-  ctx.fillStyle = COLORS.player;
-  ctx.font = '8px sans-serif';
-  ctx.fillText(`HULL ${Math.round((state.playerHealth / state.playerMaxHealth) * 100)}%`, w - 10, 18);
+  // Health bars at bottom of screen
+  const barWidth = 120;
+  const barHeight = 8;
+  const barY = h - 25;
+  const barPadding = 15;
   
+  // Player health bar (bottom left)
+  ctx.fillStyle = COLORS.player;
+  ctx.font = 'bold 8px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('YOU', barPadding, barY - 4);
+  renderHealthBar(ctx, barPadding + barWidth / 2, barY, barWidth, barHeight, 
+    state.playerHealth / state.playerMaxHealth, COLORS.player);
+  
+  // Opponent health bar (bottom right)
   if (state.opponent) {
     ctx.fillStyle = COLORS.opponent;
-    ctx.fillText(`ENEMY ${Math.round((state.opponent.health / state.opponent.maxHealth) * 100)}%`, w - 10, 30);
+    ctx.textAlign = 'right';
+    ctx.fillText(state.opponent.name, w - barPadding, barY - 4);
+    
+    if (state.opponent.isHumanPlayer && state.opponent.playerLevel) {
+      ctx.fillStyle = '#668';
+      ctx.font = '6px sans-serif';
+      ctx.fillText(`LV${state.opponent.playerLevel}`, w - barPadding - 50, barY - 4);
+    }
+    
+    renderHealthBar(ctx, w - barPadding - barWidth / 2, barY, barWidth, barHeight, 
+      state.opponent.health / state.opponent.maxHealth, COLORS.opponent);
   }
 }
 
