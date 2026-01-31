@@ -373,7 +373,8 @@ export function createArenaState(difficulty: ArenaDifficulty, mode: ArenaMode = 
     difficulty,
     entryCost: ARENA_ENTRY_COSTS[difficulty],
     potentialRewards: generatePotentialRewards(difficulty),
-    earnedReward: null,
+    earnedReward: null, // Deprecated
+    earnedRewards: [], // New: supports multiple rewards
     
     screenShakeIntensity: 0,
     teleportFlashTimer: 0,

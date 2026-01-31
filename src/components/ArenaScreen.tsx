@@ -181,10 +181,13 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           const won = prev.phase === 'playerWon';
           setBattleResult(won ? 'won' : 'lost');
           
-          // Award scraps if won
-          if (won && newState.earnedReward?.type === 'scraps' && newState.earnedReward.value) {
-            addStoredScraps(newState.earnedReward.value);
-            setScraps(getStoredScraps());
+          // Award scraps if won (check all earned rewards)
+          if (won && newState.earnedRewards) {
+            const scrapsReward = newState.earnedRewards.find(r => r.type === 'scraps');
+            if (scrapsReward?.value) {
+              addStoredScraps(scrapsReward.value);
+              setScraps(getStoredScraps());
+            }
           }
           
           // Delay transition to result screen
@@ -495,7 +498,9 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
   // Result screen
   if (screen === 'result') {
     const won = battleResult === 'won';
-    const reward = arenaState?.earnedReward;
+    const rewards = arenaState?.earnedRewards || [];
+    const scrapsReward = rewards.find(r => r.type === 'scraps');
+    const uniqueRewards = rewards.filter(r => r.type !== 'scraps');
     
     return (
       <div 
@@ -518,29 +523,54 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           {won ? '◆ VICTORY! ◆' : 'DEFEATED'}
         </h1>
         
-        {/* Reward display */}
-        {won && reward && (
-          <div 
-            className="mb-6 px-6 py-4 rounded-lg border text-center"
-            style={{
-              fontFamily: 'Orbitron, monospace',
-              borderColor: reward.rarity === 'legendary' ? '#ffd700' : 
-                          reward.rarity === 'epic' ? '#aa66ff' :
-                          reward.rarity === 'rare' ? '#4488ff' : 'rgba(0, 255, 136, 0.3)',
-              background: 'rgba(0, 0, 0, 0.5)',
-              boxShadow: reward.rarity === 'legendary' ? '0 0 30px #ffd70050' : 
-                        reward.rarity === 'epic' ? '0 0 30px #aa66ff50' : 'none',
-            }}
-          >
-            <p className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-              {reward.rarity.toUpperCase()} REWARD
-            </p>
-            <p className="text-xl mb-1" style={{ color: '#facc15' }}>
-              {reward.icon} {reward.name}
-            </p>
-            <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              {reward.description}
-            </p>
+        {/* Rewards display - show all earned rewards */}
+        {won && rewards.length > 0 && (
+          <div className="mb-6 space-y-3">
+            {/* Scraps reward */}
+            {scrapsReward && (
+              <div 
+                className="px-6 py-3 rounded-lg border text-center"
+                style={{
+                  fontFamily: 'Orbitron, monospace',
+                  borderColor: 'rgba(250, 204, 21, 0.4)',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                <p className="text-lg" style={{ color: '#facc15' }}>
+                  {scrapsReward.icon} +{scrapsReward.value} Scraps
+                </p>
+              </div>
+            )}
+            
+            {/* Unique rewards */}
+            {uniqueRewards.map((reward, index) => (
+              <div 
+                key={index}
+                className="px-6 py-4 rounded-lg border text-center"
+                style={{
+                  fontFamily: 'Orbitron, monospace',
+                  borderColor: reward.rarity === 'legendary' ? '#ffd700' : 
+                              reward.rarity === 'epic' ? '#aa66ff' :
+                              reward.rarity === 'rare' ? '#4488ff' : 'rgba(0, 255, 136, 0.3)',
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  boxShadow: reward.rarity === 'legendary' ? '0 0 30px #ffd70050' : 
+                            reward.rarity === 'epic' ? '0 0 30px #aa66ff50' : 'none',
+                }}
+              >
+                <p className="text-[9px] uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                  {reward.rarity.toUpperCase()} REWARD
+                </p>
+                <p className="text-xl mb-1" style={{ 
+                  color: reward.rarity === 'legendary' ? '#ffd700' : 
+                         reward.rarity === 'epic' ? '#aa66ff' : '#4488ff' 
+                }}>
+                  {reward.icon} {reward.name}
+                </p>
+                <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  {reward.description}
+                </p>
+              </div>
+            ))}
           </div>
         )}
         

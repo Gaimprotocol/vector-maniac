@@ -686,10 +686,24 @@ function checkCombatCollisions(state: ArenaState): ArenaState {
           newState.screenShakeIntensity = 20;
           newState.soundQueue = [...newState.soundQueue, 'bossDefeat'];
           
-          // Award reward
-          if (state.potentialRewards.length > 0) {
-            newState.earnedReward = state.potentialRewards[Math.floor(Math.random() * state.potentialRewards.length)];
+          // Award rewards - player gets scraps PLUS potential unique reward
+          const rewards: typeof state.potentialRewards = [];
+          
+          // Always award scraps
+          const scrapsReward = state.potentialRewards.find(r => r.type === 'scraps');
+          if (scrapsReward) {
+            rewards.push(scrapsReward);
           }
+          
+          // Also award unique reward if rolled
+          const uniqueRewards = state.potentialRewards.filter(r => r.type !== 'scraps');
+          if (uniqueRewards.length > 0) {
+            rewards.push(...uniqueRewards);
+          }
+          
+          newState.earnedRewards = rewards;
+          // Keep earnedReward for backwards compatibility (first unique or scraps)
+          newState.earnedReward = uniqueRewards.length > 0 ? uniqueRewards[0] : scrapsReward || null;
         }
       }
     } else if (!proj.isPlayer && state.playerInvulnerable <= 0) {
