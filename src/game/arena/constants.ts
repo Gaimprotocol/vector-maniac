@@ -9,11 +9,11 @@ export const ARENA_CONFIG = {
   arenaHeight: Math.floor(VM_CONFIG.arenaHeight * 0.5), // 844
   arenaPadding: 25,
   
-  // Player stats - Higher health for longer matches
-  playerMaxHealth: 200, // Doubled from 100
+  // Player stats - FAIR MATCH: Same as opponent base stats
+  playerMaxHealth: 200,
   playerSpeed: 2.5,
-  playerFireRate: VM_CONFIG.baseFireRate,
-  playerDamage: 6, // Reduced from base for longer fights
+  playerFireRate: 28, // Fixed rate - same as bronze opponent base
+  playerDamage: 10, // Fixed damage - same as bronze opponent base
   playerBulletSpeed: 6,
   playerSize: 14,
   
