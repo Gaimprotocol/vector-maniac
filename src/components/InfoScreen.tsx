@@ -756,21 +756,6 @@ export const InfoScreen: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            <h2 
-              className="text-[12px] text-[#00ff88] mt-4 mb-3"
-              style={{ fontFamily: 'Orbitron, monospace' }}
-            >
-              KEYBOARD (DESKTOP)
-            </h2>
-            <div 
-              className="grid grid-cols-2 gap-2 text-[8px] text-[#00ff88]/60"
-              style={{ fontFamily: 'Orbitron, monospace' }}
-            >
-              <div>WASD / Arrows - Move</div>
-              <div>Space - Fire</div>
-              <div>P / Esc - Pause</div>
-            </div>
           </div>
         )}
       </div>
