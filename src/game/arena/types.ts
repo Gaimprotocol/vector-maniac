@@ -219,6 +219,14 @@ export const ARENA_ENTRY_COSTS: Record<ArenaDifficulty, number> = {
   diamond: 1000,
 };
 
+// Scrap rewards - ALWAYS more than entry cost for profitable wins
+export const ARENA_SCRAP_REWARDS: Record<ArenaDifficulty, number> = {
+  bronze: 100,    // 50 cost → 100 reward = 2x return (50 profit)
+  silver: 300,    // 150 cost → 300 reward = 2x return (150 profit)
+  gold: 700,      // 400 cost → 700 reward = 1.75x return (300 profit)
+  diamond: 1800,  // 1000 cost → 1800 reward = 1.8x return (800 profit)
+};
+
 // Opponent names by difficulty
 export const ARENA_OPPONENT_NAMES: Record<ArenaDifficulty, string[]> = {
   bronze: ['Rookie-7', 'Cadet Nova', 'Trainee Flux', 'Scout Delta'],
