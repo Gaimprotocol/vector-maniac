@@ -21,6 +21,7 @@ import {
   rewardToConsumable,
   ConsumableType,
 } from '@/hooks/useArenaConsumables';
+import { addArenaUnlock } from '@/hooks/useArenaUnlocks';
 import { BoosterSelectionModal } from './arena/BoosterSelectionModal';
 import { ShipIcon, ScrapIcon, TargetIcon } from './VectorIcons';
 import { triggerHapticFeedback } from '@/utils/popSound';
@@ -231,20 +232,54 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
           const won = prev.phase === 'playerWon';
           setBattleResult(won ? 'won' : 'lost');
           
-          // Award scraps and convert unique rewards to consumables if won
+          // Award scraps and process rewards if won
           if (won && newState.earnedRewards) {
+            // Award scraps
             const scrapsReward = newState.earnedRewards.find(r => r.type === 'scraps');
             if (scrapsReward?.value) {
               addStoredScraps(scrapsReward.value);
               setScraps(getStoredScraps());
             }
             
-            // Convert unique rewards to consumables
-            const uniqueRewards = newState.earnedRewards.filter(r => r.type !== 'scraps');
-            for (const reward of uniqueRewards) {
-              const consumableType = rewardToConsumable(reward.name);
-              if (consumableType) {
-                addConsumable(consumableType);
+            // Process non-scrap rewards
+            const otherRewards = newState.earnedRewards.filter(r => r.type !== 'scraps');
+            for (const reward of otherRewards) {
+              if (reward.type === 'consumable') {
+                // Arena booster - add to consumable inventory
+                const consumableType = rewardToConsumable(reward.name);
+                if (consumableType) {
+                  addConsumable(consumableType);
+                }
+              } else if (reward.type === 'ship_unlock') {
+                // Permanent ship unlock for main game!
+                addArenaUnlock({
+                  id: reward.id,
+                  type: 'ship',
+                  name: reward.name,
+                  description: reward.description,
+                  rarity: reward.rarity as 'rare' | 'epic' | 'legendary',
+                  shipId: reward.unlockData?.shipId,
+                });
+              } else if (reward.type === 'skin_unlock') {
+                // Permanent skin unlock
+                addArenaUnlock({
+                  id: reward.id,
+                  type: 'skin',
+                  name: reward.name,
+                  description: reward.description,
+                  rarity: reward.rarity as 'rare' | 'epic' | 'legendary',
+                  skinId: reward.unlockData?.skinId,
+                });
+              } else if (reward.type === 'companion_unlock') {
+                // Permanent companion for main game!
+                addArenaUnlock({
+                  id: reward.id,
+                  type: 'companion',
+                  name: reward.name,
+                  description: reward.description,
+                  rarity: reward.rarity as 'rare' | 'epic' | 'legendary',
+                  companionData: reward.unlockData?.companionData,
+                });
               }
             }
           }
@@ -666,8 +701,24 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
                 <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   {reward.description}
                 </p>
-                <p className="text-[8px] mt-2" style={{ color: 'rgba(170, 102, 255, 0.8)' }}>
-                  ✦ Added to boosters
+                <p className="text-[8px] mt-2" style={{ 
+                  color: reward.type === 'consumable' 
+                    ? 'rgba(170, 102, 255, 0.8)' 
+                    : reward.type === 'ship_unlock' 
+                      ? '#ffd700'
+                      : reward.type === 'companion_unlock'
+                        ? '#00ff88'
+                        : '#4488ff'
+                }}>
+                  {reward.type === 'consumable' 
+                    ? '✦ Added to boosters' 
+                    : reward.type === 'ship_unlock' 
+                      ? '⬢ PERMANENT SHIP UNLOCKED!'
+                      : reward.type === 'skin_unlock'
+                        ? '◎ Permanent skin unlocked!'
+                        : reward.type === 'companion_unlock'
+                          ? '◈ COMPANION UNLOCKED for main game!'
+                          : '✦ Reward claimed'}
                 </p>
               </div>
             ))}

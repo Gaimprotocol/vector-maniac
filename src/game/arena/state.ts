@@ -159,7 +159,7 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
   const rewards: ArenaReward[] = [];
   const scrapAmount = ARENA_SCRAP_REWARDS[difficulty];
   
-  // Always include scraps reward - now properly profitable
+  // Always include scraps reward
   rewards.push({
     type: 'scraps',
     id: 'scraps_reward',
@@ -170,191 +170,114 @@ function generatePotentialRewards(difficulty: ArenaDifficulty): ArenaReward[] {
     icon: '◆',
   });
   
-  // Expanded reward pools with rarity tiers
-  const commonUpgrades = [
-    { name: 'Minor Hull Patch', desc: '+5 max health in arena' },
-    { name: 'Basic Targeting', desc: '+3% accuracy in arena' },
+  // ========== CONSUMABLE BOOSTERS (Arena only) ==========
+  const consumablePool = [
+    { name: 'Hull Reinforcement', desc: '+50 HP for one arena battle', icon: '◇' },
+    { name: 'Overcharged Cannons', desc: '+25% damage for one battle', icon: '◈' },
+    { name: 'Turbo Thrusters', desc: '+20% speed for one battle', icon: '▷' },
+    { name: 'Rapid Fire Module', desc: '+30% fire rate for one battle', icon: '⊕' },
+    { name: 'Energy Shield', desc: 'Start with 3s invulnerability', icon: '⬡' },
   ];
   
-  const rareUpgrades = [
-    { name: 'Arena Mastery I', desc: '+8% damage in arena battles' },
-    { name: 'Tactical Reflexes', desc: '+10% movement speed in arena' },
-    { name: 'Combat Focus', desc: '+15% fire rate in arena' },
-    { name: 'Hull Reinforcement', desc: '+20 max health in arena' },
+  // ========== PERMANENT MAIN GAME REWARDS ==========
+  // Ships (very rare - permanent unlock)
+  const shipPool = [
+    { shipId: 'arena_striker', name: 'ARENA STRIKER', desc: 'Battle-forged vector fighter for main game' },
+    { shipId: 'void_hunter', name: 'VOID HUNTER', desc: 'Stealth systems - permanent unlock' },
+    { shipId: 'neon_phantom', name: 'NEON PHANTOM', desc: 'Ghostly hull - use in main game' },
+    { shipId: 'circuit_breaker', name: 'CIRCUIT BREAKER', desc: 'EMP-resistant chassis - permanent' },
   ];
   
-  const epicAllies = [
-    { name: 'Combat Sentinel', desc: 'Arena guardian drone' },
-    { name: 'Plasma Orb', desc: 'Orbiting energy sphere' },
-    { name: 'Shadow Clone', desc: 'Holographic decoy system' },
-    { name: 'Shield Bot', desc: 'Personal barrier generator' },
+  // Skins (rare - permanent unlock)
+  const skinPool = [
+    { skinId: 'arena_gold', name: 'ARENA CHAMPION', desc: 'Golden battle-worn finish', rarity: 'epic' as const },
+    { skinId: 'arena_crimson', name: 'BLOOD VICTOR', desc: 'Crimson arena veteran coating', rarity: 'epic' as const },
+    { skinId: 'arena_void', name: 'VOID WALKER', desc: 'Dark matter infused hull', rarity: 'legendary' as const },
+    { skinId: 'arena_neon', name: 'NEON GLADIATOR', desc: 'Pulsating victory colors', rarity: 'rare' as const },
   ];
   
-  const legendaryShips = [
-    { name: 'ARENA STRIKER', desc: 'Battle-forged hull with enhanced speed' },
-    { name: 'VOID HUNTER', desc: 'Stealth systems from the arena void' },
-    { name: 'NEON PHANTOM', desc: 'Ghostly silhouette with evasion boost' },
-    { name: 'CIRCUIT BREAKER', desc: 'EMP-resistant chassis' },
+  // Companions (epic - permanent allies for main game)
+  const companionPool = [
+    { name: 'Arena Sentinel', desc: 'Battle-hardened guardian for main game', color: '#ff4466', shape: 'hexagon', level: 2, rarity: 'epic' as const },
+    { name: 'Void Stalker', desc: 'Stealth attack companion', color: '#aa66ff', shape: 'diamond', level: 2, rarity: 'epic' as const },
+    { name: 'Plasma Guardian', desc: 'High-energy defender orb', color: '#ffaa00', shape: 'circle', level: 3, rarity: 'legendary' as const },
+    { name: 'Quantum Echo', desc: 'Reality-bending attack drone', color: '#00ffff', shape: 'triangle', level: 3, rarity: 'legendary' as const },
   ];
   
   const roll = Math.random();
   
-  if (difficulty === 'diamond') {
-    // Diamond: 45% legendary, 35% epic, 15% rare, 5% nothing extra
-    if (roll < 0.45) {
-      const ship = legendaryShips[Math.floor(Math.random() * legendaryShips.length)];
-      rewards.push({
-        type: 'unique_ship',
-        id: `arena_ship_${Date.now()}_${Math.random()}`,
-        name: ship.name,
-        description: ship.desc,
-        rarity: 'legendary',
-        icon: '⬢',
-      });
-    } else if (roll < 0.80) {
-      const ally = epicAllies[Math.floor(Math.random() * epicAllies.length)];
-      rewards.push({
-        type: 'rare_ally',
-        id: `arena_ally_${Date.now()}_${Math.random()}`,
-        name: ally.name,
-        description: ally.desc,
-        rarity: 'epic',
-        icon: '◈',
-      });
-    } else if (roll < 0.95) {
-      const upgrade = rareUpgrades[Math.floor(Math.random() * rareUpgrades.length)];
-      rewards.push({
-        type: 'power_upgrade',
-        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
-        name: upgrade.name,
-        description: upgrade.desc,
-        rarity: 'rare',
-        icon: '⊕',
-      });
-    }
-  } else if (difficulty === 'gold') {
-    // Gold: 30% legendary, 40% epic, 25% rare, 5% nothing extra
-    if (roll < 0.30) {
-      const ship = legendaryShips[Math.floor(Math.random() * legendaryShips.length)];
-      rewards.push({
-        type: 'unique_ship',
-        id: `arena_ship_${Date.now()}_${Math.random()}`,
-        name: ship.name,
-        description: ship.desc,
-        rarity: 'legendary',
-        icon: '⬢',
-      });
-    } else if (roll < 0.70) {
-      const ally = epicAllies[Math.floor(Math.random() * epicAllies.length)];
-      rewards.push({
-        type: 'rare_ally',
-        id: `arena_ally_${Date.now()}_${Math.random()}`,
-        name: ally.name,
-        description: ally.desc,
-        rarity: 'epic',
-        icon: '◈',
-      });
-    } else if (roll < 0.95) {
-      const upgrade = rareUpgrades[Math.floor(Math.random() * rareUpgrades.length)];
-      rewards.push({
-        type: 'power_upgrade',
-        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
-        name: upgrade.name,
-        description: upgrade.desc,
-        rarity: 'rare',
-        icon: '⊕',
-      });
-    }
-  } else if (difficulty === 'silver') {
-    // Silver: 15% legendary, 30% epic, 40% rare, 15% common
-    if (roll < 0.15) {
-      const ship = legendaryShips[Math.floor(Math.random() * legendaryShips.length)];
-      rewards.push({
-        type: 'unique_ship',
-        id: `arena_ship_${Date.now()}_${Math.random()}`,
-        name: ship.name,
-        description: ship.desc,
-        rarity: 'legendary',
-        icon: '⬢',
-      });
-    } else if (roll < 0.45) {
-      const ally = epicAllies[Math.floor(Math.random() * epicAllies.length)];
-      rewards.push({
-        type: 'rare_ally',
-        id: `arena_ally_${Date.now()}_${Math.random()}`,
-        name: ally.name,
-        description: ally.desc,
-        rarity: 'epic',
-        icon: '◈',
-      });
-    } else if (roll < 0.85) {
-      const upgrade = rareUpgrades[Math.floor(Math.random() * rareUpgrades.length)];
-      rewards.push({
-        type: 'power_upgrade',
-        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
-        name: upgrade.name,
-        description: upgrade.desc,
-        rarity: 'rare',
-        icon: '⊕',
-      });
-    } else {
-      const upgrade = commonUpgrades[Math.floor(Math.random() * commonUpgrades.length)];
-      rewards.push({
-        type: 'power_upgrade',
-        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
-        name: upgrade.name,
-        description: upgrade.desc,
-        rarity: 'common',
-        icon: '○',
-      });
-    }
-  } else {
-    // Bronze: 5% legendary (jackpot!), 15% epic, 35% rare, 30% common, 15% nothing extra
-    if (roll < 0.05) {
-      const ship = legendaryShips[Math.floor(Math.random() * legendaryShips.length)];
-      rewards.push({
-        type: 'unique_ship',
-        id: `arena_ship_${Date.now()}_${Math.random()}`,
-        name: ship.name,
-        description: ship.desc,
-        rarity: 'legendary',
-        icon: '⬢',
-      });
-    } else if (roll < 0.20) {
-      const ally = epicAllies[Math.floor(Math.random() * epicAllies.length)];
-      rewards.push({
-        type: 'rare_ally',
-        id: `arena_ally_${Date.now()}_${Math.random()}`,
-        name: ally.name,
-        description: ally.desc,
-        rarity: 'epic',
-        icon: '◈',
-      });
-    } else if (roll < 0.55) {
-      const upgrade = rareUpgrades[Math.floor(Math.random() * rareUpgrades.length)];
-      rewards.push({
-        type: 'power_upgrade',
-        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
-        name: upgrade.name,
-        description: upgrade.desc,
-        rarity: 'rare',
-        icon: '⊕',
-      });
-    } else if (roll < 0.85) {
-      const upgrade = commonUpgrades[Math.floor(Math.random() * commonUpgrades.length)];
-      rewards.push({
-        type: 'power_upgrade',
-        id: `arena_upgrade_${Date.now()}_${Math.random()}`,
-        name: upgrade.name,
-        description: upgrade.desc,
-        rarity: 'common',
-        icon: '○',
-      });
-    }
+  // Reward chances by difficulty
+  // Format: { ship, skin, companion, consumable }
+  const chances = {
+    bronze:  { ship: 0.02, skin: 0.06, companion: 0.12, consumable: 0.50 },
+    silver:  { ship: 0.04, skin: 0.12, companion: 0.25, consumable: 0.65 },
+    gold:    { ship: 0.10, skin: 0.22, companion: 0.40, consumable: 0.75 },
+    diamond: { ship: 0.18, skin: 0.35, companion: 0.55, consumable: 0.85 },
+  };
+  
+  const c = chances[difficulty];
+  
+  if (roll < c.ship) {
+    // LEGENDARY SHIP (permanent unlock for main game!)
+    const ship = shipPool[Math.floor(Math.random() * shipPool.length)];
+    rewards.push({
+      type: 'ship_unlock',
+      id: `ship_unlock_${ship.shipId}`,
+      name: ship.name,
+      description: ship.desc,
+      rarity: 'legendary',
+      icon: '⬢',
+      unlockData: { shipId: ship.shipId },
+    });
+  } else if (roll < c.skin) {
+    // SKIN (permanent unlock)
+    const skin = skinPool[Math.floor(Math.random() * skinPool.length)];
+    rewards.push({
+      type: 'skin_unlock',
+      id: `skin_unlock_${skin.skinId}`,
+      name: skin.name,
+      description: skin.desc,
+      rarity: skin.rarity,
+      icon: '◎',
+      unlockData: { skinId: skin.skinId },
+    });
+  } else if (roll < c.companion) {
+    // COMPANION (permanent ally for main game!)
+    const comp = companionPool[Math.floor(Math.random() * companionPool.length)];
+    rewards.push({
+      type: 'companion_unlock',
+      id: `companion_unlock_${comp.name.replace(/\s/g, '_')}`,
+      name: comp.name,
+      description: comp.desc,
+      rarity: comp.rarity,
+      icon: '◈',
+      unlockData: { 
+        companionData: {
+          name: comp.name,
+          color: comp.color,
+          shape: comp.shape,
+          level: comp.level,
+        }
+      },
+    });
+  } else if (roll < c.consumable) {
+    // CONSUMABLE (arena booster - one-time use)
+    const item = consumablePool[Math.floor(Math.random() * consumablePool.length)];
+    const isRare = Math.random() < 0.3;
+    rewards.push({
+      type: 'consumable',
+      id: `consumable_${Date.now()}_${Math.random()}`,
+      name: item.name,
+      description: item.desc,
+      rarity: isRare ? 'rare' : 'common',
+      icon: item.icon,
+    });
   }
+  // Else: no extra reward beyond scraps
   
   return rewards;
 }
+
 
 // Default boosts (no consumables)
 const DEFAULT_BOOSTS: ArenaBoosts = {
