@@ -431,6 +431,47 @@ export const SHIP_PROJECTILE_STYLES: Record<string, ShipProjectileStyle> = {
     trailLength: 3,
     sound: 'plasma',
   },
+  
+  // ============= ARENA EXCLUSIVE SHIPS =============
+  hex_phantom: {
+    shape: 'diamond',
+    color: '#00ffaa',
+    glowColor: '#00ff66',
+    coreColor: '#ffffff',
+    size: 1.5,
+    trailLength: 3,
+    sound: 'energy',
+  },
+  
+  pulse_wraith: {
+    shape: 'plasma',
+    color: '#88ff00',
+    glowColor: '#66cc00',
+    coreColor: '#ffffff',
+    size: 1.4,
+    trailLength: 3,
+    sound: 'plasma',
+  },
+  
+  grid_reaper: {
+    shape: 'bolt',
+    color: '#00ffcc',
+    glowColor: '#00aa88',
+    coreColor: '#ff4444',
+    size: 1.6,
+    trailLength: 2,
+    sound: 'fire',
+  },
+  
+  null_striker: {
+    shape: 'ring',
+    color: '#ff00ff',
+    glowColor: '#aa00aa',
+    coreColor: '#00ffff',
+    size: 1.5,
+    trailLength: 3,
+    sound: 'pulse',
+  },
 };
 
 // Get projectile style for a ship (returns default if not found)

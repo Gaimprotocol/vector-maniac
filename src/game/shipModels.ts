@@ -263,6 +263,31 @@ export const SHIP_MODELS: ShipModel[] = [
     name: 'OMEGA PRIME',
     description: '⬡ LEGENDARY - Exclusive Omega Pack ship',
     colors: { primary: '#ffd700', secondary: '#1a1a2e', accent: '#00ff88', glow: '#ffd700', cockpit: '#ffffff' }
+  },
+  // ============= ARENA EXCLUSIVE SHIPS =============
+  {
+    id: 'hex_phantom',
+    name: 'HEX PHANTOM',
+    description: '◆ ARENA LEGENDARY - Hexagonal stealth fighter',
+    colors: { primary: '#00ffaa', secondary: '#00aa66', accent: '#88ffdd', glow: '#00ffaa', cockpit: '#ffffff' }
+  },
+  {
+    id: 'pulse_wraith',
+    name: 'PULSE WRAITH',
+    description: '◆ ARENA LEGENDARY - Spectral energy attacker',
+    colors: { primary: '#88ff00', secondary: '#55aa00', accent: '#ccff88', glow: '#88ff00', cockpit: '#ffffff' }
+  },
+  {
+    id: 'grid_reaper',
+    name: 'GRID REAPER',
+    description: '◆ ARENA LEGENDARY - Angular death machine',
+    colors: { primary: '#00ffcc', secondary: '#00aa88', accent: '#88ffee', glow: '#00ffcc', cockpit: '#ff4444' }
+  },
+  {
+    id: 'null_striker',
+    name: 'NULL STRIKER',
+    description: '◆ ARENA LEGENDARY - Zero-point energy fighter',
+    colors: { primary: '#ff00ff', secondary: '#aa00aa', accent: '#ff88ff', glow: '#ff00ff', cockpit: '#00ffff' }
   }
 ];
 
@@ -403,6 +428,19 @@ export function drawShipModel(
       break;
     case 'omega_prime':
       drawOmegaPrime(ctx, width, height, colors, time, quality);
+      break;
+    // ARENA EXCLUSIVE SHIPS
+    case 'hex_phantom':
+      drawHexPhantom(ctx, width, height, colors, time);
+      break;
+    case 'pulse_wraith':
+      drawPulseWraith(ctx, width, height, colors, time);
+      break;
+    case 'grid_reaper':
+      drawGridReaper(ctx, width, height, colors, time);
+      break;
+    case 'null_striker':
+      drawNullStriker(ctx, width, height, colors, time);
       break;
     default:
       drawFalcon(ctx, width, height, colors, time);
@@ -2875,6 +2913,316 @@ function drawEngine(ctx: CanvasRenderingContext2D, x: number, y: number, colors:
   ctx.lineTo(x, y + 1 * scale);
   ctx.closePath();
   ctx.fill();
+}
+
+// ============= ARENA EXCLUSIVE SHIPS =============
+
+// HEX PHANTOM - Hexagonal stealth fighter with phase-shift core
+function drawHexPhantom(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const pulse = Math.sin(time / 200) * 0.3 + 0.7;
+  
+  // Hexagonal main body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(35, 0);           // Front point
+  ctx.lineTo(20, -8);
+  ctx.lineTo(-5, -10);
+  ctx.lineTo(-20, -6);
+  ctx.lineTo(-20, 6);
+  ctx.lineTo(-5, 10);
+  ctx.lineTo(20, 8);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Inner hexagonal core (phase-shift)
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(20, 0);
+  ctx.lineTo(10, -5);
+  ctx.lineTo(-5, -6);
+  ctx.lineTo(-10, 0);
+  ctx.lineTo(-5, 6);
+  ctx.lineTo(10, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Hexagonal wings
+  ctx.fillStyle = colors.accent;
+  // Top hex wing
+  ctx.beginPath();
+  ctx.moveTo(5, -10);
+  ctx.lineTo(-10, -18);
+  ctx.lineTo(-18, -15);
+  ctx.lineTo(-15, -10);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bottom hex wing
+  ctx.beginPath();
+  ctx.moveTo(5, 10);
+  ctx.lineTo(-10, 18);
+  ctx.lineTo(-18, 15);
+  ctx.lineTo(-15, 10);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Phase-shift glow core
+  ctx.fillStyle = `rgba(0, 255, 170, ${0.5 * pulse})`;
+  ctx.beginPath();
+  ctx.arc(5, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cockpit
+  const cockpitGrad = ctx.createRadialGradient(25, 0, 0, 25, 0, 5);
+  cockpitGrad.addColorStop(0, '#ffffff');
+  cockpitGrad.addColorStop(0.5, colors.cockpit);
+  cockpitGrad.addColorStop(1, colors.glow);
+  ctx.fillStyle = cockpitGrad;
+  ctx.beginPath();
+  ctx.arc(25, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Engine
+  drawEngine(ctx, -20, 0, colors, time);
+}
+
+// PULSE WRAITH - Spectral attacker with pulsing energy wings
+function drawPulseWraith(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const pulse = Math.sin(time / 150) * 0.4 + 0.6;
+  const wingFlicker = Math.sin(time / 80) * 0.2 + 0.8;
+  
+  // Ghostly body (thin, elongated)
+  const bodyGrad = ctx.createLinearGradient(-25, 0, 35, 0);
+  bodyGrad.addColorStop(0, 'rgba(136, 255, 0, 0.6)');
+  bodyGrad.addColorStop(0.5, colors.primary);
+  bodyGrad.addColorStop(1, 'rgba(136, 255, 0, 0.8)');
+  ctx.fillStyle = bodyGrad;
+  
+  ctx.beginPath();
+  ctx.moveTo(40, 0);           // Sharp spectral nose
+  ctx.lineTo(25, -3);
+  ctx.lineTo(5, -4);
+  ctx.lineTo(-20, -3);
+  ctx.lineTo(-25, 0);
+  ctx.lineTo(-20, 3);
+  ctx.lineTo(5, 4);
+  ctx.lineTo(25, 3);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Energy wings (pulsing)
+  ctx.fillStyle = `rgba(136, 255, 0, ${0.6 * wingFlicker})`;
+  // Top energy wing
+  ctx.beginPath();
+  ctx.moveTo(10, -4);
+  ctx.quadraticCurveTo(0, -15, -15, -20);
+  ctx.lineTo(-20, -15);
+  ctx.quadraticCurveTo(-5, -10, 0, -4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bottom energy wing
+  ctx.beginPath();
+  ctx.moveTo(10, 4);
+  ctx.quadraticCurveTo(0, 15, -15, 20);
+  ctx.lineTo(-20, 15);
+  ctx.quadraticCurveTo(-5, 10, 0, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Wing energy lines
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-12, -16);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(5, 6);
+  ctx.lineTo(-12, 16);
+  ctx.stroke();
+  
+  // Central pulse core
+  ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * pulse})`;
+  ctx.beginPath();
+  ctx.arc(10, 0, 5 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Spectral cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.beginPath();
+  ctx.ellipse(30, 0, 4, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Engine
+  drawEngine(ctx, -25, 0, colors, time);
+}
+
+// GRID REAPER - Angular death machine from the data void
+function drawGridReaper(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const pulse = Math.sin(time / 100) * 0.2 + 0.8;
+  
+  // Angular aggressive body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(38, 0);           // Sharp reaper nose
+  ctx.lineTo(28, -5);
+  ctx.lineTo(15, -7);
+  ctx.lineTo(-10, -8);
+  ctx.lineTo(-22, -5);
+  ctx.lineTo(-22, 5);
+  ctx.lineTo(-10, 8);
+  ctx.lineTo(15, 7);
+  ctx.lineTo(28, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Death scythe wings (angular, aggressive)
+  ctx.fillStyle = colors.secondary;
+  // Top scythe
+  ctx.beginPath();
+  ctx.moveTo(15, -7);
+  ctx.lineTo(5, -12);
+  ctx.lineTo(-15, -22);
+  ctx.lineTo(-20, -18);
+  ctx.lineTo(-8, -10);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bottom scythe
+  ctx.beginPath();
+  ctx.moveTo(15, 7);
+  ctx.lineTo(5, 12);
+  ctx.lineTo(-15, 22);
+  ctx.lineTo(-20, 18);
+  ctx.lineTo(-8, 10);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Red accent lines (death markers)
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(30, -3);
+  ctx.lineTo(10, -3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(30, 3);
+  ctx.lineTo(10, 3);
+  ctx.stroke();
+  
+  // Scythe tips (glowing)
+  ctx.fillStyle = `rgba(255, 68, 68, ${pulse})`;
+  ctx.beginPath();
+  ctx.arc(-17, -20, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-17, 20, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Reaper eye cockpit (red glow)
+  const cockpitGrad = ctx.createRadialGradient(28, 0, 0, 28, 0, 5);
+  cockpitGrad.addColorStop(0, '#ffffff');
+  cockpitGrad.addColorStop(0.4, '#ff4444');
+  cockpitGrad.addColorStop(1, colors.secondary);
+  ctx.fillStyle = cockpitGrad;
+  ctx.beginPath();
+  ctx.arc(28, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Dual engines
+  drawEngine(ctx, -22, -3, colors, time, 0.7);
+  drawEngine(ctx, -22, 3, colors, time, 0.7);
+}
+
+// NULL STRIKER - Zero-point energy fighter with dual cores
+function drawNullStriker(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const pulse1 = Math.sin(time / 120) * 0.3 + 0.7;
+  const pulse2 = Math.sin(time / 120 + Math.PI) * 0.3 + 0.7;
+  const rotate = time / 500;
+  
+  // Sleek main body
+  const bodyGrad = ctx.createLinearGradient(-20, 0, 35, 0);
+  bodyGrad.addColorStop(0, colors.secondary);
+  bodyGrad.addColorStop(0.5, colors.primary);
+  bodyGrad.addColorStop(1, colors.secondary);
+  ctx.fillStyle = bodyGrad;
+  
+  ctx.beginPath();
+  ctx.moveTo(36, 0);           // Pointed nose
+  ctx.lineTo(25, -4);
+  ctx.lineTo(10, -5);
+  ctx.lineTo(-15, -4);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 4);
+  ctx.lineTo(10, 5);
+  ctx.lineTo(25, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Split wings (Y-shape)
+  ctx.fillStyle = colors.accent;
+  // Top wing
+  ctx.beginPath();
+  ctx.moveTo(5, -5);
+  ctx.lineTo(-5, -8);
+  ctx.lineTo(-18, -16);
+  ctx.lineTo(-15, -12);
+  ctx.lineTo(-8, -5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Bottom wing
+  ctx.beginPath();
+  ctx.moveTo(5, 5);
+  ctx.lineTo(-5, 8);
+  ctx.lineTo(-18, 16);
+  ctx.lineTo(-15, 12);
+  ctx.lineTo(-8, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Dual zero-point cores (rotating rings)
+  ctx.save();
+  ctx.translate(0, -8);
+  ctx.rotate(rotate);
+  ctx.strokeStyle = `rgba(255, 0, 255, ${pulse1})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = `rgba(0, 255, 255, ${pulse1})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  
+  ctx.save();
+  ctx.translate(0, 8);
+  ctx.rotate(-rotate);
+  ctx.strokeStyle = `rgba(0, 255, 255, ${pulse2})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = `rgba(255, 0, 255, ${pulse2})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  
+  // Cyan cockpit
+  const cockpitGrad = ctx.createRadialGradient(28, 0, 0, 28, 0, 4);
+  cockpitGrad.addColorStop(0, '#ffffff');
+  cockpitGrad.addColorStop(0.5, '#00ffff');
+  cockpitGrad.addColorStop(1, colors.primary);
+  ctx.fillStyle = cockpitGrad;
+  ctx.beginPath();
+  ctx.ellipse(28, 0, 4, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Engine
+  drawEngine(ctx, -20, 0, colors, time);
 }
 
 // Get model by ID
