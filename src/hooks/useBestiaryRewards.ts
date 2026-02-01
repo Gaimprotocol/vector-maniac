@@ -1,5 +1,6 @@
 // Bestiary Rewards - Tracks bounties and companions
 import { useState, useEffect, useCallback } from 'react';
+import { getArenaCompanions } from './useArenaUnlocks';
 
 const REWARDS_KEY = 'vector_maniac_bestiary_rewards';
 const COMPANIONS_KEY = 'vector_maniac_companions';
@@ -19,6 +20,7 @@ export interface Companion {
   purchasedAt: number;
   evolutionLevel?: number; // 1 = base, 2+ = evolved
   mergedFrom?: number[]; // Seeds of companions merged to create this
+  fromArena?: boolean; // True if companion was won from arena
 }
 
 // Bounty values based on ability rarity - ECONOMY v3: Reduced rewards
@@ -85,20 +87,99 @@ function saveRewards(rewards: BestiaryRewards): void {
 }
 
 export function getStoredCompanions(): Companion[] {
+  const companions: Companion[] = [];
+  
+  // Load regular companions
   try {
     const stored = localStorage.getItem(COMPANIONS_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      companions.push(...JSON.parse(stored));
     }
   } catch (e) {
     console.warn('[Companions] Failed to load:', e);
   }
-  return [];
+  
+  // Merge in arena-won companions
+  try {
+    const arenaCompanions = getArenaCompanions();
+    for (const ac of arenaCompanions) {
+      if (!ac.companionData) continue;
+      
+      // Generate unique seed from unlock timestamp
+      const seed = ac.unlockedAt;
+      
+      // Check if already in list (by seed or name match)
+      const alreadyExists = companions.some(c => 
+        c.seed === seed || 
+        (c.name === ac.companionData!.name && c.fromArena)
+      );
+      
+      if (!alreadyExists) {
+        // Map arena companion data to Companion interface
+        const shapeMap: Record<string, string> = {
+          'hexagon': 'hexagon',
+          'diamond': 'star',
+          'circle': 'crescent',
+          'triangle': 'triangle',
+        };
+        
+        companions.push({
+          seed,
+          name: ac.companionData.name,
+          shape: shapeMap[ac.companionData.shape] || 'hexagon',
+          hue: parseHue(ac.companionData.color),
+          saturation: 70,
+          behavior: 'orbit', // Arena companions default behavior
+          ability: ac.companionData.level >= 3 ? 'phaser' : 'shooter',
+          purchasedAt: ac.unlockedAt,
+          evolutionLevel: ac.companionData.level,
+          fromArena: true,
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('[Companions] Failed to load arena companions:', e);
+  }
+  
+  return companions;
+}
+
+// Helper to parse hex color to hue
+function parseHue(color: string): number {
+  if (!color) return 180;
+  
+  // Handle hex colors like #ff4466
+  if (color.startsWith('#')) {
+    const hex = color.slice(1);
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    
+    if (max === min) return 0;
+    
+    let h = 0;
+    const d = max - min;
+    
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+    
+    return Math.round(h * 360);
+  }
+  
+  return 180;
 }
 
 function saveCompanions(companions: Companion[]): void {
   try {
-    localStorage.setItem(COMPANIONS_KEY, JSON.stringify(companions));
+    // Only save non-arena companions (arena ones are in their own storage)
+    const regularCompanions = companions.filter(c => !c.fromArena);
+    localStorage.setItem(COMPANIONS_KEY, JSON.stringify(regularCompanions));
   } catch (e) {
     console.warn('[Companions] Failed to save:', e);
   }
@@ -121,6 +202,17 @@ export function useBestiaryRewards() {
   useEffect(() => {
     saveCompanions(companions);
   }, [companions]);
+
+  // Listen for arena unlock events to refresh companions list
+  useEffect(() => {
+    const handleArenaUnlocksChanged = () => {
+      console.log('[BestiaryRewards] Arena unlocks changed, refreshing companions...');
+      setCompanions(getStoredCompanions());
+    };
+    
+    window.addEventListener('arena_unlocks_changed', handleArenaUnlocksChanged);
+    return () => window.removeEventListener('arena_unlocks_changed', handleArenaUnlocksChanged);
+  }, []);
 
   const hasBountyCollected = useCallback((seed: number) => {
     return rewards.collectedBounties.includes(seed);
