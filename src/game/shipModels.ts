@@ -16,245 +16,246 @@ export interface ShipModel {
 
 // 40 Unique Vector Maniac Ship Models
 export const SHIP_MODELS: ShipModel[] = [
+  // ============= BASE FLEET (20 ships) =============
   {
     id: 'default',
-    name: 'VECTOR-1',
-    description: 'Standard vektor-fighter med balanserad design',
+    name: 'ZERO POINT',
+    description: 'Origin fighter - where all vectors begin',
     colors: { primary: '#00ff88', secondary: '#00aa55', accent: '#88ffaa', glow: '#00ff88', cockpit: '#ffffff' }
   },
   {
     id: 'viper',
-    name: 'NEON DART',
-    description: 'Smal och snabb med dubbla vingar',
+    name: 'PIXEL FANG',
+    description: 'Razor-thin interceptor with binary venom',
     colors: { primary: '#00ffcc', secondary: '#00aa88', accent: '#88ffdd', glow: '#00ffcc', cockpit: '#ffffff' }
   },
   {
     id: 'phantom',
-    name: 'GHOST WIRE',
-    description: 'Stealth-design med vinklade ytor',
+    name: 'GHOST PROTOCOL',
+    description: 'Stealth mesh with null-signature hull',
     colors: { primary: '#44ff88', secondary: '#22aa44', accent: '#aaffcc', glow: '#44ff88', cockpit: '#ffffff' }
   },
   {
     id: 'hammer',
-    name: 'GRID HAMMER',
-    description: 'Tung attackare med bred front',
+    name: 'CRASH DUMP',
+    description: 'Heavy striker with memory-burst cannons',
     colors: { primary: '#00ff66', secondary: '#00aa44', accent: '#88ff88', glow: '#00ff66', cockpit: '#ccffcc' }
   },
   {
     id: 'needle',
-    name: 'PIXEL SPIKE',
-    description: 'Ultratunn interceptor för max hastighet',
+    name: 'THREAD ZERO',
+    description: 'Ultra-slim data-needle for max velocity',
     colors: { primary: '#66ffaa', secondary: '#44aa77', accent: '#ccffdd', glow: '#66ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'trident',
-    name: 'TRIFORK',
-    description: 'Tre-spetsad design med bred eldkraft',
+    name: 'FORK BOMB',
+    description: 'Triple-vector assault with spread fire',
     colors: { primary: '#00ff99', secondary: '#00aa66', accent: '#88ffbb', glow: '#00ff99', cockpit: '#aaffcc' }
   },
   {
     id: 'mantis',
-    name: 'CIRCUIT BUG',
-    description: 'Insektliknande med böjda vingar',
+    name: 'BUG TRACKER',
+    description: 'Insectoid hunter with curved scan-wings',
     colors: { primary: '#33ff77', secondary: '#22aa55', accent: '#99ffaa', glow: '#33ff77', cockpit: '#ccff88' }
   },
   {
     id: 'scorpion',
-    name: 'DATACLASH',
-    description: 'Krokig design med svanskanon',
+    name: 'STACK TRACE',
+    description: 'Curved chassis with tail-mounted stinger',
     colors: { primary: '#11ff88', secondary: '#11aa55', accent: '#77ffaa', glow: '#11ff88', cockpit: '#aaffcc' }
   },
   {
     id: 'delta',
-    name: 'TRIGON',
-    description: 'Triangulär stealth-fighter',
+    name: 'DELTA MERGE',
+    description: 'Triangular stealth with diff-core engine',
     colors: { primary: '#00ffaa', secondary: '#00aa77', accent: '#66ffcc', glow: '#00ffaa', cockpit: '#ccffee' }
   },
   {
     id: 'stingray',
-    name: 'FLATLINE',
-    description: 'Platt undervattensdesign',
+    name: 'FLAT MAP',
+    description: 'Low-profile glider with wide sensor array',
     colors: { primary: '#22ff99', secondary: '#11aa66', accent: '#88ffbb', glow: '#22ff99', cockpit: '#ddffee' }
   },
   {
     id: 'phoenix',
-    name: 'PULSE HAWK',
-    description: 'Eldvingar med dramatisk silhuett',
+    name: 'HOT RELOAD',
+    description: 'Regenerating fighter with flame vectors',
     colors: { primary: '#44ffaa', secondary: '#33aa77', accent: '#bbffcc', glow: '#44ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'shark',
-    name: 'BYTE SHARK',
-    description: 'Aggressiv hajdesign med fenor',
+    name: 'HEAP SHARK',
+    description: 'Aggressive predator with memory-fin design',
     colors: { primary: '#00ff77', secondary: '#00aa55', accent: '#66ff99', glow: '#00ff77', cockpit: '#aaffbb' }
   },
   {
     id: 'wasp',
-    name: 'GLITCH WASP',
-    description: 'Smal kropp med vassa vingar',
+    name: 'ASYNC WASP',
+    description: 'Quick stinger with parallel attack threads',
     colors: { primary: '#55ff88', secondary: '#44aa66', accent: '#aaffaa', glow: '#55ff88', cockpit: '#eeffcc' }
   },
   {
     id: 'corsair',
-    name: 'ROGUE CODE',
-    description: 'Piratdesign med assymetriska vingar',
+    name: 'PIRATE HASH',
+    description: 'Rogue coder with asymmetric hull',
     colors: { primary: '#11ff99', secondary: '#11aa66', accent: '#77ffbb', glow: '#11ff99', cockpit: '#ccffdd' }
   },
   {
     id: 'specter',
-    name: 'NULL SPECTER',
-    description: 'Spöklik med genomskinliga element',
+    name: 'NULL POINTER',
+    description: 'Ghostly frame with void-reference systems',
     colors: { primary: '#88ffbb', secondary: '#66aa88', accent: '#ccffdd', glow: '#88ffbb', cockpit: '#ffffff' }
   },
   {
     id: 'raptor',
-    name: 'BIT RAPTOR',
-    description: 'Rovfågelsdesign med klor',
+    name: 'BIT RIPPER',
+    description: 'Predator class with binary talons',
     colors: { primary: '#33ffaa', secondary: '#22aa77', accent: '#99ffcc', glow: '#33ffaa', cockpit: '#ddffee' }
   },
   {
     id: 'aurora',
-    name: 'FLUX WAVE',
-    description: 'Elegant kurvor med norrsken',
+    name: 'GRADIENT FLOW',
+    description: 'Elegant curves with spectrum-shift hull',
     colors: { primary: '#00ffdd', secondary: '#00aa99', accent: '#88ffee', glow: '#00ffdd', cockpit: '#ffffff' }
   },
   {
     id: 'gladiator',
-    name: 'MEGA BLOCK',
-    description: 'Massiv pansrad stridsvagn',
+    name: 'CORE TANK',
+    description: 'Massive armored battle-processor',
     colors: { primary: '#44ff99', secondary: '#33aa77', accent: '#aaffcc', glow: '#44ff99', cockpit: '#ffffff' }
   },
   {
     id: 'eclipse',
-    name: 'VOID RING',
-    description: 'Cirkulär design med månring',
+    name: 'RING BUFFER',
+    description: 'Circular design with orbital weapon ring',
     colors: { primary: '#00ff88', secondary: '#00aa66', accent: '#66ffaa', glow: '#00ff88', cockpit: '#ccffdd' }
   },
   {
     id: 'basilisk',
-    name: 'COIL SNAKE',
-    description: 'Ormliknande med böjd kropp',
+    name: 'RECURSION',
+    description: 'Serpentine hull with self-referential core',
     colors: { primary: '#22ff77', secondary: '#11aa55', accent: '#88ff99', glow: '#22ff77', cockpit: '#aaffbb' }
   },
-  // ============= 20 VECTOR STYLE SHIPS =============
+  // ============= MEGA PACK FLEET (20 ships) =============
   {
     id: 'interceptor',
-    name: 'GRID RUNNER',
-    description: 'Klassisk vektor-stridsmaskin',
+    name: 'REGEX BLADE',
+    description: 'Pattern-matching interceptor',
     colors: { primary: '#00ffbb', secondary: '#00aa88', accent: '#77ffdd', glow: '#00ffbb', cockpit: '#eeffff' }
   },
   {
     id: 'valkyrie',
-    name: 'CHROME EDGE',
-    description: 'Silvrig attackare med skarpa vingar',
+    name: 'CHROME CAST',
+    description: 'Reflective attacker with mirror-hull',
     colors: { primary: '#66ffaa', secondary: '#44aa77', accent: '#bbffcc', glow: '#66ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'crimson',
-    name: 'MATRIX CLAW',
-    description: 'Aggressiv jagare med dubbla motorer',
+    name: 'ERROR STATE',
+    description: 'Critical-path hunter with fault sensors',
     colors: { primary: '#33ff99', secondary: '#22aa66', accent: '#99ffbb', glow: '#33ff99', cockpit: '#ddffee' }
   },
   {
     id: 'goldwing',
-    name: 'WIDE SCAN',
-    description: 'Tungt skepp med bred profil',
+    name: 'WIDE CAST',
+    description: 'Broadcast-class with expanded range',
     colors: { primary: '#55ff88', secondary: '#44aa66', accent: '#aaffaa', glow: '#55ff88', cockpit: '#ccffcc' }
   },
   {
     id: 'cobalt',
-    name: 'LASER LINE',
-    description: 'Strömlinjeformad vektor-fighter',
+    name: 'STREAM LINE',
+    description: 'Flow-optimized vector fighter',
     colors: { primary: '#00ffcc', secondary: '#00aa99', accent: '#88ffdd', glow: '#00ffcc', cockpit: '#ffffff' }
   },
   {
     id: 'ironclad',
-    name: 'ARMOR NODE',
-    description: 'Pansrad fregatt med tung plåt',
+    name: 'HARD CACHE',
+    description: 'Armored frigate with persistent shields',
     colors: { primary: '#44ff77', secondary: '#33aa55', accent: '#99ff99', glow: '#44ff77', cockpit: '#aaffbb' }
   },
   {
     id: 'redtail',
-    name: 'QUICK SYNC',
-    description: 'Snabb interceptor med markering',
+    name: 'QUICK SORT',
+    description: 'Rapid interceptor with priority targeting',
     colors: { primary: '#22ffaa', secondary: '#11aa77', accent: '#88ffcc', glow: '#22ffaa', cockpit: '#ddffee' }
   },
   {
     id: 'sunburst',
-    name: 'NOVA BURST',
-    description: 'Attackare med explosiv kraft',
+    name: 'BURST MODE',
+    description: 'Explosive attacker with overclock core',
     colors: { primary: '#66ff99', secondary: '#55aa77', accent: '#bbffbb', glow: '#66ff99', cockpit: '#ffffff' }
   },
   {
     id: 'steelwolf',
-    name: 'WOLF GRID',
-    description: 'Aggressiv jaktmaskin',
+    name: 'PACK HUNTER',
+    description: 'Aggressive swarm-class fighter',
     colors: { primary: '#00ff99', secondary: '#00aa77', accent: '#77ffbb', glow: '#00ff99', cockpit: '#ccffdd' }
   },
   {
     id: 'blueshift',
-    name: 'SHIFT BOOST',
-    description: 'Aerodynamisk vektor-racer',
+    name: 'PHASE SHIFT',
+    description: 'Dimensional racer with warp-vector drive',
     colors: { primary: '#33ffbb', secondary: '#22aa88', accent: '#99ffdd', glow: '#33ffbb', cockpit: '#eeffff' }
   },
   {
     id: 'thunderbolt',
-    name: 'THUNDER GRID',
-    description: 'Massiv stridskryssare',
+    name: 'POWER SURGE',
+    description: 'Massive cruiser with voltage core',
     colors: { primary: '#11ff88', secondary: '#11aa66', accent: '#88ffaa', glow: '#11ff88', cockpit: '#ccffcc' }
   },
   {
     id: 'yellowjacket',
-    name: 'STING CORE',
-    description: 'Smidig fighter med gaddar',
+    name: 'INJECT POINT',
+    description: 'Agile fighter with penetration stingers',
     colors: { primary: '#55ffaa', secondary: '#44aa77', accent: '#aaffcc', glow: '#55ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'silverfox',
-    name: 'SCAN FOX',
-    description: 'Elegant spanare med sensorer',
+    name: 'TRACE LOG',
+    description: 'Elegant scout with deep-scan sensors',
     colors: { primary: '#77ff99', secondary: '#55aa77', accent: '#bbffbb', glow: '#77ff99', cockpit: '#ddffdd' }
   },
   {
     id: 'firebird',
-    name: 'CORE BLAST',
-    description: 'Explosiv attackare',
+    name: 'CORE MELT',
+    description: 'Thermal attacker with fusion drive',
     colors: { primary: '#44ffbb', secondary: '#33aa88', accent: '#aaffdd', glow: '#44ffbb', cockpit: '#ffffff' }
   },
   {
     id: 'arctic',
-    name: 'CRYO LINK',
-    description: 'Isig fighter med kalla linjer',
+    name: 'COLD BOOT',
+    description: 'Cryo-fighter with freeze protocols',
     colors: { primary: '#88ffcc', secondary: '#66aa99', accent: '#ccffee', glow: '#88ffcc', cockpit: '#ffffff' }
   },
   {
     id: 'commander',
-    name: 'ADMIN NODE',
-    description: 'Stort befälsskepp',
+    name: 'ROOT ACCESS',
+    description: 'Command vessel with admin privileges',
     colors: { primary: '#22ff99', secondary: '#11aa77', accent: '#99ffcc', glow: '#22ff99', cockpit: '#ddffee' }
   },
   {
     id: 'scarlet',
-    name: 'RAZOR SYNC',
-    description: 'Skarp duellant med precision',
+    name: 'EDGE CASE',
+    description: 'Precision duelist with boundary sensors',
     colors: { primary: '#00ffaa', secondary: '#00aa88', accent: '#77ffcc', glow: '#00ffaa', cockpit: '#eeffff' }
   },
   {
     id: 'goldenrod',
-    name: 'DATA HAUL',
-    description: 'Klassisk transportjagare',
+    name: 'LOAD BALANCE',
+    description: 'Distribution-class transport hunter',
     colors: { primary: '#55ff99', secondary: '#44aa77', accent: '#aaffbb', glow: '#55ff99', cockpit: '#ccffdd' }
   },
   {
     id: 'bluehawk',
-    name: 'SWIFT CODE',
-    description: 'Snabb attackfågel',
+    name: 'COMPILE TIME',
+    description: 'Swift builder with rapid-fire arrays',
     colors: { primary: '#33ffaa', secondary: '#22aa88', accent: '#99ffcc', glow: '#33ffaa', cockpit: '#ffffff' }
   },
   {
     id: 'titanium',
-    name: 'ENDFRAME',
-    description: 'Ultra-pansrad destroyer',
+    name: 'KERNEL PANIC',
+    description: 'Ultra-armored destroyer class',
     colors: { primary: '#66ffbb', secondary: '#55aa88', accent: '#bbffdd', glow: '#66ffbb', cockpit: '#eeffff' }
   },
   // ============= SECRET OMEGA PACK EXCLUSIVE =============
