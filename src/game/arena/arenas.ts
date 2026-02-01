@@ -4,10 +4,11 @@ export interface ArenaDefinition {
   id: string;
   name: string;
   image: string;
+  music?: string; // Optional arena-specific music
 }
 
 export const ARENAS: ArenaDefinition[] = [
-  { id: 'nexus-core', name: 'NEXUS CORE', image: '/arenas/nexus-core.jpeg' },
+  { id: 'nexus-core', name: 'NEXUS CORE', image: '/arenas/nexus-core.jpeg', music: '/audio/arena/Nexus_core.mp3' },
   { id: 'cyber-vault', name: 'CYBER VAULT', image: '/arenas/cyber-vault.jpeg' },
   { id: 'quantum-grid', name: 'QUANTUM GRID', image: '/arenas/quantum-grid.jpeg' },
   { id: 'data-matrix', name: 'DATA MATRIX', image: '/arenas/data-matrix.jpeg' },
