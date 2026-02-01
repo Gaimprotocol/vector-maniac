@@ -79,6 +79,16 @@ export function getArenaCompanions(): ArenaUnlock[] {
   return getArenaUnlocks().filter(u => u.type === 'companion');
 }
 
+// Get all arena-unlocked ships
+export function getArenaShips(): ArenaUnlock[] {
+  return getArenaUnlocks().filter(u => u.type === 'ship');
+}
+
+// Get all arena-unlocked skins
+export function getArenaSkins(): ArenaUnlock[] {
+  return getArenaUnlocks().filter(u => u.type === 'skin');
+}
+
 // ============ REWARD POOLS ============
 
 // Arena-exclusive ships (can only be obtained from arena wins)
