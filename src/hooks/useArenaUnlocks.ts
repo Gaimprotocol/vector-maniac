@@ -92,29 +92,30 @@ export function getArenaSkins(): ArenaUnlock[] {
 // ============ REWARD POOLS ============
 
 // Arena-exclusive ships (can only be obtained from arena wins)
+// These are UNIQUE Vector Maniac designs - not from other games
 export const ARENA_SHIPS = [
   { 
-    shipId: 'arena_striker', 
-    name: 'ARENA STRIKER', 
-    desc: 'Battle-forged vector fighter',
+    shipId: 'hex_phantom', 
+    name: 'HEX PHANTOM', 
+    desc: 'Hexagonal stealth fighter with phase-shift core',
     rarity: 'legendary' as const,
   },
   { 
-    shipId: 'void_hunter', 
-    name: 'VOID HUNTER', 
-    desc: 'Stealth systems from the arena void',
+    shipId: 'pulse_wraith', 
+    name: 'PULSE WRAITH', 
+    desc: 'Spectral attacker with pulsing energy wings',
     rarity: 'legendary' as const,
   },
   { 
-    shipId: 'neon_phantom', 
-    name: 'NEON PHANTOM', 
-    desc: 'Ghostly silhouette with evasion matrix',
+    shipId: 'grid_reaper', 
+    name: 'GRID REAPER', 
+    desc: 'Angular death machine from the data void',
     rarity: 'legendary' as const,
   },
   { 
-    shipId: 'circuit_breaker', 
-    name: 'CIRCUIT BREAKER', 
-    desc: 'EMP-resistant chassis from the arena',
+    shipId: 'null_striker', 
+    name: 'NULL STRIKER', 
+    desc: 'Zero-point energy fighter with dual cores',
     rarity: 'legendary' as const,
   },
 ];
