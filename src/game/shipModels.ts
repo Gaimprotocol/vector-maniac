@@ -448,1416 +448,1388 @@ export function drawShipModel(
   }
 }
 
-// DEFAULT: FALCON - Classic balanced fighter
+// DEFAULT: ZERO POINT - Origin vector fighter
 function drawFalcon(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  const cx = w / 2;
-  const cy = h / 2;
+  const pulse = Math.sin(time / 200) * 0.2 + 0.8;
   
-  // Body gradient
-  const bodyGrad = ctx.createLinearGradient(-10, -6, 35, 6);
-  bodyGrad.addColorStop(0, colors.primary);
-  bodyGrad.addColorStop(0.5, colors.secondary);
-  bodyGrad.addColorStop(1, colors.primary);
-  ctx.fillStyle = bodyGrad;
-  
-  // Main fuselage
+  // Hexagonal main body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(38, 0);
-  ctx.lineTo(28, -2.5);
-  ctx.lineTo(18, -5);
-  ctx.lineTo(-18, -4);
-  ctx.lineTo(-22, -2.5);
-  ctx.lineTo(-22, 2.5);
-  ctx.lineTo(-18, 4);
-  ctx.lineTo(18, 5);
-  ctx.lineTo(28, 2.5);
+  ctx.moveTo(35, 0);           // Front point
+  ctx.lineTo(25, -6);
+  ctx.lineTo(5, -8);
+  ctx.lineTo(-15, -6);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 6);
+  ctx.lineTo(5, 8);
+  ctx.lineTo(25, 6);
   ctx.closePath();
   ctx.fill();
   
-  // Wings
+  // Inner wireframe lines
+  ctx.strokeStyle = colors.secondary;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(30, 0);
+  ctx.lineTo(0, -5);
+  ctx.lineTo(-15, 0);
+  ctx.lineTo(0, 5);
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Grid pattern on body
+  ctx.strokeStyle = colors.accent + '44';
+  for (let i = -10; i <= 20; i += 8) {
+    ctx.beginPath();
+    ctx.moveTo(i, -6);
+    ctx.lineTo(i, 6);
+    ctx.stroke();
+  }
+  
+  // Angular wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(-15, -4);
-  ctx.lineTo(-21, -10);
-  ctx.lineTo(-6, -6.5);
-  ctx.lineTo(0, -4);
+  ctx.moveTo(0, -8);
+  ctx.lineTo(-12, -14);
+  ctx.lineTo(-18, -10);
+  ctx.lineTo(-12, -6);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
-  ctx.moveTo(-15, 4);
-  ctx.lineTo(-21, 10);
-  ctx.lineTo(-6, 6.5);
-  ctx.lineTo(0, 4);
+  ctx.moveTo(0, 8);
+  ctx.lineTo(-12, 14);
+  ctx.lineTo(-18, 10);
+  ctx.lineTo(-12, 6);
   ctx.closePath();
   ctx.fill();
   
-  // Accent stripes
+  // Wing tip nodes
+  ctx.fillStyle = colors.glow;
+  ctx.beginPath();
+  ctx.arc(-15, -12, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-15, 12, 2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cockpit - digital display
+  ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+  ctx.fillRect(26, -2, 6, 4);
+  
+  drawEngine(ctx, -20, 0, colors, time);
+}
+
+// PIXEL FANG - Binary venom interceptor
+function drawViper(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const scan = (time / 100) % 40;
+  
+  // Sharp arrow body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(42, 0);
+  ctx.lineTo(30, -4);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-15, -4);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-15, 4);
+  ctx.lineTo(5, 5);
+  ctx.lineTo(30, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Pixelated teeth pattern
   ctx.fillStyle = colors.accent;
-  ctx.fillRect(-15, -2, 40, 1);
-  ctx.fillRect(-15, 1, 40, 1);
+  for (let i = 0; i < 5; i++) {
+    const x = 25 - i * 8;
+    ctx.fillRect(x, -3, 3, 2);
+    ctx.fillRect(x, 1, 3, 2);
+  }
   
-  // Cockpit
-  const cockpitGrad = ctx.createRadialGradient(28, 0, 0, 28, 0, 5);
-  cockpitGrad.addColorStop(0, '#ffffff');
-  cockpitGrad.addColorStop(0.5, colors.cockpit);
-  cockpitGrad.addColorStop(1, colors.glow);
-  ctx.fillStyle = cockpitGrad;
+  // Fang wings
+  ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.arc(28, 0, 4, 0, Math.PI * 2);
+  ctx.moveTo(10, -5);
+  ctx.lineTo(-5, -16);
+  ctx.lineTo(-10, -14);
+  ctx.lineTo(-5, -5);
+  ctx.closePath();
   ctx.fill();
   
-  // Engine
+  ctx.beginPath();
+  ctx.moveTo(10, 5);
+  ctx.lineTo(-5, 16);
+  ctx.lineTo(-10, 14);
+  ctx.lineTo(-5, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Scan line effect
+  ctx.fillStyle = colors.glow + '66';
+  ctx.fillRect(-20 + scan, -5, 2, 10);
+  
+  // Digital cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(32, -2, 8, 4);
+  
   drawEngine(ctx, -22, 0, colors, time);
 }
 
-// VIPER - Sleek dual-wing fighter
-function drawViper(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  // Long thin body
-  const bodyGrad = ctx.createLinearGradient(-20, 0, 35, 0);
-  bodyGrad.addColorStop(0, colors.secondary);
-  bodyGrad.addColorStop(0.5, colors.primary);
-  bodyGrad.addColorStop(1, colors.secondary);
-  ctx.fillStyle = bodyGrad;
-  
-  ctx.beginPath();
-  ctx.moveTo(42, 0);
-  ctx.lineTo(30, -2);
-  ctx.lineTo(10, -3);
-  ctx.lineTo(-20, -2);
-  ctx.lineTo(-24, 0);
-  ctx.lineTo(-20, 2);
-  ctx.lineTo(10, 3);
-  ctx.lineTo(30, 2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Dual swept wings
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.moveTo(5, -3);
-  ctx.lineTo(-15, -14);
-  ctx.lineTo(-20, -12);
-  ctx.lineTo(-5, -3);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(5, 3);
-  ctx.lineTo(-15, 14);
-  ctx.lineTo(-20, 12);
-  ctx.lineTo(-5, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Wing tips glow
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = colors.glow;
-  ctx.beginPath();
-  ctx.arc(-17, -13, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-17, 13, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(30, 0, 5, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -24, 0, colors, time);
-}
-
-// PHANTOM - Stealth angular design
+// GHOST PROTOCOL - Null-signature stealth
 function drawPhantom(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+  const flicker = Math.sin(time / 80) * 0.3 + 0.7;
   
-  // Angular body
+  // Triangular stealth hull
+  ctx.globalAlpha = 0.85 * flicker;
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(20, -5);
-  ctx.lineTo(-5, -6);
-  ctx.lineTo(-25, -3);
-  ctx.lineTo(-25, 3);
-  ctx.lineTo(-5, 6);
-  ctx.lineTo(20, 5);
+  ctx.moveTo(38, 0);
+  ctx.lineTo(15, -7);
+  ctx.lineTo(-20, -5);
+  ctx.lineTo(-25, 0);
+  ctx.lineTo(-20, 5);
+  ctx.lineTo(15, 7);
   ctx.closePath();
   ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // Null-signature pattern (dashed outline)
+  ctx.strokeStyle = colors.glow;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(38, 0);
+  ctx.lineTo(15, -7);
+  ctx.lineTo(-20, -5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(38, 0);
+  ctx.lineTo(15, 7);
+  ctx.lineTo(-20, 5);
+  ctx.stroke();
+  ctx.setLineDash([]);
   
   // Stealth wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(-5, -6);
-  ctx.lineTo(-25, -15);
-  ctx.lineTo(-30, -10);
-  ctx.lineTo(-25, -3);
+  ctx.moveTo(5, -7);
+  ctx.lineTo(-15, -15);
+  ctx.lineTo(-22, -12);
+  ctx.lineTo(-15, -5);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
-  ctx.moveTo(-5, 6);
-  ctx.lineTo(-25, 15);
-  ctx.lineTo(-30, 10);
-  ctx.lineTo(-25, 3);
+  ctx.moveTo(5, 7);
+  ctx.lineTo(-15, 15);
+  ctx.lineTo(-22, 12);
+  ctx.lineTo(-15, 5);
   ctx.closePath();
   ctx.fill();
   
-  // Subtle edge glow
-  ctx.strokeStyle = colors.glow + '44';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(20, -5);
-  ctx.lineTo(-30, -10);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(20, 5);
-  ctx.lineTo(-30, 10);
-  ctx.stroke();
-  
-  // Cockpit slit
+  // Digital cockpit slit
   ctx.fillStyle = colors.cockpit;
-  ctx.fillRect(22, -1, 10, 2);
+  ctx.fillRect(25, -1, 10, 2);
   
   drawEngine(ctx, -25, 0, colors, time);
 }
 
-// HAMMER - Heavy attack ship with broad front
+// CRASH DUMP - Memory-burst heavy striker
 function drawHammer(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const pulse = Math.sin(time / 150) * 0.15 + 0.85;
+  
+  // Rectangular tank hull
   ctx.fillStyle = colors.primary;
-  
-  // Broad hammerhead
   ctx.beginPath();
-  ctx.moveTo(25, -8);
-  ctx.lineTo(30, -8);
-  ctx.lineTo(32, 0);
+  ctx.moveTo(30, -8);
   ctx.lineTo(30, 8);
-  ctx.lineTo(25, 8);
-  ctx.lineTo(20, 5);
-  ctx.lineTo(20, -5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Body
-  ctx.beginPath();
-  ctx.moveTo(20, -5);
-  ctx.lineTo(20, 5);
-  ctx.lineTo(-20, 4);
+  ctx.lineTo(-20, 7);
   ctx.lineTo(-25, 0);
-  ctx.lineTo(-20, -4);
+  ctx.lineTo(-20, -7);
   ctx.closePath();
   ctx.fill();
   
-  // Heavy armor plates
+  // Data block pattern
   ctx.fillStyle = colors.secondary;
-  ctx.fillRect(22, -7, 6, 3);
-  ctx.fillRect(22, 4, 6, 3);
-  ctx.fillRect(-15, -5, 25, 2);
-  ctx.fillRect(-15, 3, 25, 2);
+  ctx.fillRect(20, -7, 8, 6);
+  ctx.fillRect(20, 1, 8, 6);
+  ctx.fillRect(8, -6, 10, 4);
+  ctx.fillRect(8, 2, 10, 4);
+  ctx.fillRect(-5, -5, 10, 3);
+  ctx.fillRect(-5, 2, 10, 3);
   
-  // Weapons
+  // Memory dump indicator
+  ctx.fillStyle = `rgba(255, 100, 100, ${pulse})`;
+  ctx.fillRect(-18, -3, 6, 6);
+  
+  // Burst cannons
   ctx.fillStyle = colors.accent;
   ctx.fillRect(28, -10, 4, 4);
   ctx.fillRect(28, 6, 4, 4);
   
-  // Cockpit
-  const cockpitGrad = ctx.createRadialGradient(15, 0, 0, 15, 0, 4);
-  cockpitGrad.addColorStop(0, '#ffffff');
-  cockpitGrad.addColorStop(1, colors.cockpit);
-  ctx.fillStyle = cockpitGrad;
-  ctx.beginPath();
-  ctx.arc(15, 0, 3, 0, Math.PI * 2);
-  ctx.fill();
+  // Viewport
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(22, -2, 6, 4);
   
-  drawEngine(ctx, -25, 0, colors, time);
+  drawEngine(ctx, -25, 0, colors, time, 1.2);
 }
 
-// NEEDLE - Ultra-thin interceptor
+// THREAD ZERO - Ultra-slim data-needle
 function drawNeedle(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+  const dataFlow = (time / 50) % 60;
   
-  // Super thin needle body
+  // Needle-thin body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
   ctx.moveTo(45, 0);
-  ctx.lineTo(35, -1);
-  ctx.lineTo(-20, -1.5);
+  ctx.lineTo(35, -2);
+  ctx.lineTo(-20, -2);
   ctx.lineTo(-25, 0);
-  ctx.lineTo(-20, 1.5);
-  ctx.lineTo(35, 1);
+  ctx.lineTo(-20, 2);
+  ctx.lineTo(35, 2);
   ctx.closePath();
   ctx.fill();
+  
+  // Data thread running through
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.lineDashOffset = -dataFlow;
+  ctx.beginPath();
+  ctx.moveTo(-20, 0);
+  ctx.lineTo(40, 0);
+  ctx.stroke();
+  ctx.setLineDash([]);
   
   // Tiny stabilizers
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(-10, -1.5);
-  ctx.lineTo(-18, -6);
+  ctx.moveTo(-10, -2);
+  ctx.lineTo(-18, -7);
   ctx.lineTo(-20, -5);
-  ctx.lineTo(-15, -1.5);
+  ctx.lineTo(-15, -2);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
-  ctx.moveTo(-10, 1.5);
-  ctx.lineTo(-18, 6);
+  ctx.moveTo(-10, 2);
+  ctx.lineTo(-18, 7);
   ctx.lineTo(-20, 5);
-  ctx.lineTo(-15, 1.5);
+  ctx.lineTo(-15, 2);
   ctx.closePath();
   ctx.fill();
   
-  // Speed lines
-  ctx.strokeStyle = colors.glow;
-  ctx.lineWidth = 0.5;
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  ctx.moveTo(-25, 0);
-  ctx.lineTo(-45, 0);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  
-  // Cockpit
+  // Point light cockpit
   ctx.fillStyle = colors.cockpit;
   ctx.beginPath();
-  ctx.ellipse(38, 0, 4, 1.5, 0, 0, Math.PI * 2);
+  ctx.arc(40, 0, 2, 0, Math.PI * 2);
   ctx.fill();
   
   drawEngine(ctx, -25, 0, colors, time, 0.6);
 }
 
-// TRIDENT - Three-pronged design
+// FORK BOMB - Triple-vector assault ship
 function drawTrident(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const pulse = Math.sin(time / 120) * 0.3 + 0.7;
+  
+  // Three parallel prongs
   ctx.fillStyle = colors.primary;
-  
-  // Central prong
-  ctx.beginPath();
-  ctx.moveTo(40, 0);
-  ctx.lineTo(25, -2);
-  ctx.lineTo(-10, -2);
-  ctx.lineTo(-15, 0);
-  ctx.lineTo(-10, 2);
-  ctx.lineTo(25, 2);
-  ctx.closePath();
-  ctx.fill();
-  
+  // Center prong
+  ctx.fillRect(-15, -2, 50, 4);
   // Upper prong
-  ctx.beginPath();
-  ctx.moveTo(30, -4);
-  ctx.lineTo(20, -5);
-  ctx.lineTo(-5, -8);
-  ctx.lineTo(-15, -5);
-  ctx.lineTo(-10, -4);
-  ctx.closePath();
-  ctx.fill();
-  
+  ctx.fillRect(-10, -10, 35, 4);
   // Lower prong
-  ctx.beginPath();
-  ctx.moveTo(30, 4);
-  ctx.lineTo(20, 5);
-  ctx.lineTo(-5, 8);
-  ctx.lineTo(-15, 5);
-  ctx.lineTo(-10, 4);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillRect(-10, 6, 35, 4);
   
-  // Prong tips glow
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 6;
+  // Connecting block
+  ctx.fillStyle = colors.secondary;
+  ctx.fillRect(-15, -10, 8, 24);
+  
+  // Fork node tips
+  ctx.fillStyle = `rgba(136, 255, 187, ${pulse})`;
+  ctx.fillRect(33, -1, 4, 2);
+  ctx.fillRect(23, -9, 4, 2);
+  ctx.fillRect(23, 7, 4, 2);
+  
+  // Process indicator lights
   ctx.fillStyle = colors.accent;
   ctx.beginPath();
-  ctx.arc(40, 0, 2, 0, Math.PI * 2);
+  ctx.arc(-10, 0, 2, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(30, -4, 1.5, 0, Math.PI * 2);
+  ctx.arc(-10, -8, 1.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(30, 4, 1.5, 0, Math.PI * 2);
+  ctx.arc(-10, 8, 1.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
+  drawEngine(ctx, -15, -8, colors, time, 0.4);
+  drawEngine(ctx, -15, 0, colors, time, 0.6);
+  drawEngine(ctx, -15, 8, colors, time, 0.4);
+}
+
+// BUG TRACKER - Insectoid hunter with scan-wings
+function drawMantis(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const scan = (time / 100) % 30;
+  
+  // Segmented hexagonal body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(35, 0);
+  ctx.lineTo(25, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-15, -5);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 5);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(25, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Segmentation lines
+  ctx.strokeStyle = colors.secondary;
+  ctx.lineWidth = 1;
+  for (let i = -5; i <= 20; i += 10) {
+    ctx.beginPath();
+    ctx.moveTo(i, -5);
+    ctx.lineTo(i, 5);
+    ctx.stroke();
+  }
+  
+  // Angular scan-wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-10, -16);
+  ctx.lineTo(-20, -12);
+  ctx.lineTo(-15, -5);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 6);
+  ctx.lineTo(-10, 16);
+  ctx.lineTo(-20, 12);
+  ctx.lineTo(-15, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Scan beam effect
+  ctx.fillStyle = colors.glow + '44';
+  ctx.beginPath();
+  ctx.moveTo(35, 0);
+  ctx.lineTo(35 + scan, -scan * 0.5);
+  ctx.lineTo(35 + scan, scan * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Compound eyes (dual cockpits)
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(28, -3, 5, 2);
+  ctx.fillRect(28, 1, 5, 2);
+  
+  drawEngine(ctx, -20, 0, colors, time);
+}
+
+// STACK TRACE - Curved chassis with tail-stinger
+function drawScorpion(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const tailPulse = Math.sin(time / 100) * 3;
+  
+  // Blocky main hull
+  ctx.fillStyle = colors.primary;
+  ctx.fillRect(-18, -6, 35, 12);
+  
+  // Stack segments on body
+  ctx.fillStyle = colors.secondary;
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(-15 + i * 8, -5, 6, 3);
+    ctx.fillRect(-15 + i * 8, 2, 6, 3);
+  }
+  
+  // Curved trace tail
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(17, 0);
+  ctx.quadraticCurveTo(30, -5 + tailPulse, 40, -12 + tailPulse);
+  ctx.stroke();
+  
+  // Stinger point
+  ctx.fillStyle = colors.glow;
+  ctx.beginPath();
+  ctx.arc(40, -12 + tailPulse, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Claw wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(-15, -6);
+  ctx.lineTo(-22, -12);
+  ctx.lineTo(-25, -8);
+  ctx.lineTo(-18, -6);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(-15, 6);
+  ctx.lineTo(-22, 12);
+  ctx.lineTo(-25, 8);
+  ctx.lineTo(-18, 6);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Debug viewport
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(10, -2, 6, 4);
+  
+  drawEngine(ctx, -18, 0, colors, time);
+}
+
+// DELTA MERGE - Diff-core triangular stealth
+function drawDelta(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const merge = Math.sin(time / 200) * 0.2 + 0.8;
+  
+  // Perfect delta triangle
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(38, 0);
+  ctx.lineTo(-22, -16);
+  ctx.lineTo(-18, 0);
+  ctx.lineTo(-22, 16);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Inner diff pattern
+  ctx.strokeStyle = colors.secondary;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(28, 0);
+  ctx.lineTo(-12, -10);
+  ctx.lineTo(-8, 0);
+  ctx.lineTo(-12, 10);
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Merge indicator lines
+  ctx.strokeStyle = `rgba(102, 255, 204, ${merge})`;
+  ctx.setLineDash([2, 2]);
+  ctx.beginPath();
+  ctx.moveTo(15, 0);
+  ctx.lineTo(-15, -12);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(15, 0);
+  ctx.lineTo(-15, 12);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Merge nodes
+  ctx.fillStyle = colors.accent;
+  ctx.beginPath();
+  ctx.arc(-20, -15, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-20, 15, 2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cockpit core
+  ctx.fillStyle = colors.cockpit;
+  ctx.beginPath();
+  ctx.arc(20, 0, 5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  drawEngine(ctx, -18, 0, colors, time);
+}
+
+// FLAT MAP - Wide sensor array glider
+function drawStingray(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const sweep = Math.sin(time / 150) * 2;
+  
+  // Wide hexagonal body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(30, 0);
+  ctx.lineTo(20, -4);
+  ctx.lineTo(-5, -8);
+  ctx.lineTo(-25, -10 + sweep);
+  ctx.lineTo(-30, 0);
+  ctx.lineTo(-25, 10 - sweep);
+  ctx.lineTo(-5, 8);
+  ctx.lineTo(20, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Grid pattern on wide wings
+  ctx.strokeStyle = colors.secondary + '88';
+  ctx.lineWidth = 0.5;
+  for (let i = -20; i <= 10; i += 8) {
+    ctx.beginPath();
+    ctx.moveTo(i, -8);
+    ctx.lineTo(i - 5, 0);
+    ctx.lineTo(i, 8);
+    ctx.stroke();
+  }
+  
+  // Sensor array indicator
+  ctx.fillStyle = colors.accent;
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(-20 + i * 8, -1, 3, 2);
+  }
+  
+  // Data stream tail
+  ctx.strokeStyle = colors.glow;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(-30, 0);
+  ctx.lineTo(-42, 0);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Dual viewports
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(18, -2, 8, 1.5);
+  ctx.fillRect(18, 0.5, 8, 1.5);
+}
+
+// HOT RELOAD - Regenerating flame fighter
+function drawPhoenix(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const reload = (time / 100) % 30;
+  const pulse = Math.sin(time / 80) * 0.3 + 0.7;
+  
+  // Angular phoenix body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(38, 0);
+  ctx.lineTo(28, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-15, -4);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 4);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(28, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Reload progress wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-10, -16);
+  ctx.lineTo(-18, -12);
+  ctx.lineTo(-12, -4);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 6);
+  ctx.lineTo(-10, 16);
+  ctx.lineTo(-18, 12);
+  ctx.lineTo(-12, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Hot reload indicator (circular progress)
+  ctx.strokeStyle = `rgba(187, 255, 204, ${pulse})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, 8, 0, (reload / 30) * Math.PI * 2);
+  ctx.stroke();
+  
+  // Flame tips
+  ctx.fillStyle = colors.accent;
+  ctx.beginPath();
+  ctx.arc(-14, -14, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-14, 14, 3, 0, Math.PI * 2);
+  ctx.fill();
   
   // Cockpit
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.arc(20, 0, 3, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(28, -2, 8, 4);
   
-  drawEngine(ctx, -15, -6, colors, time, 0.5);
-  drawEngine(ctx, -15, 0, colors, time, 0.7);
-  drawEngine(ctx, -15, 6, colors, time, 0.5);
+  drawEngine(ctx, -20, 0, colors, time);
 }
 
-// MANTIS - Insect-like with curved wings
-function drawMantis(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+// HEAP SHARK - Memory-fin predator
+function drawShark(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const bite = Math.sin(time / 100) * 2;
   
-  // Segmented body
+  // Streamlined data body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.quadraticCurveTo(25, -3, 10, -2);
-  ctx.lineTo(-15, -2);
-  ctx.quadraticCurveTo(-22, 0, -15, 2);
-  ctx.lineTo(10, 2);
-  ctx.quadraticCurveTo(25, 3, 35, 0);
+  ctx.moveTo(40 + bite, 0);
+  ctx.lineTo(28, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-18, -5);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 5);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(28, 5);
   ctx.closePath();
   ctx.fill();
   
-  // Curved mantis wings
+  // Dorsal heap-fin
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(5, -2);
-  ctx.quadraticCurveTo(-10, -15, -25, -12);
-  ctx.quadraticCurveTo(-20, -8, -15, -2);
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-5, -16);
+  ctx.lineTo(-12, -12);
+  ctx.lineTo(-8, -6);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Side memory-fins
+  ctx.beginPath();
+  ctx.moveTo(-5, -5);
+  ctx.lineTo(-15, -11);
+  ctx.lineTo(-20, -8);
+  ctx.lineTo(-15, -5);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
-  ctx.moveTo(5, 2);
-  ctx.quadraticCurveTo(-10, 15, -25, 12);
-  ctx.quadraticCurveTo(-20, 8, -15, 2);
+  ctx.moveTo(-5, 5);
+  ctx.lineTo(-15, 11);
+  ctx.lineTo(-20, 8);
+  ctx.lineTo(-15, 5);
   ctx.closePath();
   ctx.fill();
   
-  // Antenna
-  ctx.strokeStyle = colors.accent;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(32, -1);
-  ctx.quadraticCurveTo(40, -5, 38, -8);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(32, 1);
-  ctx.quadraticCurveTo(40, 5, 38, 8);
-  ctx.stroke();
+  // Byte teeth pattern
+  ctx.fillStyle = colors.accent;
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(30 - i * 6, -2, 2, 1);
+    ctx.fillRect(30 - i * 6, 1, 2, 1);
+  }
   
-  // Eyes
+  // Eye viewport
   ctx.fillStyle = colors.cockpit;
   ctx.beginPath();
-  ctx.ellipse(30, -2, 3, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(30, 2, 3, 2, 0, 0, Math.PI * 2);
+  ctx.arc(32, 0, 3, 0, Math.PI * 2);
   ctx.fill();
   
   drawEngine(ctx, -22, 0, colors, time);
 }
 
-// SCORPION - Curved design with tail cannon
-function drawScorpion(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+// ASYNC WASP - Parallel attack stinger
+function drawWasp(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const buzz = Math.sin(time / 50) * 1;
   
-  // Body
+  // Striped async body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(20, 0);
-  ctx.lineTo(15, -4);
-  ctx.lineTo(-10, -5);
-  ctx.lineTo(-20, -3);
-  ctx.lineTo(-20, 3);
-  ctx.lineTo(-10, 5);
-  ctx.lineTo(15, 4);
+  ctx.moveTo(38, 0);
+  ctx.lineTo(28, -3);
+  ctx.lineTo(-15, -3);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 3);
+  ctx.lineTo(28, 3);
   ctx.closePath();
   ctx.fill();
   
-  // Tail curving up
+  // Async stripes (parallel lines)
+  ctx.fillStyle = colors.accent;
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(20 - i * 8, -2, 3, 4);
+  }
+  
+  // Rapid wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(20, 0);
-  ctx.quadraticCurveTo(30, -2, 35, -8);
-  ctx.quadraticCurveTo(38, -12, 40, -10);
-  ctx.quadraticCurveTo(38, -6, 32, 0);
-  ctx.lineTo(25, 0);
+  ctx.moveTo(8, -3);
+  ctx.lineTo(-5, -12 + buzz);
+  ctx.lineTo(-15, -10 + buzz);
+  ctx.lineTo(-5, -3);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(8, 3);
+  ctx.lineTo(-5, 12 - buzz);
+  ctx.lineTo(-15, 10 - buzz);
+  ctx.lineTo(-5, 3);
   ctx.closePath();
   ctx.fill();
   
   // Stinger
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.moveTo(40, -10);
-  ctx.lineTo(45, -8);
-  ctx.lineTo(40, -6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Claws
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(-10, -5);
-  ctx.lineTo(-18, -12);
-  ctx.lineTo(-22, -8);
-  ctx.lineTo(-15, -5);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(-10, 5);
-  ctx.lineTo(-18, 12);
-  ctx.lineTo(-22, 8);
-  ctx.lineTo(-15, 5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.arc(10, 0, 3, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -20, 0, colors, time);
-}
-
-// DELTA - Triangular stealth fighter
-function drawDelta(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Perfect triangle
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(-25, -15);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-25, 15);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Inner detail
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(25, 0);
-  ctx.lineTo(-15, -10);
-  ctx.lineTo(-12, 0);
-  ctx.lineTo(-15, 10);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Edge lights
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 5;
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(-23, -14, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-23, 14, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(15, 0, 6, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -20, 0, colors, time);
-}
-
-// STINGRAY - Flat underwater design
-function drawStingray(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Wide flat body
-  ctx.beginPath();
-  ctx.moveTo(30, 0);
-  ctx.quadraticCurveTo(20, -3, 5, -5);
-  ctx.quadraticCurveTo(-15, -12, -28, -8);
-  ctx.lineTo(-30, 0);
-  ctx.lineTo(-28, 8);
-  ctx.quadraticCurveTo(-15, 12, 5, 5);
-  ctx.quadraticCurveTo(20, 3, 30, 0);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Wing patterns
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(0, -4);
-  ctx.quadraticCurveTo(-12, -10, -25, -7);
-  ctx.quadraticCurveTo(-15, -8, 0, -3);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(0, 4);
-  ctx.quadraticCurveTo(-12, 10, -25, 7);
-  ctx.quadraticCurveTo(-15, 8, 0, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Tail
-  ctx.strokeStyle = colors.secondary;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(-30, 0);
-  ctx.lineTo(-45, 0);
-  ctx.stroke();
-  
-  // Eyes
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(15, -2, 4, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(15, 2, 4, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // No visible engine for underwater look
-}
-
-// PHOENIX - Fire wings with dramatic silhouette
-function drawPhoenix(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  // Flame wings
-  ctx.fillStyle = colors.primary;
-  const wingFlicker = Math.sin(time * 0.01) * 2;
-  
-  // Top flame wing
-  ctx.beginPath();
-  ctx.moveTo(0, -3);
-  ctx.quadraticCurveTo(-10, -8 - wingFlicker, -25, -18 - wingFlicker);
-  ctx.quadraticCurveTo(-20, -12, -15, -8);
-  ctx.quadraticCurveTo(-8, -5, 0, -3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Bottom flame wing
-  ctx.beginPath();
-  ctx.moveTo(0, 3);
-  ctx.quadraticCurveTo(-10, 8 + wingFlicker, -25, 18 + wingFlicker);
-  ctx.quadraticCurveTo(-20, 12, -15, 8);
-  ctx.quadraticCurveTo(-8, 5, 0, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Body
-  ctx.fillStyle = colors.secondary;
+  ctx.fillStyle = colors.glow;
   ctx.beginPath();
   ctx.moveTo(38, 0);
-  ctx.lineTo(25, -3);
-  ctx.lineTo(-5, -3);
-  ctx.lineTo(-15, 0);
-  ctx.lineTo(-5, 3);
-  ctx.lineTo(25, 3);
+  ctx.lineTo(45, 0);
+  ctx.lineTo(38, -1);
   ctx.closePath();
   ctx.fill();
   
-  // Wing tips fire
-  ctx.shadowColor = colors.accent;
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = colors.accent;
+  drawEngine(ctx, -20, 0, colors, time);
+}
+
+// PIRATE HASH - Rogue asymmetric coder
+function drawCorsair(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  // Rugged asymmetric hull
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.arc(-25, -18 - wingFlicker, 3, 0, Math.PI * 2);
+  ctx.moveTo(32, 0);
+  ctx.lineTo(25, -5);
+  ctx.lineTo(-8, -6);
+  ctx.lineTo(-20, -3);
+  ctx.lineTo(-22, 4);
+  ctx.lineTo(-8, 7);
+  ctx.lineTo(25, 5);
+  ctx.closePath();
   ctx.fill();
+  
+  // Asymmetric wings (hash collision visual)
+  ctx.fillStyle = colors.secondary;
+  // Larger top wing
   ctx.beginPath();
-  ctx.arc(-25, 18 + wingFlicker, 3, 0, Math.PI * 2);
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-10, -16);
+  ctx.lineTo(-20, -12);
+  ctx.lineTo(-12, -6);
+  ctx.closePath();
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
+  // Smaller bottom wing
+  ctx.beginPath();
+  ctx.moveTo(0, 7);
+  ctx.lineTo(-8, 11);
+  ctx.lineTo(-14, 9);
+  ctx.lineTo(-8, 7);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Hash symbol emblem
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(12, -4);
+  ctx.lineTo(12, 4);
+  ctx.moveTo(18, -4);
+  ctx.lineTo(18, 4);
+  ctx.moveTo(10, -2);
+  ctx.lineTo(20, -2);
+  ctx.moveTo(10, 2);
+  ctx.lineTo(20, 2);
+  ctx.stroke();
   
   // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(24, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// NULL POINTER - Void-reference ghost
+function drawSpecter(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const ghostPulse = Math.sin(time / 100) * 0.25 + 0.75;
+  
+  // Semi-transparent ethereal body
+  ctx.globalAlpha = 0.7 * ghostPulse;
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(35, 0);
+  ctx.lineTo(25, -6);
+  ctx.lineTo(0, -7);
+  ctx.lineTo(-20, -5);
+  ctx.lineTo(-25, 0);
+  ctx.lineTo(-20, 5);
+  ctx.lineTo(0, 7);
+  ctx.lineTo(25, 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // Null pointer trail
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(-25, 0);
+  ctx.lineTo(-35, -5);
+  ctx.lineTo(-40, 0);
+  ctx.lineTo(-35, 5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  
+  // Void reference indicator (dashed box)
+  ctx.strokeStyle = colors.glow;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.strokeRect(0, -5, 15, 10);
+  ctx.setLineDash([]);
+  
+  // Glowing core (null state)
+  ctx.fillStyle = `rgba(255, 255, 255, ${ghostPulse})`;
+  ctx.beginPath();
+  ctx.arc(20, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// BIT RIPPER - Predator with binary talons
+function drawRaptor(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const rip = Math.sin(time / 80) * 2;
+  
+  // Angular predator body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(40, 0);
+  ctx.lineTo(28, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-18, -4);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 4);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(28, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Binary claw wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(10, -6);
+  ctx.lineTo(-5, -15 + rip);
+  ctx.lineTo(-15, -12 + rip);
+  ctx.lineTo(-8, -4);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(10, 6);
+  ctx.lineTo(-5, 15 - rip);
+  ctx.lineTo(-15, 12 - rip);
+  ctx.lineTo(-8, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Binary talons (1s and 0s pattern)
+  ctx.fillStyle = colors.accent;
+  ctx.font = '6px monospace';
+  ctx.fillText('1', 36, 2);
+  ctx.fillText('0', 36, -1);
+  
+  // Ripper cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(30, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// GRADIENT FLOW - Spectrum-shift hull
+function drawAurora(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const flow = (time / 100) % 40;
+  
+  // Flowing curved body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(38, 0);
+  ctx.lineTo(28, -5);
+  ctx.lineTo(0, -6);
+  ctx.lineTo(-22, -4);
+  ctx.lineTo(-28, 0);
+  ctx.lineTo(-22, 4);
+  ctx.lineTo(0, 6);
+  ctx.lineTo(28, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Gradient flow lines
+  ctx.strokeStyle = colors.secondary;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 4; i++) {
+    const offset = (flow + i * 10) % 40;
+    ctx.beginPath();
+    ctx.moveTo(-20 + offset, -5);
+    ctx.lineTo(-15 + offset, 0);
+    ctx.lineTo(-20 + offset, 5);
+    ctx.stroke();
+  }
+  
+  // Spectrum wings
+  ctx.fillStyle = colors.accent + '88';
+  ctx.beginPath();
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-10, -14);
+  ctx.lineTo(-22, -10);
+  ctx.lineTo(-15, -4);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 6);
+  ctx.lineTo(-10, 14);
+  ctx.lineTo(-22, 10);
+  ctx.lineTo(-15, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Flow core
   ctx.fillStyle = colors.cockpit;
   ctx.beginPath();
   ctx.arc(30, 0, 4, 0, Math.PI * 2);
   ctx.fill();
   
-  drawEngine(ctx, -15, 0, colors, time);
-}
-
-// SHARK - Aggressive shark design with fins
-function drawShark(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Streamlined body
-  ctx.beginPath();
-  ctx.moveTo(40, 0);
-  ctx.quadraticCurveTo(30, -4, 15, -5);
-  ctx.lineTo(-15, -4);
-  ctx.lineTo(-22, 0);
-  ctx.lineTo(-15, 4);
-  ctx.lineTo(15, 5);
-  ctx.quadraticCurveTo(30, 4, 40, 0);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Dorsal fin
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(5, -5);
-  ctx.lineTo(-5, -15);
-  ctx.lineTo(-10, -12);
-  ctx.lineTo(-5, -5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Side fins
-  ctx.beginPath();
-  ctx.moveTo(-5, -4);
-  ctx.lineTo(-15, -10);
-  ctx.lineTo(-18, -6);
-  ctx.lineTo(-10, -4);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(-5, 4);
-  ctx.lineTo(-15, 10);
-  ctx.lineTo(-18, 6);
-  ctx.lineTo(-10, 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Tail fin
-  ctx.beginPath();
-  ctx.moveTo(-18, -3);
-  ctx.lineTo(-28, -8);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-28, 8);
-  ctx.lineTo(-18, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Eye
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(30, 0, 4, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Gills
-  ctx.strokeStyle = colors.accent;
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo(10 - i * 5, -3);
-    ctx.lineTo(8 - i * 5, -5);
-    ctx.stroke();
-  }
-  
-  drawEngine(ctx, -25, 0, colors, time);
-}
-
-// WASP - Thin body with sharp wings
-function drawWasp(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  // Striped body
-  ctx.fillStyle = colors.primary;
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(25, -2);
-  ctx.lineTo(-15, -2);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-15, 2);
-  ctx.lineTo(25, 2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Stripes
-  ctx.fillStyle = colors.accent;
-  for (let i = 0; i < 4; i++) {
-    ctx.fillRect(15 - i * 10, -2, 3, 4);
-  }
-  
-  // Sharp wings
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(10, -2);
-  ctx.lineTo(-5, -12);
-  ctx.lineTo(-15, -10);
-  ctx.lineTo(0, -2);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(10, 2);
-  ctx.lineTo(-5, 12);
-  ctx.lineTo(-15, 10);
-  ctx.lineTo(0, 2);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Stinger
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(42, 0);
-  ctx.lineTo(35, -1);
-  ctx.closePath();
-  ctx.fill();
-  
-  drawEngine(ctx, -20, 0, colors, time);
-}
-
-// CORSAIR - Pirate design with asymmetric wings
-function drawCorsair(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Rugged body
-  ctx.beginPath();
-  ctx.moveTo(30, 0);
-  ctx.lineTo(25, -4);
-  ctx.lineTo(-10, -5);
-  ctx.lineTo(-20, -2);
-  ctx.lineTo(-22, 3);
-  ctx.lineTo(-10, 6);
-  ctx.lineTo(25, 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Asymmetric wings
-  ctx.fillStyle = colors.secondary;
-  // Top wing - larger
-  ctx.beginPath();
-  ctx.moveTo(5, -5);
-  ctx.lineTo(-10, -16);
-  ctx.lineTo(-20, -12);
-  ctx.lineTo(-10, -5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Bottom wing - smaller, damaged look
-  ctx.beginPath();
-  ctx.moveTo(0, 6);
-  ctx.lineTo(-8, 10);
-  ctx.lineTo(-15, 8);
-  ctx.lineTo(-5, 6);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Skull emblem
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(15, 0, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = colors.primary;
-  ctx.beginPath();
-  ctx.arc(14, -1, 1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(17, -1, 1, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.arc(25, 0, 3, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -22, 0, colors, time);
-}
-
-// SPECTER - Ghost-like with translucent elements
-function drawSpecter(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  const ghostPulse = Math.sin(time * 0.005) * 0.2 + 0.8;
-  
-  // Ethereal body
-  ctx.globalAlpha = 0.7 * ghostPulse;
-  ctx.fillStyle = colors.primary;
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.quadraticCurveTo(25, -5, 10, -4);
-  ctx.quadraticCurveTo(-10, -6, -20, -3);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-20, 3);
-  ctx.quadraticCurveTo(-10, 6, 10, 4);
-  ctx.quadraticCurveTo(25, 5, 35, 0);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Wispy trails
-  ctx.globalAlpha = 0.4 * ghostPulse;
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(-20, -3);
-  ctx.quadraticCurveTo(-30, -8, -40, -5);
-  ctx.quadraticCurveTo(-35, 0, -40, 5);
-  ctx.quadraticCurveTo(-30, 8, -20, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.globalAlpha = 1;
-  
-  // Glowing core
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 15;
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.arc(20, 0, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Eyes
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.ellipse(28, -2, 2, 1.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(28, 2, 2, 1.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// RAPTOR - Bird of prey design with claws
-function drawRaptor(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Streamlined body
-  ctx.beginPath();
-  ctx.moveTo(38, 0);
-  ctx.lineTo(28, -3);
-  ctx.lineTo(5, -4);
-  ctx.lineTo(-15, -3);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-15, 3);
-  ctx.lineTo(5, 4);
-  ctx.lineTo(28, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Swept wings
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(10, -4);
-  ctx.lineTo(-5, -6);
-  ctx.lineTo(-20, -14);
-  ctx.lineTo(-15, -8);
-  ctx.lineTo(0, -4);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(10, 4);
-  ctx.lineTo(-5, 6);
-  ctx.lineTo(-20, 14);
-  ctx.lineTo(-15, 8);
-  ctx.lineTo(0, 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Talons
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.moveTo(38, 0);
-  ctx.lineTo(44, -3);
-  ctx.lineTo(42, 0);
-  ctx.lineTo(44, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Beak cockpit
-  const cockpitGrad = ctx.createRadialGradient(32, 0, 0, 32, 0, 4);
-  cockpitGrad.addColorStop(0, '#ffffff');
-  cockpitGrad.addColorStop(1, colors.cockpit);
-  ctx.fillStyle = cockpitGrad;
-  ctx.beginPath();
-  ctx.ellipse(32, 0, 4, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -20, 0, colors, time);
-}
-
-// AURORA - Elegant curves with northern lights effect
-function drawAurora(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  const shimmer = time * 0.005;
-  
-  // Curved elegant body
-  ctx.fillStyle = colors.primary;
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.bezierCurveTo(30, -4, 15, -6, 0, -5);
-  ctx.bezierCurveTo(-15, -4, -25, -2, -28, 0);
-  ctx.bezierCurveTo(-25, 2, -15, 4, 0, 5);
-  ctx.bezierCurveTo(15, 6, 30, 4, 35, 0);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Aurora effect wings
-  const auroraGrad = ctx.createLinearGradient(-20, -15, -20, 15);
-  auroraGrad.addColorStop(0, colors.accent + '88');
-  auroraGrad.addColorStop(0.5, colors.primary);
-  auroraGrad.addColorStop(1, colors.accent + '88');
-  ctx.fillStyle = auroraGrad;
-  
-  ctx.beginPath();
-  ctx.moveTo(5, -5);
-  ctx.bezierCurveTo(-5, -8, -15, -15, -25, -12);
-  ctx.bezierCurveTo(-20, -8, -10, -5, 5, -5);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(5, 5);
-  ctx.bezierCurveTo(-5, 8, -15, 15, -25, 12);
-  ctx.bezierCurveTo(-20, 8, -10, 5, 5, 5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Shimmer effect
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 10 + Math.sin(shimmer) * 5;
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.arc(28, 0, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
   drawEngine(ctx, -28, 0, colors, time);
 }
 
-// GLADIATOR - Massive armored battleship
+// CORE TANK - Massive battle-processor
 function drawGladiator(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const process = Math.sin(time / 120) * 0.2 + 0.8;
+  
+  // Heavy rectangular hull
   ctx.fillStyle = colors.primary;
+  ctx.fillRect(-22, -8, 50, 16);
   
-  // Heavy armored body
-  ctx.beginPath();
-  ctx.moveTo(28, 0);
-  ctx.lineTo(25, -6);
-  ctx.lineTo(10, -8);
-  ctx.lineTo(-15, -7);
-  ctx.lineTo(-22, -4);
-  ctx.lineTo(-22, 4);
-  ctx.lineTo(-15, 7);
-  ctx.lineTo(10, 8);
-  ctx.lineTo(25, 6);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Armor plates
+  // Processor blocks
   ctx.fillStyle = colors.secondary;
-  ctx.fillRect(-18, -6, 35, 3);
-  ctx.fillRect(-18, 3, 35, 3);
+  ctx.fillRect(-18, -7, 12, 6);
+  ctx.fillRect(-18, 1, 12, 6);
+  ctx.fillRect(-2, -7, 12, 6);
+  ctx.fillRect(-2, 1, 12, 6);
+  ctx.fillRect(14, -7, 12, 6);
+  ctx.fillRect(14, 1, 12, 6);
   
-  // Shield generators
+  // Processing indicator lights
+  ctx.fillStyle = `rgba(170, 255, 204, ${process})`;
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(-15 + i * 16, -4, 2, 2);
+    ctx.fillRect(-15 + i * 16, 2, 2, 2);
+  }
+  
+  // Heavy cannons
   ctx.fillStyle = colors.accent;
-  ctx.fillRect(-20, -8, 6, 3);
-  ctx.fillRect(-20, 5, 6, 3);
-  ctx.fillRect(15, -9, 6, 3);
-  ctx.fillRect(15, 6, 6, 3);
+  ctx.fillRect(26, -10, 6, 4);
+  ctx.fillRect(26, 6, 6, 4);
   
-  // Heavy weapons
-  ctx.fillStyle = colors.secondary;
-  ctx.fillRect(20, -10, 8, 4);
-  ctx.fillRect(20, 6, 8, 4);
-  
-  // Cockpit slit
+  // Command viewport
   ctx.fillStyle = colors.cockpit;
-  ctx.fillRect(18, -2, 8, 4);
+  ctx.fillRect(22, -2, 6, 4);
   
-  drawEngine(ctx, -22, -4, colors, time, 0.6);
-  drawEngine(ctx, -22, 4, colors, time, 0.6);
+  drawEngine(ctx, -22, -5, colors, time, 0.6);
+  drawEngine(ctx, -22, 5, colors, time, 0.6);
 }
 
-// ECLIPSE - Circular design with moon ring
+// RING BUFFER - Circular orbital weapon
 function drawEclipse(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  // Outer ring
+  const rotate = time / 200;
+  
+  // Outer ring structure
   ctx.strokeStyle = colors.secondary;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(5, 0, 18, 0, Math.PI * 2);
-  ctx.stroke();
-  
-  // Inner dark core
-  ctx.fillStyle = colors.primary;
-  ctx.beginPath();
-  ctx.arc(5, 0, 14, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Eclipse effect - bright edge
-  const eclipseGrad = ctx.createRadialGradient(5, 0, 10, 5, 0, 16);
-  eclipseGrad.addColorStop(0, 'transparent');
-  eclipseGrad.addColorStop(0.7, 'transparent');
-  eclipseGrad.addColorStop(1, colors.glow);
-  ctx.fillStyle = eclipseGrad;
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.arc(5, 0, 16, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Inner core
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.arc(5, 0, 12, 0, Math.PI * 2);
   ctx.fill();
   
-  // Nose extension
+  // Rotating buffer segments
+  ctx.save();
+  ctx.translate(5, 0);
+  ctx.rotate(rotate);
+  ctx.fillStyle = colors.accent;
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 2);
+    ctx.fillRect(12, -2, 5, 4);
+  }
+  ctx.restore();
+  
+  // Nose pointer
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(23, 0);
+  ctx.moveTo(21, 0);
   ctx.lineTo(35, 0);
-  ctx.lineTo(23, -3);
+  ctx.lineTo(21, -3);
   ctx.closePath();
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(23, 0);
+  ctx.moveTo(21, 0);
   ctx.lineTo(35, 0);
-  ctx.lineTo(23, 3);
+  ctx.lineTo(21, 3);
   ctx.closePath();
   ctx.fill();
   
-  // Central cockpit glow
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 15;
+  // Core cockpit
   ctx.fillStyle = colors.cockpit;
   ctx.beginPath();
   ctx.arc(5, 0, 5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Engine in ring
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(-13, 0, 3, 0, Math.PI * 2);
-  ctx.fill();
 }
 
-// BASILISK - Snake-like with curved body
+// RECURSION - Self-referential serpent
 function drawBasilisk(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  const slither = Math.sin(time * 0.008) * 2;
+  const recurse = Math.sin(time / 100) * 3;
   
+  // Coiled body segments
   ctx.fillStyle = colors.primary;
   
-  // Serpentine body
+  // Main segment
   ctx.beginPath();
   ctx.moveTo(38, 0);
-  ctx.quadraticCurveTo(30, -3 + slither, 20, -2 + slither);
-  ctx.quadraticCurveTo(10, -1 + slither * 0.5, 0, 1 - slither * 0.5);
-  ctx.quadraticCurveTo(-10, 3 - slither, -20, 2 - slither);
-  ctx.lineTo(-25, 0);
-  ctx.quadraticCurveTo(-20, -2 + slither, -10, -1 + slither);
-  ctx.quadraticCurveTo(0, -3 + slither * 0.5, 10, -4 + slither * 0.5);
-  ctx.quadraticCurveTo(20, -5 - slither, 30, -4 - slither);
+  ctx.lineTo(28, -4);
+  ctx.lineTo(5, -5 + recurse);
+  ctx.lineTo(-15, -3);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 3);
+  ctx.lineTo(5, 5 - recurse);
+  ctx.lineTo(28, 4);
   ctx.closePath();
   ctx.fill();
   
-  // Scales pattern
+  // Recursive tail segments (smaller copies)
+  ctx.globalAlpha = 0.7;
+  ctx.save();
+  ctx.translate(-22, 0);
+  ctx.scale(0.6, 0.6);
+  ctx.beginPath();
+  ctx.moveTo(20, 0 + recurse);
+  ctx.lineTo(10, -4 + recurse);
+  ctx.lineTo(-10, -3);
+  ctx.lineTo(-15, 0);
+  ctx.lineTo(-10, 3);
+  ctx.lineTo(10, 4 - recurse);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  
+  // Hood pattern
   ctx.fillStyle = colors.secondary;
-  for (let i = 0; i < 5; i++) {
-    const sx = 25 - i * 10;
-    const sOffset = Math.sin(time * 0.008 + i * 0.5) * 1;
-    ctx.beginPath();
-    ctx.ellipse(sx, sOffset, 4, 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  
-  // Hood/Crest
-  ctx.fillStyle = colors.accent;
   ctx.beginPath();
-  ctx.moveTo(30, -4 - slither);
-  ctx.quadraticCurveTo(28, -10, 22, -8);
-  ctx.lineTo(25, -4);
+  ctx.moveTo(25, -4);
+  ctx.lineTo(15, -12);
+  ctx.lineTo(10, -8);
+  ctx.lineTo(18, -4);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
-  ctx.moveTo(30, 4 + slither);
-  ctx.quadraticCurveTo(28, 10, 22, 8);
-  ctx.lineTo(25, 4);
+  ctx.moveTo(25, 4);
+  ctx.lineTo(15, 12);
+  ctx.lineTo(10, 8);
+  ctx.lineTo(18, 4);
   ctx.closePath();
   ctx.fill();
   
   // Eyes
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 8;
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(35, -2, 2, 1.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(35, 2, 2, 1.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.fillRect(32, -2, 4, 1.5);
+  ctx.fillRect(32, 0.5, 4, 1.5);
   
-  drawEngine(ctx, -25, 0, colors, time, 0.7);
+  drawEngine(ctx, -20, 0, colors, time, 0.7);
 }
 
-// ============= 20 NEW RETRO SCI-FI SHIPS DRAW FUNCTIONS =============
+// ============= MEGA PACK FLEET - 20 VECTOR MANIAC SHIPS =============
 
-// INTERCEPTOR - Classic blue fighter with red details
+// REGEX BLADE - Pattern-matching interceptor
 function drawInterceptor(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+  const match = (time / 80) % 30;
   
-  // Main body - elongated cockpit section
+  // Blade-like body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(40, 0);
-  ctx.lineTo(32, -4);
-  ctx.lineTo(15, -5);
-  ctx.lineTo(-15, -4);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-15, 4);
-  ctx.lineTo(15, 5);
-  ctx.lineTo(32, 4);
+  ctx.moveTo(42, 0);
+  ctx.lineTo(30, -4);
+  ctx.lineTo(0, -5);
+  ctx.lineTo(-18, -3);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 3);
+  ctx.lineTo(0, 5);
+  ctx.lineTo(30, 4);
   ctx.closePath();
   ctx.fill();
   
-  // Angular wings
+  // Regex pattern lines
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 2]);
+  ctx.beginPath();
+  ctx.moveTo(-15 + match, -3);
+  ctx.lineTo(25 + match, -3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-15 + match, 3);
+  ctx.lineTo(25 + match, 3);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Match indicator wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
   ctx.moveTo(5, -5);
   ctx.lineTo(-10, -14);
-  ctx.lineTo(-18, -12);
-  ctx.lineTo(-15, -4);
+  ctx.lineTo(-18, -10);
+  ctx.lineTo(-12, -3);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
   ctx.moveTo(5, 5);
   ctx.lineTo(-10, 14);
-  ctx.lineTo(-18, 12);
-  ctx.lineTo(-15, 4);
+  ctx.lineTo(-18, 10);
+  ctx.lineTo(-12, 3);
   ctx.closePath();
   ctx.fill();
   
-  // Red accent stripes
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(20, -3, 15, 2);
-  ctx.fillRect(20, 1, 15, 2);
-  ctx.fillRect(-12, -13, 4, 10);
-  ctx.fillRect(-12, 3, 4, 10);
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(32, -2, 8, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// CHROME CAST - Reflective mirror-hull
+function drawValkyrie(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const reflect = Math.sin(time / 100) * 0.3 + 0.7;
+  
+  // Chrome body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(42, 0);
+  ctx.lineTo(32, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-15, -4);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 4);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(32, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Reflection lines
+  ctx.strokeStyle = `rgba(187, 255, 204, ${reflect})`;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(-10 + i * 12, -5);
+    ctx.lineTo(-5 + i * 12, 5);
+    ctx.stroke();
+  }
+  
+  // Cast wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(10, -6);
+  ctx.lineTo(-5, -16);
+  ctx.lineTo(-15, -12);
+  ctx.lineTo(-8, -4);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(10, 6);
+  ctx.lineTo(-5, 16);
+  ctx.lineTo(-15, 12);
+  ctx.lineTo(-8, 4);
+  ctx.closePath();
+  ctx.fill();
   
   // Cockpit
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(30, 0, 6, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(34, -2, 6, 4);
   
   drawEngine(ctx, -20, 0, colors, time);
 }
 
-// VALKYRIE - Silver attacker with sharp wings
-function drawValkyrie(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Sleek main body
-  ctx.beginPath();
-  ctx.moveTo(42, 0);
-  ctx.lineTo(35, -3);
-  ctx.lineTo(20, -4);
-  ctx.lineTo(-10, -3);
-  ctx.lineTo(-18, 0);
-  ctx.lineTo(-10, 3);
-  ctx.lineTo(20, 4);
-  ctx.lineTo(35, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Sharp swept wings
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(10, -4);
-  ctx.lineTo(-5, -16);
-  ctx.lineTo(-15, -14);
-  ctx.lineTo(-10, -3);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(10, 4);
-  ctx.lineTo(-5, 16);
-  ctx.lineTo(-15, 14);
-  ctx.lineTo(-10, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Red wing tips
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(-7, -15, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-7, 15, 3, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Cockpit glass
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(32, 0, 8, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -18, 0, colors, time);
-}
-
-// CRIMSON HAWK - Red hunter with dual engines
+// ERROR STATE - Critical-path hunter
 function drawCrimson(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+  const error = Math.sin(time / 60) * 0.4 + 0.6;
   
-  // Bulky main body
+  // Angular error body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(28, -5);
-  ctx.lineTo(10, -6);
-  ctx.lineTo(-15, -5);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-15, 5);
-  ctx.lineTo(10, 6);
-  ctx.lineTo(28, 5);
+  ctx.moveTo(38, 0);
+  ctx.lineTo(28, -6);
+  ctx.lineTo(5, -7);
+  ctx.lineTo(-18, -5);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 5);
+  ctx.lineTo(5, 7);
+  ctx.lineTo(28, 6);
   ctx.closePath();
   ctx.fill();
   
-  // Twin engine nacelles
+  // Error indicator (flashing)
+  ctx.fillStyle = `rgba(255, 100, 100, ${error})`;
+  ctx.fillRect(10, -3, 6, 6);
+  
+  // Dual engine pods
   ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.roundRect(-18, -10, 20, 5, 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(-18, 5, 20, 5, 2);
-  ctx.fill();
+  ctx.fillRect(-18, -10, 18, 4);
+  ctx.fillRect(-18, 6, 18, 4);
   
-  // Yellow accent
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(-15, -9, 15, 1);
-  ctx.fillRect(-15, 8, 15, 1);
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(25, 0, 5, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -18, -7.5, colors, time, 0.6);
-  drawEngine(ctx, -18, 7.5, colors, time, 0.6);
-}
-
-// GOLDWING - Heavy golden ship with broad profile
-function drawGoldwing(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Wide heavy body
-  ctx.beginPath();
-  ctx.moveTo(30, 0);
-  ctx.lineTo(25, -7);
-  ctx.lineTo(10, -9);
-  ctx.lineTo(-15, -8);
-  ctx.lineTo(-22, -5);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-22, 5);
-  ctx.lineTo(-15, 8);
-  ctx.lineTo(10, 9);
-  ctx.lineTo(25, 7);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Panel lines
-  ctx.strokeStyle = colors.secondary;
+  // Fault lines
+  ctx.strokeStyle = colors.accent;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(20, -6);
-  ctx.lineTo(-10, -7);
+  ctx.moveTo(-15, -8);
+  ctx.lineTo(-2, -8);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(20, 6);
-  ctx.lineTo(-10, 7);
+  ctx.moveTo(-15, 8);
+  ctx.lineTo(-2, 8);
   ctx.stroke();
-  
-  // White accent details
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(15, -4, 8, 2);
-  ctx.fillRect(15, 2, 8, 2);
   
   // Cockpit
   ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(28, -2, 8, 4);
+  
+  drawEngine(ctx, -18, -8, colors, time, 0.6);
+  drawEngine(ctx, -18, 8, colors, time, 0.6);
+}
+
+// WIDE CAST - Broadcast-class expanded range
+function drawGoldwing(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const broadcast = (time / 150) % 20;
+  
+  // Wide broadcast hull
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.ellipse(22, 0, 4, 3, 0, 0, Math.PI * 2);
+  ctx.moveTo(32, 0);
+  ctx.lineTo(25, -8);
+  ctx.lineTo(0, -10);
+  ctx.lineTo(-18, -8);
+  ctx.lineTo(-25, 0);
+  ctx.lineTo(-18, 8);
+  ctx.lineTo(0, 10);
+  ctx.lineTo(25, 8);
+  ctx.closePath();
   ctx.fill();
+  
+  // Broadcast wave rings
+  ctx.strokeStyle = colors.glow + '44';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    const r = 8 + i * 6 + broadcast;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, -0.5, 0.5);
+    ctx.stroke();
+  }
+  
+  // Signal panels
+  ctx.fillStyle = colors.secondary;
+  ctx.fillRect(-15, -9, 25, 3);
+  ctx.fillRect(-15, 6, 25, 3);
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(22, -3, 8, 6);
   
   drawEngine(ctx, -25, 0, colors, time, 1.2);
 }
 
-// COBALT STRIKER - Streamlined blue fighter
+// STREAM LINE - Flow-optimized fighter
 function drawCobalt(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+  const flow = (time / 60) % 50;
   
-  // Aerodynamic body
+  // Streamlined body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(42, 0);
-  ctx.quadraticCurveTo(35, -4, 20, -4);
-  ctx.lineTo(-15, -3);
-  ctx.quadraticCurveTo(-22, 0, -15, 3);
-  ctx.lineTo(20, 4);
-  ctx.quadraticCurveTo(35, 4, 42, 0);
+  ctx.moveTo(45, 0);
+  ctx.lineTo(35, -4);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-18, -3);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 3);
+  ctx.lineTo(5, 5);
+  ctx.lineTo(35, 4);
   ctx.closePath();
   ctx.fill();
   
-  // Dorsal fin
+  // Flow stream lines
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    const offset = (flow + i * 15) % 50;
+    ctx.beginPath();
+    ctx.moveTo(-20 + offset, -2 - i);
+    ctx.lineTo(-10 + offset, -2 - i);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-20 + offset, 2 + i);
+    ctx.lineTo(-10 + offset, 2 + i);
+    ctx.stroke();
+  }
+  
+  // Dorsal stabilizer
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(5, -4);
-  ctx.lineTo(-5, -12);
+  ctx.moveTo(5, -5);
+  ctx.lineTo(-8, -12);
   ctx.lineTo(-15, -8);
   ctx.lineTo(-10, -3);
   ctx.closePath();
   ctx.fill();
   
-  // Ventral stabilizer
-  ctx.beginPath();
-  ctx.moveTo(5, 4);
-  ctx.lineTo(-5, 10);
-  ctx.lineTo(-12, 7);
-  ctx.lineTo(-10, 3);
-  ctx.closePath();
-  ctx.fill();
-  
-  // White stripes
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(10, -2, 25, 1);
-  ctx.fillRect(10, 1, 25, 1);
-  
   // Cockpit
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(32, 0, 6, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(36, -2, 7, 4);
   
-  drawEngine(ctx, -20, 0, colors, time);
+  drawEngine(ctx, -22, 0, colors, time);
 }
 
-// IRONCLAD - Armored gray frigate
+// HARD CACHE - Persistent shield frigate
 function drawIronclad(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const cache = Math.sin(time / 150) * 0.2 + 0.8;
+  
+  // Blocky armored hull
   ctx.fillStyle = colors.primary;
+  ctx.fillRect(-22, -7, 52, 14);
   
-  // Boxy armored hull
-  ctx.beginPath();
-  ctx.moveTo(32, -3);
-  ctx.lineTo(35, 0);
-  ctx.lineTo(32, 3);
-  ctx.lineTo(-20, 6);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-20, -6);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Armor plates
+  // Cache blocks
   ctx.fillStyle = colors.secondary;
-  ctx.fillRect(-15, -7, 35, 2);
-  ctx.fillRect(-15, 5, 35, 2);
-  ctx.fillRect(-18, -4, 5, 8);
+  ctx.fillRect(-18, -6, 10, 5);
+  ctx.fillRect(-18, 1, 10, 5);
+  ctx.fillRect(-5, -6, 10, 5);
+  ctx.fillRect(-5, 1, 10, 5);
+  ctx.fillRect(8, -6, 10, 5);
+  ctx.fillRect(8, 1, 10, 5);
   
-  // Orange accent lights
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(25, -2, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(25, 2, 2, 0, Math.PI * 2);
-  ctx.fill();
+  // Cache status lights
+  ctx.fillStyle = `rgba(170, 255, 187, ${cache})`;
+  ctx.fillRect(-15, -4, 2, 2);
+  ctx.fillRect(-2, -4, 2, 2);
+  ctx.fillRect(11, -4, 2, 2);
   
-  // Cockpit viewport
+  // Command viewport
   ctx.fillStyle = colors.cockpit;
-  ctx.fillRect(28, -2, 5, 4);
+  ctx.fillRect(22, -3, 8, 6);
   
-  drawEngine(ctx, -25, 0, colors, time);
+  drawEngine(ctx, -22, 0, colors, time);
 }
 
-// REDTAIL - Fast red interceptor with yellow marking
+// QUICK SORT - Priority targeting interceptor
 function drawRedtail(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  // Slim quick body
   ctx.fillStyle = colors.primary;
-  
-  // Slim fast body
   ctx.beginPath();
-  ctx.moveTo(40, 0);
-  ctx.lineTo(30, -3);
-  ctx.lineTo(10, -4);
-  ctx.lineTo(-15, -3);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-15, 3);
-  ctx.lineTo(10, 4);
-  ctx.lineTo(30, 3);
+  ctx.moveTo(42, 0);
+  ctx.lineTo(32, -4);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-18, -3);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 3);
+  ctx.lineTo(5, 5);
+  ctx.lineTo(32, 4);
   ctx.closePath();
   ctx.fill();
   
-  // Tail fins
+  // Sort indicator bars (descending)
+  ctx.fillStyle = colors.accent;
+  ctx.fillRect(20, -3, 8, 2);
+  ctx.fillRect(20, 1, 6, 2);
+  ctx.fillRect(8, -3, 6, 2);
+  ctx.fillRect(8, 1, 4, 2);
+  
+  // Priority tail fins
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
   ctx.moveTo(-10, -3);
-  ctx.lineTo(-18, -10);
+  ctx.lineTo(-18, -11);
   ctx.lineTo(-22, -8);
   ctx.lineTo(-15, -3);
   ctx.closePath();
@@ -1865,473 +1837,657 @@ function drawRedtail(ctx: CanvasRenderingContext2D, w: number, h: number, colors
   
   ctx.beginPath();
   ctx.moveTo(-10, 3);
-  ctx.lineTo(-18, 10);
+  ctx.lineTo(-18, 11);
   ctx.lineTo(-22, 8);
   ctx.lineTo(-15, 3);
   ctx.closePath();
   ctx.fill();
   
-  // Yellow tail stripe
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(-20, -2, 8, 4);
-  
   // Cockpit
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(32, 0, 5, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -20, 0, colors, time);
-}
-
-// SUNBURST - Yellow attacker with sun pattern
-function drawSunburst(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Radial body
-  ctx.beginPath();
-  ctx.moveTo(35, 0);
-  ctx.lineTo(25, -6);
-  ctx.lineTo(5, -8);
-  ctx.lineTo(-15, -6);
-  ctx.lineTo(-22, 0);
-  ctx.lineTo(-15, 6);
-  ctx.lineTo(5, 8);
-  ctx.lineTo(25, 6);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Sunburst rays (wings)
-  ctx.fillStyle = colors.secondary;
-  const rayCount = 4;
-  for (let i = 0; i < rayCount; i++) {
-    const angle = (i - 1.5) * 0.4 - Math.PI / 2;
-    const x1 = Math.cos(angle) * 8;
-    const y1 = Math.sin(angle) * 8 - 4;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 - 12, y1 - 8);
-    ctx.lineTo(x1 - 8, y1);
-    ctx.closePath();
-    ctx.fill();
-  }
-  for (let i = 0; i < rayCount; i++) {
-    const angle = (i - 1.5) * 0.4 + Math.PI / 2;
-    const x1 = Math.cos(angle) * 8;
-    const y1 = Math.sin(angle) * 8 + 4;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 - 12, y1 + 8);
-    ctx.lineTo(x1 - 8, y1);
-    ctx.closePath();
-    ctx.fill();
-  }
-  
-  // Orange core glow
-  ctx.shadowColor = colors.accent;
-  ctx.shadowBlur = 10;
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(10, 0, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(28, 0, 4, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(34, -2, 6, 4);
   
   drawEngine(ctx, -22, 0, colors, time);
 }
 
-// STEEL WOLF - Aggressive gray hunter
-function drawSteelwolf(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+// BURST MODE - Overclock explosive attacker
+function drawSunburst(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const burst = Math.sin(time / 50) * 0.4 + 0.6;
   
-  // Wolf-like angular body
+  // Central core body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
   ctx.moveTo(38, 0);
-  ctx.lineTo(28, -4);
-  ctx.lineTo(10, -5);
-  ctx.lineTo(-5, -6);
-  ctx.lineTo(-20, -4);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-20, 4);
-  ctx.lineTo(-5, 6);
-  ctx.lineTo(10, 5);
-  ctx.lineTo(28, 4);
+  ctx.lineTo(28, -6);
+  ctx.lineTo(5, -8);
+  ctx.lineTo(-15, -6);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 6);
+  ctx.lineTo(5, 8);
+  ctx.lineTo(28, 6);
   ctx.closePath();
   ctx.fill();
   
-  // Ear-like fins
+  // Burst rays
   ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(15, -5);
-  ctx.lineTo(5, -14);
-  ctx.lineTo(-5, -10);
-  ctx.lineTo(0, -5);
-  ctx.closePath();
-  ctx.fill();
+  for (let i = 0; i < 4; i++) {
+    const angle = (i - 1.5) * 0.5;
+    ctx.save();
+    ctx.translate(0, 0);
+    ctx.rotate(angle);
+    ctx.fillRect(-18, -2, 12, 3);
+    ctx.restore();
+  }
   
+  // Overclock core (pulsing)
+  ctx.fillStyle = `rgba(187, 255, 187, ${burst})`;
   ctx.beginPath();
-  ctx.moveTo(15, 5);
-  ctx.lineTo(5, 14);
-  ctx.lineTo(-5, 10);
-  ctx.lineTo(0, 5);
-  ctx.closePath();
+  ctx.arc(10, 0, 6, 0, Math.PI * 2);
   ctx.fill();
-  
-  // Cyan accent lights
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 6;
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.ellipse(3, -12, 2, 1, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(3, 12, 2, 1, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
   
   // Cockpit
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(30, 0, 5, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(28, -2, 8, 4);
   
-  drawEngine(ctx, -25, 0, colors, time);
+  drawEngine(ctx, -20, 0, colors, time);
 }
 
-// BLUESHIFT - Aerodynamic blue racer
-function drawBlueshift(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+// PACK HUNTER - Swarm-class fighter
+function drawSteelwolf(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const hunt = Math.sin(time / 80) * 2;
   
-  // Ultra aerodynamic body
+  // Wolf pack body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(45, 0);
-  ctx.quadraticCurveTo(40, -3, 30, -3);
-  ctx.lineTo(0, -4);
-  ctx.lineTo(-20, -2);
-  ctx.lineTo(-25, 0);
-  ctx.lineTo(-20, 2);
-  ctx.lineTo(0, 4);
-  ctx.lineTo(30, 3);
-  ctx.quadraticCurveTo(40, 3, 45, 0);
+  ctx.moveTo(40, 0);
+  ctx.lineTo(30, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-18, -4);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 4);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(30, 5);
   ctx.closePath();
   ctx.fill();
+  
+  // Ear-like hunter fins
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(15, -6);
+  ctx.lineTo(5, -15 + hunt);
+  ctx.lineTo(-5, -11 + hunt);
+  ctx.lineTo(5, -6);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(15, 6);
+  ctx.lineTo(5, 15 - hunt);
+  ctx.lineTo(-5, 11 - hunt);
+  ctx.lineTo(5, 6);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Pack indicator lights
+  ctx.fillStyle = colors.accent;
+  ctx.beginPath();
+  ctx.arc(3, -13 + hunt, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(3, 13 - hunt, 2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(32, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// PHASE SHIFT - Dimensional warp racer
+function drawBlueshift(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const phase = Math.sin(time / 100) * 0.3 + 0.7;
+  
+  // Aerodynamic phase body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(48, 0);
+  ctx.lineTo(38, -4);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-20, -3);
+  ctx.lineTo(-25, 0);
+  ctx.lineTo(-20, 3);
+  ctx.lineTo(5, 5);
+  ctx.lineTo(38, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Phase shift ghost trail
+  ctx.globalAlpha = 0.3 * phase;
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(40, 0);
+  ctx.lineTo(30, -3);
+  ctx.lineTo(-10, -4);
+  ctx.lineTo(-18, 0);
+  ctx.lineTo(-10, 4);
+  ctx.lineTo(30, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
   
   // Speed wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(5, -4);
-  ctx.lineTo(-8, -12);
-  ctx.lineTo(-15, -10);
-  ctx.lineTo(-8, -4);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(5, 4);
-  ctx.lineTo(-8, 12);
-  ctx.lineTo(-15, 10);
-  ctx.lineTo(-8, 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Orange racing stripes
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(0, -2, 35, 1);
-  ctx.fillRect(0, 1, 35, 1);
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(35, 0, 6, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -25, 0, colors, time);
-}
-
-// THUNDERBOLT - Massive red-silver battlecruiser
-function drawThunderbolt(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Massive hull
-  ctx.beginPath();
-  ctx.moveTo(32, 0);
-  ctx.lineTo(25, -8);
-  ctx.lineTo(5, -10);
-  ctx.lineTo(-20, -8);
-  ctx.lineTo(-28, 0);
-  ctx.lineTo(-20, 8);
-  ctx.lineTo(5, 10);
-  ctx.lineTo(25, 8);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Silver armor panels
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(-15, -9, 30, 2);
-  ctx.fillRect(-15, 7, 30, 2);
-  ctx.fillRect(18, -5, 4, 10);
-  
-  // Weapon pods
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.roundRect(-10, -14, 15, 5, 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(-10, 9, 15, 5, 2);
-  ctx.fill();
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(22, 0, 5, 4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -28, 0, colors, time, 1.3);
-}
-
-// YELLOW JACKET - Sleek yellow-black fighter
-function drawYellowjacket(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Wasp-like body
-  ctx.beginPath();
-  ctx.moveTo(40, 0);
-  ctx.lineTo(30, -4);
-  ctx.lineTo(15, -5);
-  ctx.lineTo(-5, -4);
-  ctx.lineTo(-15, -3);
-  ctx.lineTo(-22, 0);
-  ctx.lineTo(-15, 3);
-  ctx.lineTo(-5, 4);
-  ctx.lineTo(15, 5);
-  ctx.lineTo(30, 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Black stripes
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(10, -4.5, 6, 9);
-  ctx.fillRect(-5, -4, 5, 8);
-  
-  // Stinger wings
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
   ctx.moveTo(5, -5);
-  ctx.lineTo(-5, -13);
-  ctx.lineTo(-12, -10);
-  ctx.lineTo(-5, -4);
+  ctx.lineTo(-10, -13);
+  ctx.lineTo(-18, -10);
+  ctx.lineTo(-10, -3);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
   ctx.moveTo(5, 5);
-  ctx.lineTo(-5, 13);
-  ctx.lineTo(-12, 10);
-  ctx.lineTo(-5, 4);
+  ctx.lineTo(-10, 13);
+  ctx.lineTo(-18, 10);
+  ctx.lineTo(-10, 3);
   ctx.closePath();
   ctx.fill();
   
   // Cockpit
   ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(32, 0, 5, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillRect(40, -2, 6, 4);
   
-  drawEngine(ctx, -22, 0, colors, time);
+  drawEngine(ctx, -25, 0, colors, time);
 }
 
-// SILVER FOX - Elegant silver-blue scout
-function drawSilverfox(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+// POWER SURGE - Voltage core cruiser
+function drawThunderbolt(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const surge = Math.sin(time / 60) * 0.4 + 0.6;
   
-  // Elegant curved body
+  // Massive cruiser hull
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(35, 0);
+  ctx.lineTo(28, -9);
+  ctx.lineTo(0, -11);
+  ctx.lineTo(-22, -8);
+  ctx.lineTo(-28, 0);
+  ctx.lineTo(-22, 8);
+  ctx.lineTo(0, 11);
+  ctx.lineTo(28, 9);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Power core
+  ctx.fillStyle = `rgba(136, 255, 170, ${surge})`;
+  ctx.beginPath();
+  ctx.arc(5, 0, 8, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Voltage lines
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-20, -6);
+  ctx.lineTo(-10, 0);
+  ctx.lineTo(-20, 6);
+  ctx.stroke();
+  
+  // Weapon pods
+  ctx.fillStyle = colors.secondary;
+  ctx.fillRect(-15, -13, 18, 4);
+  ctx.fillRect(-15, 9, 18, 4);
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(25, -3, 8, 6);
+  
+  drawEngine(ctx, -28, 0, colors, time, 1.3);
+}
+
+// INJECT POINT - Penetration stinger
+function drawYellowjacket(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const inject = Math.sin(time / 50) * 1;
+  
+  // Injection body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
   ctx.moveTo(42, 0);
-  ctx.quadraticCurveTo(38, -3, 28, -3);
-  ctx.lineTo(5, -4);
-  ctx.quadraticCurveTo(-10, -4, -18, -2);
-  ctx.lineTo(-22, 0);
-  ctx.lineTo(-18, 2);
-  ctx.quadraticCurveTo(-10, 4, 5, 4);
-  ctx.lineTo(28, 3);
-  ctx.quadraticCurveTo(38, 3, 42, 0);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Fox ear stabilizers
-  ctx.fillStyle = colors.secondary;
-  ctx.beginPath();
-  ctx.moveTo(10, -4);
-  ctx.lineTo(0, -12);
-  ctx.lineTo(-8, -8);
-  ctx.lineTo(-2, -4);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(10, 4);
-  ctx.lineTo(0, 12);
-  ctx.lineTo(-8, 8);
-  ctx.lineTo(-2, 4);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Blue accent lights
-  ctx.shadowColor = colors.accent;
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.arc(-2, -10, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-2, 10, 2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(34, 0, 5, 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -22, 0, colors, time);
-}
-
-// FIREBIRD - Fire red with orange flames
-function drawFirebird(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Phoenix body
-  ctx.beginPath();
-  ctx.moveTo(38, 0);
-  ctx.lineTo(28, -5);
-  ctx.lineTo(10, -6);
-  ctx.lineTo(-10, -5);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-10, 5);
-  ctx.lineTo(10, 6);
-  ctx.lineTo(28, 5);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Flame wings
-  ctx.fillStyle = colors.accent;
-  ctx.beginPath();
-  ctx.moveTo(5, -6);
-  ctx.quadraticCurveTo(-5, -15, -18, -14);
-  ctx.quadraticCurveTo(-12, -10, -8, -6);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(5, 6);
-  ctx.quadraticCurveTo(-5, 15, -18, 14);
-  ctx.quadraticCurveTo(-12, 10, -8, 6);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Inner flame glow
-  ctx.shadowColor = colors.glow;
-  ctx.shadowBlur = 10;
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.arc(-10, -12, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-10, 12, 3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Cockpit
-  ctx.fillStyle = colors.cockpit;
-  ctx.beginPath();
-  ctx.ellipse(28, 0, 5, 3, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  drawEngine(ctx, -20, 0, colors, time);
-}
-
-// ARCTIC WOLF - Ice blue with white details
-function drawArctic(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
-  
-  // Sleek icy body
-  ctx.beginPath();
-  ctx.moveTo(40, 0);
   ctx.lineTo(32, -4);
-  ctx.lineTo(15, -5);
-  ctx.lineTo(-10, -4);
-  ctx.lineTo(-20, 0);
-  ctx.lineTo(-10, 4);
-  ctx.lineTo(15, 5);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-18, -4);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 4);
+  ctx.lineTo(5, 5);
   ctx.lineTo(32, 4);
   ctx.closePath();
   ctx.fill();
   
-  // Crystal wings
+  // Inject stripes
+  ctx.fillStyle = colors.accent;
+  ctx.fillRect(15, -4, 5, 8);
+  ctx.fillRect(5, -4, 4, 8);
+  ctx.fillRect(-5, -4, 4, 8);
+  
+  // Stinger wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
   ctx.moveTo(8, -5);
-  ctx.lineTo(-2, -14);
-  ctx.lineTo(-12, -12);
+  ctx.lineTo(-5, -14 + inject);
+  ctx.lineTo(-15, -10 + inject);
   ctx.lineTo(-8, -4);
   ctx.closePath();
   ctx.fill();
   
   ctx.beginPath();
   ctx.moveTo(8, 5);
-  ctx.lineTo(-2, 14);
-  ctx.lineTo(-12, 12);
+  ctx.lineTo(-5, 14 - inject);
+  ctx.lineTo(-15, 10 - inject);
   ctx.lineTo(-8, 4);
   ctx.closePath();
   ctx.fill();
   
-  // White frost accents
-  ctx.fillStyle = colors.accent;
-  ctx.fillRect(5, -3, 20, 1.5);
-  ctx.fillRect(5, 1.5, 20, 1.5);
-  ctx.fillRect(-5, -13, 5, 2);
-  ctx.fillRect(-5, 11, 5, 2);
+  // Injection needle
+  ctx.fillStyle = colors.glow;
+  ctx.beginPath();
+  ctx.moveTo(42, 0);
+  ctx.lineTo(50, 0);
+  ctx.lineTo(42, -1);
+  ctx.closePath();
+  ctx.fill();
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// TRACE LOG - Deep-scan scout
+function drawSilverfox(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const trace = (time / 100) % 40;
+  
+  // Elegant scout body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(40, 0);
+  ctx.lineTo(30, -5);
+  ctx.lineTo(5, -6);
+  ctx.lineTo(-18, -4);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 4);
+  ctx.lineTo(5, 6);
+  ctx.lineTo(30, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Trace scan lines
+  ctx.strokeStyle = colors.accent + '88';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const x = -15 + ((trace + i * 8) % 40);
+    ctx.beginPath();
+    ctx.moveTo(x, -4);
+    ctx.lineTo(x, 4);
+    ctx.stroke();
+  }
+  
+  // Sensor wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(10, -6);
+  ctx.lineTo(-5, -14);
+  ctx.lineTo(-15, -10);
+  ctx.lineTo(-8, -4);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(10, 6);
+  ctx.lineTo(-5, 14);
+  ctx.lineTo(-15, 10);
+  ctx.lineTo(-8, 4);
+  ctx.closePath();
+  ctx.fill();
   
   // Cockpit
   ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(32, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// CORE MELT - Fusion thermal attacker
+function drawFirebird(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const melt = Math.sin(time / 60) * 0.3 + 0.7;
+  
+  // Angular melt body
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.ellipse(32, 0, 5, 2.5, 0, 0, Math.PI * 2);
+  ctx.moveTo(38, 0);
+  ctx.lineTo(28, -6);
+  ctx.lineTo(5, -7);
+  ctx.lineTo(-18, -5);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 5);
+  ctx.lineTo(5, 7);
+  ctx.lineTo(28, 6);
+  ctx.closePath();
   ctx.fill();
+  
+  // Core melt center (pulsing)
+  ctx.fillStyle = `rgba(170, 255, 221, ${melt})`;
+  ctx.beginPath();
+  ctx.arc(8, 0, 7, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Heat wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(5, -7);
+  ctx.lineTo(-10, -16);
+  ctx.lineTo(-20, -12);
+  ctx.lineTo(-12, -5);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 7);
+  ctx.lineTo(-10, 16);
+  ctx.lineTo(-20, 12);
+  ctx.lineTo(-12, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(30, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// COLD BOOT - Freeze protocol fighter
+function drawArctic(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const cold = Math.sin(time / 120) * 0.2 + 0.8;
+  
+  // Crystal-like body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(40, 0);
+  ctx.lineTo(30, -5);
+  ctx.lineTo(10, -6);
+  ctx.lineTo(-15, -5);
+  ctx.lineTo(-20, 0);
+  ctx.lineTo(-15, 5);
+  ctx.lineTo(10, 6);
+  ctx.lineTo(30, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Ice crystal pattern
+  ctx.strokeStyle = `rgba(204, 255, 238, ${cold})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(15, 0);
+  ctx.lineTo(5, -4);
+  ctx.lineTo(-5, 0);
+  ctx.lineTo(5, 4);
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Cold wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(5, -6);
+  ctx.lineTo(-10, -14);
+  ctx.lineTo(-18, -10);
+  ctx.lineTo(-10, -5);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 6);
+  ctx.lineTo(-10, 14);
+  ctx.lineTo(-18, 10);
+  ctx.lineTo(-10, 5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(32, -2, 6, 4);
   
   drawEngine(ctx, -20, 0, colors, time);
 }
 
-// COMMANDER - Large gray command ship
+// ROOT ACCESS - Admin command vessel
 function drawCommander(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
-  ctx.fillStyle = colors.primary;
+  const access = Math.sin(time / 100) * 0.3 + 0.7;
   
-  // Large command hull
+  // Command vessel hull
+  ctx.fillStyle = colors.primary;
   ctx.beginPath();
-  ctx.moveTo(30, 0);
-  ctx.lineTo(22, -7);
-  ctx.lineTo(5, -9);
-  ctx.lineTo(-18, -7);
+  ctx.moveTo(35, 0);
+  ctx.lineTo(28, -7);
+  ctx.lineTo(5, -8);
+  ctx.lineTo(-20, -6);
   ctx.lineTo(-25, 0);
-  ctx.lineTo(-18, 7);
-  ctx.lineTo(5, 9);
-  ctx.lineTo(22, 7);
+  ctx.lineTo(-20, 6);
+  ctx.lineTo(5, 8);
+  ctx.lineTo(28, 7);
   ctx.closePath();
   ctx.fill();
   
-  // Command tower
+  // Root access indicator
+  ctx.fillStyle = `rgba(153, 255, 204, ${access})`;
+  ctx.fillRect(10, -3, 10, 6);
+  
+  // Command wings
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(10, -9);
-  ctx.lineTo(5, -14);
-  ctx.lineTo(-5, -14);
-  ctx.lineTo(-10, -9);
+  ctx.moveTo(5, -8);
+  ctx.lineTo(-10, -16);
+  ctx.lineTo(-20, -12);
+  ctx.lineTo(-15, -6);
   ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(5, 8);
+  ctx.lineTo(-10, 16);
+  ctx.lineTo(-20, 12);
+  ctx.lineTo(-15, 6);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Authority stripes
+  ctx.fillStyle = colors.accent;
+  ctx.fillRect(-15, -5, 20, 2);
+  ctx.fillRect(-15, 3, 20, 2);
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(26, -3, 8, 6);
+  
+  drawEngine(ctx, -25, 0, colors, time);
+}
+
+// EDGE CASE - Boundary precision duelist
+function drawScarlet(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  // Precise angular body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(42, 0);
+  ctx.lineTo(32, -4);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-18, -3);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 3);
+  ctx.lineTo(5, 5);
+  ctx.lineTo(32, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Edge markers
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(38, -3);
+  ctx.lineTo(38, 3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-18, -3);
+  ctx.lineTo(-18, 3);
+  ctx.stroke();
+  
+  // Boundary wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(10, -5);
+  ctx.lineTo(-5, -14);
+  ctx.lineTo(-15, -10);
+  ctx.lineTo(-8, -3);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(10, 5);
+  ctx.lineTo(-5, 14);
+  ctx.lineTo(-15, 10);
+  ctx.lineTo(-8, 3);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(34, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// LOAD BALANCE - Distribution transport
+function drawGoldenrod(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const balance = Math.sin(time / 100);
+  
+  // Balanced hull
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(35, 0);
+  ctx.lineTo(28, -6);
+  ctx.lineTo(5, -7);
+  ctx.lineTo(-18, -6);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 6);
+  ctx.lineTo(5, 7);
+  ctx.lineTo(28, 6);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Load distribution bars
+  ctx.fillStyle = colors.secondary;
+  const leftLoad = 4 + balance * 2;
+  const rightLoad = 4 - balance * 2;
+  ctx.fillRect(-10, -5, 6, leftLoad);
+  ctx.fillRect(5, -5, 6, rightLoad);
+  ctx.fillRect(-10, 1, 6, rightLoad);
+  ctx.fillRect(5, 1, 6, leftLoad);
+  
+  // Balance indicator
+  ctx.fillStyle = colors.accent;
+  ctx.fillRect(15, -1, 8, 2);
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(26, -2, 8, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// COMPILE TIME - Rapid builder
+function drawBluehawk(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const compile = (time / 40) % 30;
+  
+  // Swift body
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(42, 0);
+  ctx.lineTo(32, -4);
+  ctx.lineTo(5, -5);
+  ctx.lineTo(-18, -3);
+  ctx.lineTo(-22, 0);
+  ctx.lineTo(-18, 3);
+  ctx.lineTo(5, 5);
+  ctx.lineTo(32, 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Compile progress bar
+  ctx.fillStyle = colors.secondary;
+  ctx.fillRect(-15, -2, 30, 4);
+  ctx.fillStyle = colors.accent;
+  ctx.fillRect(-15, -2, compile, 4);
+  
+  // Rapid wings
+  ctx.fillStyle = colors.secondary;
+  ctx.beginPath();
+  ctx.moveTo(10, -5);
+  ctx.lineTo(-5, -13);
+  ctx.lineTo(-15, -9);
+  ctx.lineTo(-8, -3);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.moveTo(10, 5);
+  ctx.lineTo(-5, 13);
+  ctx.lineTo(-15, 9);
+  ctx.lineTo(-8, 3);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(34, -2, 6, 4);
+  
+  drawEngine(ctx, -22, 0, colors, time);
+}
+
+// KERNEL PANIC - Ultra-armored destroyer
+function drawTitanium(ctx: CanvasRenderingContext2D, w: number, h: number, colors: typeof SHIP_MODELS[0]['colors'], time: number) {
+  const panic = Math.sin(time / 50) * 0.3 + 0.7;
+  
+  // Massive destroyer hull
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(35, 0);
+  ctx.lineTo(28, -9);
+  ctx.lineTo(0, -11);
+  ctx.lineTo(-22, -9);
+  ctx.lineTo(-28, 0);
+  ctx.lineTo(-22, 9);
+  ctx.lineTo(0, 11);
+  ctx.lineTo(28, 9);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Panic warning (flashing)
+  ctx.fillStyle = `rgba(255, 100, 100, ${panic})`;
+  ctx.fillRect(10, -4, 8, 8);
+  
+  // Armor plating
+  ctx.fillStyle = colors.secondary;
+  ctx.fillRect(-20, -10, 35, 3);
+  ctx.fillRect(-20, 7, 35, 3);
+  ctx.fillRect(-25, -5, 5, 10);
+  
+  // Heavy weapon pods
+  ctx.fillRect(20, -12, 8, 5);
+  ctx.fillRect(20, 7, 8, 5);
+  
+  // Cockpit
+  ctx.fillStyle = colors.cockpit;
+  ctx.fillRect(25, -3, 8, 6);
+  
+  drawEngine(ctx, -28, -6, colors, time, 0.7);
+  drawEngine(ctx, -28, 6, colors, time, 0.7);
+}
   ctx.fill();
   
   // Gold command stripes
