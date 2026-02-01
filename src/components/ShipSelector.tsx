@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { SHIP_MODELS, drawShipModel, getActiveShipModelId, setActiveShipModelId, ShipModel } from '@/game/shipModels';
 import { usePurchases } from '@/hooks/usePurchases';
 import { setStoredMegaShipId } from '@/hooks/useMegaShips';
+import { getArenaShips, ArenaUnlock, ARENA_SHIPS } from '@/hooks/useArenaUnlocks';
+
+// Rarity colors and labels
+const RARITY_CONFIG = {
+  legendary: { color: '#ffd700', bg: 'linear-gradient(90deg, #ffd700, #ffaa00)', label: '◆ LEGENDARY' },
+  epic: { color: '#aa66ff', bg: 'linear-gradient(90deg, #aa66ff, #8844dd)', label: '◈ EPIC' },
+  rare: { color: '#00aaff', bg: 'linear-gradient(90deg, #00aaff, #0088dd)', label: '◇ RARE' },
+};
 
 export const ShipSelector: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +21,26 @@ export const ShipSelector: React.FC = () => {
   const { hasSecretShip } = usePurchases();
   
   const isOmegaUnlocked = hasSecretShip();
-
-  // All ships except omega_prime (handled separately)
-  const standardShips = SHIP_MODELS.filter(model => model.id !== 'omega_prime');
+  
+  // Get arena-unlocked ships
+  const arenaUnlockedShips = getArenaShips();
+  
+  // All ships except omega_prime (handled separately) and arena-exclusive ships
+  const arenaShipIds = ARENA_SHIPS.map(s => s.shipId);
+  const standardShips = SHIP_MODELS.filter(model => 
+    model.id !== 'omega_prime' && !arenaShipIds.includes(model.id)
+  );
   const omegaShip = SHIP_MODELS.find(model => model.id === 'omega_prime');
-
-  // Draw preview ship
+  
+  // Check if an arena ship is unlocked
+  const isArenaShipUnlocked = (shipId: string) => 
+    arenaUnlockedShips.some(u => u.shipId === shipId);
+  
+  // Get rarity for arena ship
+  const getArenaShipRarity = (shipId: string) => {
+    const arenaShip = ARENA_SHIPS.find(s => s.shipId === shipId);
+    return arenaShip?.rarity || 'rare';
+  };
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -201,6 +223,45 @@ export const ShipSelector: React.FC = () => {
               />
             ))}
           </div>
+          
+          {/* Arena-exclusive ships section */}
+          {ARENA_SHIPS.length > 0 && (
+            <>
+              <h3 
+                className="text-[10px] mt-4 mb-2 flex items-center gap-2"
+                style={{ 
+                  fontFamily: 'Orbitron, monospace',
+                  color: '#ff4466',
+                  textShadow: '0 0 10px #ff4466'
+                }}
+              >
+                ◆ ARENA EXCLUSIVE
+              </h3>
+              <div className="grid grid-cols-4 gap-2">
+                {ARENA_SHIPS.map((arenaShip) => {
+                  const isUnlocked = isArenaShipUnlocked(arenaShip.shipId);
+                  const rarity = arenaShip.rarity;
+                  const rarityConfig = RARITY_CONFIG[rarity];
+                  
+                  return (
+                    <ArenaShipCard
+                      key={arenaShip.shipId}
+                      shipId={arenaShip.shipId}
+                      name={arenaShip.name}
+                      description={arenaShip.desc}
+                      isActive={activeId === arenaShip.shipId}
+                      isPreview={previewId === arenaShip.shipId}
+                      isUnlocked={isUnlocked}
+                      rarity={rarity}
+                      rarityConfig={rarityConfig}
+                      onPreview={() => isUnlocked && setPreviewId(arenaShip.shipId)}
+                      onSelect={() => isUnlocked && handleSelect(arenaShip.shipId)}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          )}
           
           {/* Omega Prime - 3x wide card (separate row) */}
           {omegaShip && (
@@ -455,6 +516,132 @@ const ShipCard: React.FC<{
         >
           ◆
         </span>
+      )}
+    </button>
+  );
+};
+
+// Arena Ship Card - with locked/unlocked state and rarity badge
+const ArenaShipCard: React.FC<{
+  shipId: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  isPreview: boolean;
+  isUnlocked: boolean;
+  rarity: 'rare' | 'epic' | 'legendary';
+  rarityConfig: { color: string; bg: string; label: string };
+  onPreview: () => void;
+  onSelect: () => void;
+}> = ({ shipId, name, description, isActive, isPreview, isUnlocked, rarity, rarityConfig, onPreview, onSelect }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Dark arena-themed background
+    const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    bgGrad.addColorStop(0, '#1a0a0a');
+    bgGrad.addColorStop(1, '#0a0505');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Rarity glow
+    const glow = ctx.createRadialGradient(40, 25, 5, 40, 25, 40);
+    glow.addColorStop(0, `${rarityConfig.color}20`);
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    if (isUnlocked) {
+      // Draw actual ship
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.scale(0.8, 0.8);
+      drawShipModel(ctx, shipId, 60, 30, Date.now());
+      ctx.restore();
+    } else {
+      // Draw silhouette with lock
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.globalAlpha = 0.15;
+      ctx.filter = 'blur(4px)';
+      ctx.scale(0.8, 0.8);
+      drawShipModel(ctx, 'default', 60, 30, Date.now());
+      ctx.restore();
+      
+      // Lock icon
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.fillStyle = rarityConfig.color;
+      ctx.globalAlpha = 0.8;
+      ctx.font = 'bold 16px Orbitron';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🔒', 0, 0);
+      ctx.restore();
+    }
+  }, [shipId, isUnlocked, rarityConfig]);
+
+  return (
+    <button
+      onMouseEnter={isUnlocked ? onPreview : undefined}
+      onClick={isUnlocked ? onSelect : undefined}
+      disabled={!isUnlocked}
+      className="relative rounded-lg border-2 p-1 transition-all"
+      style={{
+        borderColor: isActive ? rarityConfig.color : isPreview ? rarityConfig.color : `${rarityConfig.color}40`,
+        background: isActive || isPreview ? `${rarityConfig.color}15` : 'rgba(26, 10, 10, 0.5)',
+        boxShadow: isActive || isPreview ? `0 0 15px ${rarityConfig.color}40` : 'none',
+        cursor: isUnlocked ? 'pointer' : 'not-allowed',
+        opacity: isUnlocked ? 1 : 0.7,
+        ...(isUnlocked && (isActive || isPreview) ? { transform: 'scale(1.05)' } : {})
+      }}
+    >
+      {/* Rarity badge */}
+      <span 
+        className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[5px] px-1.5 py-0.5 rounded-full z-10 whitespace-nowrap"
+        style={{ 
+          fontFamily: 'Orbitron, monospace',
+          background: rarityConfig.bg,
+          color: '#000',
+          fontWeight: 'bold',
+        }}
+      >
+        {rarity.toUpperCase()}
+      </span>
+      
+      <canvas ref={canvasRef} width={80} height={50} className="w-full rounded" />
+      
+      <p 
+        className="text-[6px] mt-1 truncate"
+        style={{ 
+          fontFamily: 'Orbitron, monospace',
+          color: isUnlocked ? rarityConfig.color : `${rarityConfig.color}60`,
+        }}
+      >
+        {isUnlocked ? name : '???'}
+      </p>
+      
+      {isActive && isUnlocked && (
+        <span 
+          className="absolute top-2 right-1 text-[8px]"
+          style={{ color: rarityConfig.color, textShadow: `0 0 5px ${rarityConfig.color}` }}
+        >
+          ◆
+        </span>
+      )}
+      
+      {!isUnlocked && (
+        <p 
+          className="text-[5px] text-center"
+          style={{ fontFamily: 'Rajdhani', color: `${rarityConfig.color}60` }}
+        >
+          WIN IN ARENA
+        </p>
       )}
     </button>
   );

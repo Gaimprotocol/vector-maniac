@@ -14,6 +14,14 @@ import {
   CheckIcon, LockIcon, PlayingIcon 
 } from './VectorIcons';
 import { SHIP_MODELS, drawShipModel, getActiveShipModelId, setActiveShipModelId } from '@/game/shipModels';
+import { getArenaSkins, ARENA_SKINS, ArenaUnlock } from '@/hooks/useArenaUnlocks';
+
+// Rarity colors for arena unlocks
+const RARITY_CONFIG = {
+  legendary: { color: '#ffd700', bg: 'linear-gradient(90deg, #ffd700, #ffaa00)', label: '◆ LEGENDARY' },
+  epic: { color: '#aa66ff', bg: 'linear-gradient(90deg, #aa66ff, #8844dd)', label: '◈ EPIC' },
+  rare: { color: '#00aaff', bg: 'linear-gradient(90deg, #00aaff, #0088dd)', label: '◇ RARE' },
+};
 
 // Draw a mini preview using the actual mega ship renderer with skin colors
 function drawMiniShip(ctx: CanvasRenderingContext2D, ship: MegaShip, time: number, skinColors?: ShipSkinColors) {
@@ -537,6 +545,95 @@ export const EquipmentPanel: React.FC = () => {
             );
           })}
         </div>
+        
+        {/* Arena-exclusive skins section */}
+        {ARENA_SKINS.length > 0 && (
+          <>
+            <h3 
+              className="text-[10px] mt-4 mb-2 flex items-center gap-2"
+              style={{ 
+                fontFamily: 'Orbitron, monospace',
+                color: '#ff4466',
+                textShadow: '0 0 10px #ff4466'
+              }}
+            >
+              ◆ ARENA EXCLUSIVE SKINS
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {ARENA_SKINS.map((arenaSkin) => {
+                const arenaUnlockedSkins = getArenaSkins();
+                const isUnlocked = arenaUnlockedSkins.some(u => u.skinId === arenaSkin.skinId);
+                const rarity = arenaSkin.rarity;
+                const rarityConfig = RARITY_CONFIG[rarity];
+                const isActive = equipment.activeShipSkin === arenaSkin.skinId;
+                
+                return (
+                  <button
+                    key={arenaSkin.skinId}
+                    onClick={isUnlocked ? () => setActiveShipSkin(arenaSkin.skinId) : undefined}
+                    disabled={!isUnlocked}
+                    className="relative p-3 rounded border-2 transition-all duration-300"
+                    style={{
+                      borderColor: isActive ? rarityConfig.color : isUnlocked ? `${rarityConfig.color}60` : `${rarityConfig.color}30`,
+                      background: isActive 
+                        ? `linear-gradient(135deg, ${rarityConfig.color}20 0%, ${rarityConfig.color}05 100%)`
+                        : 'linear-gradient(135deg, #1a0a0a 0%, #0a0505 100%)',
+                      cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                      opacity: isUnlocked ? 1 : 0.6,
+                    }}
+                  >
+                    {/* Rarity badge */}
+                    <span 
+                      className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[6px] px-2 py-0.5 rounded-full z-10 whitespace-nowrap"
+                      style={{ 
+                        fontFamily: 'Orbitron, monospace',
+                        background: rarityConfig.bg,
+                        color: '#000',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {rarity.toUpperCase()}
+                    </span>
+                    
+                    <div className="flex items-center gap-2 mt-1">
+                      <div 
+                        className="w-6 h-6 rounded-full border-2"
+                        style={{ 
+                          backgroundColor: isUnlocked ? rarityConfig.color : '#333',
+                          borderColor: rarityConfig.color,
+                          boxShadow: isUnlocked ? `0 0 10px ${rarityConfig.color}` : 'none',
+                        }}
+                      />
+                      <div className="text-left">
+                        <p 
+                          className="text-[9px]"
+                          style={{ 
+                            fontFamily: 'Orbitron, monospace',
+                            color: isUnlocked ? rarityConfig.color : `${rarityConfig.color}50`,
+                          }}
+                        >
+                          {isUnlocked ? arenaSkin.name : '???'}
+                        </p>
+                        <p 
+                          className="text-[6px]"
+                          style={{ 
+                            fontFamily: 'Rajdhani, sans-serif',
+                            color: isUnlocked ? `${rarityConfig.color}80` : `${rarityConfig.color}40`,
+                          }}
+                        >
+                          {isUnlocked ? 'ARENA VICTORY' : 'WIN IN ARENA'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {isActive && isUnlocked && <span className="absolute top-2 right-1"><CheckIcon size={10} /></span>}
+                    {!isUnlocked && <span className="absolute top-2 right-1"><LockIcon size={12} /></span>}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Soundtracks Section */}
