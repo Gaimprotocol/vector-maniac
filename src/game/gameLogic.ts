@@ -468,7 +468,7 @@ function updatePlayer(data: GameData, input: InputState): GameData {
   // Also apply legacy speed boost for backwards compatibility
   const legacyFireRateMultiplier = shipSpeedBoost?.fireRate || 1.0;
   const shipFireRateMultiplier = (1 / shipStats.fireRate) * legacyFireRateMultiplier;
-  const shipBombRateMultiplier = (1 / shipStats.bombRate) * (shipSpeedBoost?.bombRate || 1.0);
+  const shipBombRateMultiplier = shipSpeedBoost?.bombRate || 1.0;
   
   // Calculate projectile stats from ship
   const baseDamage = 12;
