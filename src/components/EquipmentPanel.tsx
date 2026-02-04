@@ -88,21 +88,21 @@ const MegaShipCard: React.FC<{
     >
       <canvas ref={canvasRef} width={80} height={50} className="w-full rounded" />
       <p 
-        className={`text-[7px] mt-1 truncate ${
+        className={`text-sm mt-1.5 truncate font-bold ${
           isLocked ? 'text-[#00ff88]/30' : isActive ? 'text-[#00ff88]' : 'text-[#00ff88]/70'
         }`}
-        style={{ fontFamily: 'Orbitron, monospace' }}
+        style={{ fontFamily: 'Orbitron, monospace', textShadow: isActive ? '0 0 10px #00ff88' : 'none' }}
       >
         {ship.name}
       </p>
       <p 
-        className="text-[5px] text-[#00ff88]/40 truncate"
+        className="text-xs text-[#00ff88]/50 line-clamp-2 leading-tight mt-0.5"
         style={{ fontFamily: 'Rajdhani, sans-serif' }}
       >
-        {ship.ability.slice(0, 25)}
+        {ship.ability}
       </p>
-      {isActive && <span className="absolute top-1 right-1"><CheckIcon size={10} /></span>}
-      {isLocked && <span className="absolute top-1 right-1"><LockIcon size={12} /></span>}
+      {isActive && <span className="absolute top-1 right-1"><CheckIcon size={12} /></span>}
+      {isLocked && <span className="absolute top-1 right-1"><LockIcon size={14} /></span>}
     </button>
   );
 };
