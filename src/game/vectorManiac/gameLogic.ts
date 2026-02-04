@@ -2316,10 +2316,26 @@ function checkCollisions(state: VectorState): VectorState {
                         enemy.type === 'shooter' ? 100 : 50;
       const pointMultiplier = newState.activePowerUps.doublePoints > 0 ? 2 : 1;
       newState.score += baseScore * (1 + newState.combo * 0.1) * pointMultiplier;
-      
-      // Chance to spawn power-up
-      if (Math.random() < VM_CONFIG.powerUpSpawnChance) {
+
+      // Power-up drops
+      // Problem we saw in practice: even with a high Chain Lightning *mix* chance, the overall
+      // power-up drop chance (VM_CONFIG.powerUpSpawnChance) can still produce long streaks.
+      // We guarantee at least 1 Chain Lightning per map by forcing the first drop after a few kills.
+      const shouldForceChainLightning =
+        newState.chainLightningDropsThisMap <= 0 &&
+        newState.enemiesDefeated >= 3 &&
+        // Avoid forcing during boss-only moments; still allow normal random drops.
+        enemy.type !== 'boss';
+
+      if (shouldForceChainLightning) {
+        const powerUp = createPowerUp(enemy.x, enemy.y, 'chainLightning');
+        newState.chainLightningDropsThisMap++;
+        newState.powerups = [...newState.powerups, powerUp];
+      } else if (Math.random() < VM_CONFIG.powerUpSpawnChance) {
         const powerUp = createPowerUp(enemy.x, enemy.y);
+        if (powerUp.type === 'chainLightning') {
+          newState.chainLightningDropsThisMap++;
+        }
         newState.powerups = [...newState.powerups, powerUp];
       }
       
@@ -2535,6 +2551,9 @@ function completeWave(state: VectorState): VectorState {
     newState.spawnTimer = 60;
     newState.bossActive = false;
     newState.bossDefeated = false;
+
+    // Reset per-map power-up tracking
+    newState.chainLightningDropsThisMap = 0;
     
     // Show new map name
     newState.showMapName = true;
