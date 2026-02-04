@@ -188,6 +188,7 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
   if (newState.activePowerUps.doublePoints > 0) newState.activePowerUps.doublePoints--;
   if (newState.activePowerUps.doubleShot > 0) newState.activePowerUps.doubleShot--;
   if (newState.activePowerUps.speedBoost > 0) newState.activePowerUps.speedBoost--;
+  if (newState.activePowerUps.chainLightning > 0) newState.activePowerUps.chainLightning--;
   
   // Update boss enraged timer
   if (newState.bossEnragedTimer > 0) newState.bossEnragedTimer--;
@@ -215,8 +216,28 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
     
     const newProjectiles: VectorProjectile[] = [];
     
-    // Check if double shot is active
-    if (newState.activePowerUps.doubleShot > 0) {
+    // MULTI VECTOR (crimson_hawk) shoots in all 4 directions
+    const isMultiVector = shipId === 'crimson_hawk';
+    
+    if (isMultiVector) {
+      // Fire in 4 cardinal directions relative to player angle
+      const directions = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+      for (const offset of directions) {
+        const angle = newState.playerAngle + offset;
+        const projX = newState.playerX + Math.cos(angle) * tipOffset;
+        const projY = newState.playerY + Math.sin(angle) * tipOffset;
+        newProjectiles.push(createPlayerProjectile(
+          projX,
+          projY,
+          angle,
+          newState.stats.bulletSpeed,
+          newState.stats.damage * 0.7, // Slightly reduced damage per projectile for balance
+          newState.stats.pierce,
+          shipId
+        ));
+      }
+    } else if (newState.activePowerUps.doubleShot > 0) {
+      // Check if double shot is active
       // Shoot two projectiles with slight angle offset (tighter spread)
       const spreadAngle = 0.08;
       newProjectiles.push(createPlayerProjectile(
@@ -249,9 +270,9 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
       ));
     }
     
-    // Fire extra cannons (from permanent upgrades)
+    // Fire extra cannons (from permanent upgrades) - skip for MULTI VECTOR
     const extraCannons = newState.stats.extraCannons || 0;
-    if (extraCannons > 0) {
+    if (extraCannons > 0 && !isMultiVector) {
       // Each extra cannon fires from the side of the ship
       for (let i = 0; i < Math.min(extraCannons, 4); i++) {
         // Alternate sides: even = right, odd = left
@@ -2025,9 +2046,128 @@ function applyPowerUp(state: VectorState, type: VectorPowerUp['type']): VectorSt
       newState.salvage = newState.salvage.map(s => ({ ...s, magnetized: true }));
       newState.soundQueue = [...newState.soundQueue, 'magnetPulse'];
       break;
+      
+    case 'chainLightning':
+      // Chain lightning effect - on hit, chains to nearby enemies
+      newState.activePowerUps.chainLightning = VM_CONFIG.powerUpDuration;
+      newState.soundQueue = [...newState.soundQueue, 'chainLightning'];
+      break;
   }
   
   return newState;
+}
+
+// Chain Lightning: damages nearby enemies in a cascading chain reaction
+function applyChainLightning(
+  state: VectorState, 
+  originX: number, 
+  originY: number, 
+  baseDamage: number, 
+  originEnemyId: string
+): VectorState {
+  let newState = { ...state };
+  const chainRange = 150; // Range for chain to jump
+  const hitEnemyIds = new Set<string>([originEnemyId]);
+  
+  // First chain: 2 enemies at 50% damage
+  const firstChainTargets: { x: number; y: number; id: string }[] = [];
+  
+  for (const enemy of newState.enemies) {
+    if (hitEnemyIds.has(enemy.id)) continue;
+    
+    const dist = distance(originX, originY, enemy.x, enemy.y);
+    if (dist < chainRange && firstChainTargets.length < 2) {
+      firstChainTargets.push({ x: enemy.x, y: enemy.y, id: enemy.id });
+      hitEnemyIds.add(enemy.id);
+      
+      // Apply 50% damage
+      const chainDamage = Math.floor(baseDamage * 0.5);
+      newState.enemies = newState.enemies.map(e => 
+        e.id === enemy.id ? { ...e, health: e.health - chainDamage } : e
+      );
+      
+      // Create lightning particles from origin to target
+      const lightningParticles = createLightningParticles(originX, originY, enemy.x, enemy.y);
+      newState.particles = [...newState.particles, ...lightningParticles];
+    }
+  }
+  
+  // Second chain: from each first target, 2 more enemies at 25% damage
+  for (const firstTarget of firstChainTargets) {
+    let secondChainCount = 0;
+    
+    for (const enemy of newState.enemies) {
+      if (hitEnemyIds.has(enemy.id)) continue;
+      
+      const dist = distance(firstTarget.x, firstTarget.y, enemy.x, enemy.y);
+      if (dist < chainRange && secondChainCount < 2) {
+        hitEnemyIds.add(enemy.id);
+        secondChainCount++;
+        
+        // Apply 25% damage
+        const chainDamage = Math.floor(baseDamage * 0.25);
+        newState.enemies = newState.enemies.map(e => 
+          e.id === enemy.id ? { ...e, health: e.health - chainDamage } : e
+        );
+        
+        // Create lightning particles from first target to second target
+        const lightningParticles = createLightningParticles(firstTarget.x, firstTarget.y, enemy.x, enemy.y);
+        newState.particles = [...newState.particles, ...lightningParticles];
+      }
+    }
+  }
+  
+  // Play chain lightning hit sound if any chains occurred
+  if (hitEnemyIds.size > 1) {
+    newState.soundQueue = [...newState.soundQueue, 'chainLightningHit'];
+  }
+  
+  return newState;
+}
+
+// Create jagged lightning particles between two points
+function createLightningParticles(
+  fromX: number, 
+  fromY: number, 
+  toX: number, 
+  toY: number
+): VectorState['particles'] {
+  const particles: VectorState['particles'] = [];
+  const segments = 5;
+  const dx = (toX - fromX) / segments;
+  const dy = (toY - fromY) / segments;
+  
+  for (let i = 0; i < segments; i++) {
+    const x = fromX + dx * i + (Math.random() - 0.5) * 20;
+    const y = fromY + dy * i + (Math.random() - 0.5) * 20;
+    
+    particles.push({
+      id: `lightning_${Date.now()}_${i}_${Math.random()}`,
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      size: 3 + Math.random() * 3,
+      color: '#88ffff',
+      life: 15 + Math.random() * 10,
+      maxLife: 25,
+    });
+  }
+  
+  // Add bright core particles at endpoints
+  particles.push({
+    id: `lightning_core_${Date.now()}_${Math.random()}`,
+    x: toX,
+    y: toY,
+    vx: 0,
+    vy: 0,
+    size: 8,
+    color: '#ffffff',
+    life: 10,
+    maxLife: 10,
+  });
+  
+  return particles;
 }
 
 function checkCollisions(state: VectorState): VectorState {
@@ -2066,6 +2206,11 @@ function checkCollisions(state: VectorState): VectorState {
           : VM_CONFIG.enemyColors[enemy.type] || VM_CONFIG.enemyColors.elite;
         const particles = createParticle(proj.x, proj.y, hitColor, 3);
         newState.particles = [...newState.particles, ...particles];
+        
+        // Chain Lightning effect - on hit, chains to nearby enemies
+        if (newState.activePowerUps.chainLightning > 0 && proj.isPlayer) {
+          newState = applyChainLightning(newState, enemy.x, enemy.y, proj.damage, enemy.id);
+        }
         
         if (pierce <= 0) break;
       }

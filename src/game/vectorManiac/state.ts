@@ -116,6 +116,7 @@ export function createVectorManiacState(): VectorState {
       warpShield: 0,
       timeWarp: 0,
       magnetPulse: 0,
+      chainLightning: 0,
     },
     
     // New map-based progression

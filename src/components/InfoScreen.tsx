@@ -80,6 +80,13 @@ const MagnetPulseIcon = () => (
   </svg>
 );
 
+const ChainLightningIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
+    <path d="M13 2L4 14h7l-2 8 9-12h-7l2-8z" />
+    <path d="M17 8l3-2M18 14l4 1M7 18l-3 2" strokeLinecap="round" strokeDasharray="2 2" />
+  </svg>
+);
+
 // Enemy icons in green vector style
 const DroneIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" stroke="#00ff88" strokeWidth="1.5" fill="none">
@@ -185,6 +192,11 @@ const POWERUPS: { name: string; description: string; icon: React.ReactNode }[] =
     name: 'MAGNET PULSE', 
     description: 'Pulls all salvage towards you',
     icon: <MagnetPulseIcon />
+  },
+  { 
+    name: 'CHAIN LIGHTNING', 
+    description: 'Hits chain to nearby enemies (50% → 25% damage)',
+    icon: <ChainLightningIcon />
   },
 ];
 

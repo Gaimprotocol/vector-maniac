@@ -1188,6 +1188,29 @@ function renderPowerUps(ctx: CanvasRenderingContext2D, state: VectorState): void
         ctx.fill();
         break;
         
+      case 'chainLightning':
+        // Chain lightning - branching lightning bolt
+        ctx.beginPath();
+        // Main bolt
+        ctx.moveTo(iconSize * 0.2, -iconSize);
+        ctx.lineTo(-iconSize * 0.3, -iconSize * 0.2);
+        ctx.lineTo(iconSize * 0.1, -iconSize * 0.2);
+        ctx.lineTo(-iconSize * 0.2, iconSize);
+        ctx.stroke();
+        // Branch 1 (left)
+        ctx.beginPath();
+        ctx.setLineDash([2, 2]);
+        ctx.moveTo(-iconSize * 0.3, -iconSize * 0.2);
+        ctx.lineTo(-iconSize * 0.9, iconSize * 0.3);
+        ctx.stroke();
+        // Branch 2 (right)
+        ctx.beginPath();
+        ctx.moveTo(iconSize * 0.1, -iconSize * 0.2);
+        ctx.lineTo(iconSize * 0.7, iconSize * 0.4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        break;
+        
       default:
         // Fallback - question mark
         ctx.font = `bold ${iconSize * 1.5}px monospace`;
