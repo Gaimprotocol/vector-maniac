@@ -5,6 +5,7 @@ import { createPlayer, createBullet, createBomb, createEnemy, createCivilian, cr
 import { checkCollision, createExplosion, generateTerrain, createStar, clamp, playSound, lerp, getShipShootSound, getShipBombSound } from './utils';
 import { getMap, MAP_DURATION, getNextMapId, isNewWave, getTerrainType, isMapLocked } from './maps';
 import { getStoredMegaShipId, hasLaserAbility, hasDoubleBombs, hasSpeedBoost, hasMultiDirectionalShots, hasStealthMode } from '@/hooks/useMegaShips';
+import { getMegaShipStats, calculateDamage, calculateFireRate, calculateDamageReceived } from './megaShipStats';
 import { createVectorManiacState, updateVectorManiac } from './vectorManiac';
 
 export function createInitialGameData(): GameData {
@@ -362,8 +363,15 @@ function updatePlayer(data: GameData, input: InputState): GameData {
     .map(f => ({ ...f, timer: f.timer - 1 }))
     .filter(f => f.timer > 0);
   
+  // Get ship defense for terrain damage
+  const terrainShipId = getStoredMegaShipId();
+  const terrainShipStats = getMegaShipStats(terrainShipId);
+  const terrainDefenseMultiplier = 1 / terrainShipStats.defense;
+  
   if ((hitTerrain || hitStructure) && terrainCollisionTimer <= 0) {
-    player.health -= 8; // Terrain/structure damage
+    // Apply ship defense to terrain damage
+    const terrainDamage = Math.floor(8 * terrainDefenseMultiplier);
+    player.health -= terrainDamage;
     player.invulnerable = true;
     player.invulnerableTimer = 30;
     screenShake = 5;
@@ -448,16 +456,24 @@ function updatePlayer(data: GameData, input: InputState): GameData {
     }
   }
 
-  // Get mega ship abilities (reuse from updatePlayer scope)
+  // Get mega ship abilities and stats
   const shipId = getStoredMegaShipId();
+  const shipStats = getMegaShipStats(shipId);
   const shipSpeedBoost = hasSpeedBoost(shipId);
   const isLaserShip = hasLaserAbility(shipId);
   const doubleBombs = hasDoubleBombs(shipId);
   const multiShots = hasMultiDirectionalShots(shipId);
   
-  // Apply speed boost to fire rate
-  const shipFireRateMultiplier = shipSpeedBoost?.fireRate || 1.0;
-  const shipBombRateMultiplier = shipSpeedBoost?.bombRate || 1.0;
+  // Apply ship stats to fire rate (higher fireRate stat = faster shooting)
+  // Also apply legacy speed boost for backwards compatibility
+  const legacyFireRateMultiplier = shipSpeedBoost?.fireRate || 1.0;
+  const shipFireRateMultiplier = (1 / shipStats.fireRate) * legacyFireRateMultiplier;
+  const shipBombRateMultiplier = (1 / shipStats.bombRate) * (shipSpeedBoost?.bombRate || 1.0);
+  
+  // Calculate projectile stats from ship
+  const baseDamage = 12;
+  const shipDamage = Math.round(baseDamage * shipStats.damage);
+  const shipBulletSpeed = GAME_CONFIG.bulletSpeed * shipStats.projectileSpeed;
 
   if (input.fire && player.fireTimer <= 0) {
     if (player.hasHomingMissiles) {
@@ -484,43 +500,43 @@ function updatePlayer(data: GameData, input: InputState): GameData {
         delay: 8
       };
     } else if (player.hasTripleShot || data.adTripleShotsActive) {
-      // Triple shot from power-up OR ad reward
+      // Triple shot from power-up OR ad reward - use ship damage
       const wingOffset = player.height * 0.35;
       bullets.push(
-        createBullet(player.x + player.width, player.y + player.height / 2 - 1, GAME_CONFIG.bulletSpeed, 0, true, 12),
-        createBullet(player.x + player.width * 0.7, player.y + player.height / 2 - wingOffset, GAME_CONFIG.bulletSpeed * 0.95, -1, true, 10),
-        createBullet(player.x + player.width * 0.7, player.y + player.height / 2 + wingOffset, GAME_CONFIG.bulletSpeed * 0.95, 1, true, 10)
+        createBullet(player.x + player.width, player.y + player.height / 2 - 1, shipBulletSpeed, 0, true, shipDamage),
+        createBullet(player.x + player.width * 0.7, player.y + player.height / 2 - wingOffset, shipBulletSpeed * 0.95, -1, true, Math.round(shipDamage * 0.8)),
+        createBullet(player.x + player.width * 0.7, player.y + player.height / 2 + wingOffset, shipBulletSpeed * 0.95, 1, true, Math.round(shipDamage * 0.8))
       );
     } else if (data.adDoubleLaserActive) {
       // Double laser from ad reward - fire two parallel shots
       const bullet1 = createBullet(
         player.x + player.width,
         player.y + player.height / 2 - 5,
-        GAME_CONFIG.bulletSpeed,
+        shipBulletSpeed,
         0,
         true,
-        15
+        Math.round(shipDamage * 1.25)
       );
       bullet1.isLaser = true;
       const bullet2 = createBullet(
         player.x + player.width,
         player.y + player.height / 2 + 5,
-        GAME_CONFIG.bulletSpeed,
+        shipBulletSpeed,
         0,
         true,
-        15
+        Math.round(shipDamage * 1.25)
       );
       bullet2.isLaser = true;
       bullets.push(bullet1, bullet2);
     } else {
-      // Normal or laser shot
+      // Normal or laser shot - use ship damage and speed
       const bullet = createBullet(
         player.x + player.width,
         player.y + player.height / 2 - 1,
-        GAME_CONFIG.bulletSpeed,
+        shipBulletSpeed,
         0,
         true,
-        isLaserShip ? 15 : 12
+        isLaserShip ? Math.round(shipDamage * 1.5) : shipDamage // Laser ships get bonus damage
       );
       if (isLaserShip) {
         bullet.isLaser = true;
@@ -1327,13 +1343,20 @@ function checkAllCollisions(data: GameData): GameData {
   // Apply damage multiplier when player gets hit (includes difficulty setting)
   const diffMult = getDifficultyMultipliers();
   const damageMultiplier = ENEMY_CONFIG.enemyDamageMultiplier * diffMult.enemyDamage;
+  
+  // Get ship defense stat (higher defense = less damage taken)
+  const currentShipId = getStoredMegaShipId();
+  const currentShipStats = getMegaShipStats(currentShipId);
+  const defenseMultiplier = 1 / currentShipStats.defense; // Lower defense = more damage
 
   if (!player.invulnerable && !player.hasShield) {
     bullets = bullets.filter(bullet => {
       if (bullet.isPlayerBullet) return true;
 
       if (checkCollision(bullet, player)) {
-        player.health -= Math.floor(bullet.damage * damageMultiplier);
+        // Apply ship defense to damage calculation
+        const finalDamage = Math.floor(bullet.damage * damageMultiplier * defenseMultiplier);
+        player.health -= finalDamage;
         player.invulnerable = true;
         player.invulnerableTimer = 45;
         screenShake = 4;
@@ -1353,8 +1376,9 @@ function checkAllCollisions(data: GameData): GameData {
           playSound('explosion');
           return false; // Remove enemy
         } else {
-          // Normal collision damage
-          player.health -= Math.floor(15 * damageMultiplier);
+          // Normal collision damage with ship defense
+          const finalDamage = Math.floor(15 * damageMultiplier * defenseMultiplier);
+          player.health -= finalDamage;
           player.invulnerable = true;
           player.invulnerableTimer = 45;
           screenShake = 5;
@@ -1367,7 +1391,9 @@ function checkAllCollisions(data: GameData): GameData {
     // Check debris collision with player
     fallingDebris = fallingDebris.filter(debris => {
       if (checkCollision(player, debris)) {
-        player.health -= Math.floor(debris.damage * damageMultiplier);
+        // Apply ship defense to debris damage
+        const finalDamage = Math.floor(debris.damage * damageMultiplier * defenseMultiplier);
+        player.health -= finalDamage;
         player.invulnerable = true;
         player.invulnerableTimer = 30;
         screenShake = 3;

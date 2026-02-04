@@ -1000,23 +1000,7 @@ export function playVectorSound(type: VectorSoundType): void {
 function playShipShootSound(ctx: AudioContext, soundType: string): void {
   switch (soundType) {
     case 'laser': {
-      // High-pitched laser beam
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(3200, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.08);
-      break;
-    }
-    
-    case 'plasma': {
-      // Deep pulsing plasma sound
+      // High-pitched precision laser beam - PHOTON EDGE
       const osc = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -1025,21 +1009,152 @@ function playShipShootSound(ctx: AudioContext, soundType: string): void {
       osc2.connect(gain2);
       gain.connect(ctx.destination);
       gain2.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(400, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      // Harmonic
-      osc2.type = 'triangle';
-      osc2.frequency.setValueAtTime(800, ctx.currentTime);
-      osc2.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
-      gain2.gain.setValueAtTime(0.1, ctx.currentTime);
+      // Main laser sweep
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(3500, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      // High harmonic shimmer
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(4500, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.08);
+      gain2.gain.setValueAtTime(0.08, ctx.currentTime);
       gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.1);
+      osc.stop(ctx.currentTime + 0.12);
       osc2.start(ctx.currentTime);
       osc2.stop(ctx.currentTime + 0.08);
+      break;
+    }
+    
+    case 'pulse': {
+      // Heavy cryo pulse thump - CRYO BLAST
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const gain2 = ctx.createGain();
+      osc.connect(gain);
+      osc2.connect(gain2);
+      gain.connect(ctx.destination);
+      gain2.connect(ctx.destination);
+      // Deep bass thump
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      // Ice crackle overlay
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(2000, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.06);
+      gain2.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+      osc2.start(ctx.currentTime);
+      osc2.stop(ctx.currentTime + 0.06);
+      break;
+    }
+    
+    case 'machinegun': {
+      // Rapid-fire machinegun burst - HYPER SYNC
+      const osc = ctx.createOscillator();
+      const noise = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const noiseGain = ctx.createGain();
+      osc.connect(gain);
+      noise.connect(noiseGain);
+      gain.connect(ctx.destination);
+      noiseGain.connect(ctx.destination);
+      // Sharp attack
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.03);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
+      // Mechanical rattle
+      noise.type = 'sawtooth';
+      noise.frequency.setValueAtTime(400, ctx.currentTime);
+      noise.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.02);
+      noiseGain.gain.setValueAtTime(0.08, ctx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.03);
+      noise.start(ctx.currentTime);
+      noise.stop(ctx.currentTime + 0.02);
+      break;
+    }
+    
+    case 'lightning': {
+      // Electric lightning zap - NULL PHASE
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const gain2 = ctx.createGain();
+      osc.connect(gain);
+      osc2.connect(gain2);
+      gain.connect(ctx.destination);
+      gain2.connect(ctx.destination);
+      // Electric zap main
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(2200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.04);
+      osc.frequency.setValueAtTime(2800, ctx.currentTime + 0.04);
+      osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      // Crackling arcs
+      osc2.type = 'sawtooth';
+      osc2.frequency.setValueAtTime(3500, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.06);
+      gain2.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.08);
+      osc2.start(ctx.currentTime);
+      osc2.stop(ctx.currentTime + 0.06);
+      break;
+    }
+    
+    case 'plasma': {
+      // Deep pulsing plasma burst - MULTI VECTOR
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const osc3 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const gain2 = ctx.createGain();
+      const gain3 = ctx.createGain();
+      osc.connect(gain);
+      osc2.connect(gain2);
+      osc3.connect(gain3);
+      gain.connect(ctx.destination);
+      gain2.connect(ctx.destination);
+      gain3.connect(ctx.destination);
+      // Low plasma base
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(350, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      // Mid harmonic
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(700, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.1);
+      gain2.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      // High sizzle
+      osc3.type = 'sawtooth';
+      osc3.frequency.setValueAtTime(1200, ctx.currentTime);
+      osc3.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.06);
+      gain3.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.12);
+      osc2.start(ctx.currentTime);
+      osc2.stop(ctx.currentTime + 0.1);
+      osc3.start(ctx.currentTime);
+      osc3.stop(ctx.currentTime + 0.06);
       break;
     }
     
@@ -1058,22 +1173,6 @@ function playShipShootSound(ctx: AudioContext, soundType: string): void {
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.1);
-      break;
-    }
-    
-    case 'pulse': {
-      // Heavy thump
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(200, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.25, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.12);
       break;
     }
     
@@ -1124,7 +1223,7 @@ function playShipShootSound(ctx: AudioContext, soundType: string): void {
     }
     
     default: {
-      // Default shoot sound (same as original)
+      // Default shoot sound - GRID CORE (standard cyan beam)
       if (laserBuffer) {
         const source = ctx.createBufferSource();
         const gain = ctx.createGain();
@@ -1150,4 +1249,17 @@ function playShipShootSound(ctx: AudioContext, soundType: string): void {
       break;
     }
   }
+}
+
+// Get the shoot sound type for a mega ship based on its stats
+export function getMegaShipShootSoundType(shipId: string): string {
+  const soundMap: Record<string, string> = {
+    'original': 'shoot',      // Default
+    'blue_hawk': 'laser',     // Precision laser
+    'arctic_wolf': 'pulse',   // Heavy cryo pulse
+    'delta_prime': 'machinegun', // Rapid fire
+    'crimson_hawk': 'plasma', // Multi-directional plasma
+    'valkyrie_prime': 'lightning', // Electric stealth
+  };
+  return soundMap[shipId] || 'shoot';
 }

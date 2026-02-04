@@ -380,6 +380,11 @@ export const Game: React.FC<GameProps> = ({
                 return newValue;
               });
             }}
+            onShipChange={(shipId) => {
+              // Ship changed mid-game - no game state changes needed,
+              // the game logic will read the new ship ID automatically
+              console.log('[Game] Ship changed to:', shipId);
+            }}
           />
         )}
 
