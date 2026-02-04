@@ -24,9 +24,11 @@ const RARITY_CONFIG = {
 };
 
 // Draw a mini preview using the actual mega ship renderer with skin colors
+// Canvas is 160x100 for crisp rendering (displayed at 80x50 via CSS)
 function drawMiniShip(ctx: CanvasRenderingContext2D, ship: MegaShip, time: number, skinColors?: ShipSkinColors) {
   ctx.save();
-  const scale = 0.9;
+  // Scale up since canvas is 2x display size for retina sharpness
+  const scale = 1.8;
   ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
   ctx.scale(scale, scale);
   drawMegaShip(ctx, 0, 0, ship.id, time / 1000, skinColors);
@@ -86,7 +88,7 @@ const MegaShipCard: React.FC<{
             : 'border-[#00ff88]/30 hover:border-[#00ff88]/60'
       }`}
     >
-      <canvas ref={canvasRef} width={80} height={50} className="w-full rounded" />
+      <canvas ref={canvasRef} width={160} height={100} className="w-full rounded" style={{ maxHeight: '50px' }} />
       <p 
         className={`text-[8px] mt-1 truncate font-bold ${
           isLocked ? 'text-[#00ff88]/30' : isActive ? 'text-[#00ff88]' : 'text-[#00ff88]/70'
@@ -136,8 +138,8 @@ const OmegaPrimeEquipmentCard: React.FC<{
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Gold radial glow
-      const glow = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 10, canvas.width / 2, canvas.height / 2, 100);
+      // Gold radial glow - scaled for 2x canvas
+      const glow = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 20, canvas.width / 2, canvas.height / 2, 200);
       glow.addColorStop(0, 'rgba(255, 215, 0, 0.15)');
       glow.addColorStop(0.6, 'rgba(255, 170, 0, 0.05)');
       glow.addColorStop(1, 'transparent');
@@ -145,8 +147,8 @@ const OmegaPrimeEquipmentCard: React.FC<{
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       if (isUnlocked) {
-        // Show the actual ship - 35% larger (legendary)
-        const baseScale = 1.0;
+        // Show the actual ship - 35% larger (legendary) and 2x for retina
+        const baseScale = 2.0;
         const shipScale = baseScale * 1.35;
         
         ctx.save();
@@ -155,14 +157,14 @@ const OmegaPrimeEquipmentCard: React.FC<{
         drawShipModel(ctx, 'omega_prime', 60, 30, time);
         ctx.restore();
       } else {
-        // Show locked silhouette
+        // Show locked silhouette - scaled for 2x canvas
         ctx.save();
         ctx.translate(canvas.width / 2, canvas.height / 2);
         
         // Draw ship silhouette (blurred/hidden)
         ctx.globalAlpha = 0.15;
-        ctx.filter = 'blur(8px)';
-        ctx.scale(1.0 * 1.35, 1.0 * 1.35);
+        ctx.filter = 'blur(12px)';
+        ctx.scale(2.0 * 1.35, 2.0 * 1.35);
         drawShipModel(ctx, 'omega_prime', 60, 30, time);
         ctx.restore();
         
@@ -219,7 +221,7 @@ const OmegaPrimeEquipmentCard: React.FC<{
         ◆ LEGENDARY
       </span>
       
-      <canvas ref={canvasRef} width={280} height={60} className="w-full rounded mb-1" />
+      <canvas ref={canvasRef} width={560} height={120} className="w-full rounded mb-1" style={{ maxHeight: '60px' }} />
       
       <div className="text-center">
         <p 
