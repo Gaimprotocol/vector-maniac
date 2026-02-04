@@ -58,8 +58,8 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
 
   return (
     <div 
-      className="absolute inset-0 flex items-center justify-center z-60"
-      style={{ background: 'rgba(0, 0, 0, 0.9)' }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: 'rgba(0, 0, 0, 0.95)', zIndex: 100 }}
     >
       <div 
         className="w-[95%] max-w-md max-h-[85vh] overflow-y-auto rounded-lg border p-4"

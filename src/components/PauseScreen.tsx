@@ -32,12 +32,14 @@ export const PauseScreen: React.FC<PauseScreenProps> = ({
       className="absolute inset-0 flex flex-col items-center justify-center p-4 z-50"
       style={{ background: 'radial-gradient(ellipse at center, #051510 0%, #020a08 70%, #010504 100%)' }}
     >
-      {/* Ship Swap Modal */}
-      <ShipSwapModal 
-        isOpen={showShipSwap} 
-        onClose={() => setShowShipSwap(false)}
-        onShipChange={handleShipChange}
-      />
+      {/* Ship Swap Modal - rendered outside button container with high z-index */}
+      {showShipSwap && (
+        <ShipSwapModal 
+          isOpen={showShipSwap} 
+          onClose={() => setShowShipSwap(false)}
+          onShipChange={handleShipChange}
+        />
+      )}
 
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
