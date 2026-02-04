@@ -409,15 +409,28 @@ export function playSound(type: 'shoot' | 'laser' | 'iceBomb' | 'rapidFire' | 'm
 // Helper to get the correct shoot sound for each mega ship
 export function getShipShootSound(shipId: string): 'shoot' | 'laser' | 'rapidFire' | 'multiShot' | 'stealthShot' {
   switch (shipId) {
-    case 'blue_hawk': return 'laser';
-    case 'delta_prime': return 'rapidFire';
-    case 'crimson_hawk': return 'multiShot';
-    case 'valkyrie_prime': return 'stealthShot';
-    default: return 'shoot';
+    case 'blue_hawk': return 'laser';       // PHOTON EDGE - precision laser
+    case 'arctic_wolf': return 'shoot';     // CRYO BLAST - pulse handled separately
+    case 'delta_prime': return 'rapidFire'; // HYPER SYNC - machinegun
+    case 'crimson_hawk': return 'multiShot'; // MULTI VECTOR - plasma spread
+    case 'valkyrie_prime': return 'stealthShot'; // NULL PHASE - lightning
+    default: return 'shoot';                // GRID CORE - standard
   }
 }
 
 // Helper to get bomb sound for ships
 export function getShipBombSound(shipId: string): 'bomb' | 'iceBomb' {
   return shipId === 'arctic_wolf' ? 'iceBomb' : 'bomb';
+}
+
+// Get shoot sound type for Vector Maniac sounds system
+export function getShipShootSoundType(shipId: string): string {
+  switch (shipId) {
+    case 'blue_hawk': return 'laser';
+    case 'arctic_wolf': return 'pulse';
+    case 'delta_prime': return 'machinegun';
+    case 'crimson_hawk': return 'plasma';
+    case 'valkyrie_prime': return 'lightning';
+    default: return 'shoot';
+  }
 }

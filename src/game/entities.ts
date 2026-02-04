@@ -1,8 +1,16 @@
 import { Player, Bullet, Bomb, Enemy, Civilian, Pickup, EnemyBehavior, FallingDebris } from './types';
 import { generateId } from './utils';
 import { GAME_CONFIG, SPRITE_SIZE, ENEMY_CONFIG } from './constants';
+import { getStoredMegaShipId } from '@/hooks/useMegaShips';
+import { getMegaShipStats } from './megaShipStats';
 
 export function createPlayer(): Player {
+  // Get ship stats for health multiplier
+  const shipId = getStoredMegaShipId();
+  const shipStats = getMegaShipStats(shipId);
+  const baseHealth = 100;
+  const maxHealth = Math.round(baseHealth * shipStats.maxHealth);
+  
   return {
     id: generateId(),
     x: 100,
@@ -12,8 +20,8 @@ export function createPlayer(): Player {
     velocityX: 0,
     velocityY: 0,
     active: true,
-    health: 100,
-    maxHealth: 100,
+    health: maxHealth,
+    maxHealth: maxHealth,
     isGroundMode: false,
     invulnerable: false,
     invulnerableTimer: 0,

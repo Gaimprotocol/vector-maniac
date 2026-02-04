@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ShipIcon, SettingsIcon } from './VectorIcons';
+import { ShipSwapModal } from './ShipSwapModal';
 
 interface PauseScreenProps {
   onResume: () => void;
@@ -8,6 +9,7 @@ interface PauseScreenProps {
   sfxMuted: boolean;
   onToggleMusic: () => void;
   onToggleSfx: () => void;
+  onShipChange?: (shipId: string) => void;
 }
 
 export const PauseScreen: React.FC<PauseScreenProps> = ({ 
@@ -16,13 +18,27 @@ export const PauseScreen: React.FC<PauseScreenProps> = ({
   musicMuted, 
   sfxMuted,
   onToggleMusic,
-  onToggleSfx
+  onToggleSfx,
+  onShipChange
 }) => {
+  const [showShipSwap, setShowShipSwap] = useState(false);
+
+  const handleShipChange = (shipId: string) => {
+    onShipChange?.(shipId);
+  };
+
   return (
     <div 
       className="absolute inset-0 flex flex-col items-center justify-center p-4 z-50"
       style={{ background: 'radial-gradient(ellipse at center, #051510 0%, #020a08 70%, #010504 100%)' }}
     >
+      {/* Ship Swap Modal */}
+      <ShipSwapModal 
+        isOpen={showShipSwap} 
+        onClose={() => setShowShipSwap(false)}
+        onShipChange={handleShipChange}
+      />
+
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(15)].map((_, i) => (
@@ -81,6 +97,23 @@ export const PauseScreen: React.FC<PauseScreenProps> = ({
           }}
         >
           <ShipIcon size={16} /> Resume
+        </button>
+        
+        {/* Switch Ship Button */}
+        <button
+          onClick={() => setShowShipSwap(true)}
+          onTouchEnd={(e) => { e.preventDefault(); setShowShipSwap(true); }}
+          className="text-sm border rounded w-full px-6 py-3
+                     transition-all duration-300 hover:bg-[#44aaff]/10 active:scale-95 uppercase tracking-wider
+                     flex items-center justify-center gap-2"
+          style={{ 
+            fontFamily: 'Orbitron, monospace',
+            color: '#44aaff',
+            borderColor: 'rgba(68, 170, 255, 0.4)',
+            boxShadow: '0 0 15px rgba(68, 170, 255, 0.15)',
+          }}
+        >
+          ⚡ Switch Ship
         </button>
         
         {/* Audio controls */}
