@@ -280,6 +280,9 @@ export interface VectorState {
   // Visual anomaly system
   backgroundAnomalySeed: number | null;   // Seed for procedural background (null = use normal theme)
   hyperspaceAnomalySeed: number | null;   // Seed for procedural hyperspace (null = use normal variant)
+
+  // Power-up tracking (per map)
+  chainLightningDropsThisMap: number;
   
   // Companion system
   companion: CompanionState | null;

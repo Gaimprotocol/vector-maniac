@@ -170,6 +170,9 @@ export function createVectorManiacState(): VectorState {
     // Visual anomaly system - chance to generate unique visuals
     backgroundAnomalySeed: null,
     hyperspaceAnomalySeed: null,
+
+    // Power-up tracking (per map)
+    chainLightningDropsThisMap: 0,
     
     // Companion
     companion: companionState,
