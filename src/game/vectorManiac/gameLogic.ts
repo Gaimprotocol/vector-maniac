@@ -49,6 +49,12 @@ export function updateVectorState(state: VectorState, input: VectorInput): Vecto
   };
   
   newState.gameTime++;
+
+  // Defensive: if an older in-memory state (or a partial restore) is missing newer fields,
+  // ensure we still get correct power-up behavior.
+  if (!Number.isFinite((newState as any).chainLightningDropsThisMap)) {
+    (newState as any).chainLightningDropsThisMap = 0;
+  }
   
   switch (newState.phase) {
     case 'entering':
@@ -2330,11 +2336,28 @@ function checkCollisions(state: VectorState): VectorState {
       if (shouldForceChainLightning) {
         const powerUp = createPowerUp(enemy.x, enemy.y, 'chainLightning');
         newState.chainLightningDropsThisMap++;
+        if (import.meta.env.DEV) {
+          console.log(
+            `[VM][powerup] FORCED chainLightning @map=${newState.currentMap} kills=${newState.enemiesDefeated} dropsThisMap=${newState.chainLightningDropsThisMap}`
+          );
+        }
         newState.powerups = [...newState.powerups, powerUp];
       } else if (Math.random() < VM_CONFIG.powerUpSpawnChance) {
         const powerUp = createPowerUp(enemy.x, enemy.y);
         if (powerUp.type === 'chainLightning') {
           newState.chainLightningDropsThisMap++;
+          if (import.meta.env.DEV) {
+            console.log(
+              `[VM][powerup] RANDOM chainLightning @map=${newState.currentMap} kills=${newState.enemiesDefeated} dropsThisMap=${newState.chainLightningDropsThisMap}`
+            );
+          }
+        } else if (import.meta.env.DEV) {
+          // Keep this one very light to avoid log spam.
+          if (newState.enemiesDefeated % 10 === 0) {
+            console.log(
+              `[VM][powerup] randomDrop type=${powerUp.type} @map=${newState.currentMap} kills=${newState.enemiesDefeated}`
+            );
+          }
         }
         newState.powerups = [...newState.powerups, powerUp];
       }
