@@ -442,14 +442,14 @@ export function createSalvage(x: number, y: number, value: number, forceRare?: b
 }
 
 export function createPowerUp(x: number, y: number, type?: PowerUpType): VectorPowerUp {
-  // Chain Lightning has 15% chance - should appear 1-3 times per map
+  // Chain Lightning has 60% chance among power-up drops - should appear ~1-3 times per map
   const roll = Math.random();
   let powerUpType: PowerUpType;
   
   if (type) {
     powerUpType = type;
-  } else if (roll < 0.15) {
-    // 15% chance for chain lightning (uncommon but reliable)
+  } else if (roll < 0.6) {
+    // Make chain lightning common enough to reliably show up each map
     powerUpType = 'chainLightning';
   } else {
     // Regular power-ups
