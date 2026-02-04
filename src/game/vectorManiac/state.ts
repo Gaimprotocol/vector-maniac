@@ -6,26 +6,47 @@ import { getComputedStats } from '@/hooks/useShipUpgrades';
 import { resetGameStartVoice } from './sounds';
 import { getActiveCompanion } from '@/hooks/useBestiaryRewards';
 import { getCompanionMaxHealth } from './companion';
+import { getStoredMegaShipId } from '@/hooks/useMegaShips';
+import { getMegaShipStats } from '@/game/megaShipStats';
 
 export function createDefaultStats(): PlayerStats {
   const upgrades = getComputedStats();
   
+  // Get mega ship stats for multipliers
+  const megaShipId = getStoredMegaShipId();
+  const megaShipStats = getMegaShipStats(megaShipId);
+  
   return {
-    fireRate: VM_CONFIG.baseFireRate * (1 / upgrades.fireRateMultiplier), // Lower = faster
-    bulletSpeed: VM_CONFIG.baseBulletSpeed,
-    damage: VM_CONFIG.baseDamage * upgrades.damageMultiplier,
+    // Fire rate: apply both upgrade multiplier AND mega ship multiplier
+    // Higher fireRate stat = faster, so we divide by it
+    fireRate: VM_CONFIG.baseFireRate * (1 / upgrades.fireRateMultiplier) * (1 / megaShipStats.fireRate),
+    bulletSpeed: VM_CONFIG.baseBulletSpeed * megaShipStats.projectileSpeed,
+    damage: VM_CONFIG.baseDamage * upgrades.damageMultiplier * megaShipStats.damage,
     pierce: 1 + upgrades.bonusPierce,
     magnetRange: VM_CONFIG.baseMagnetRange * upgrades.magnetRangeMultiplier,
     salvageBonus: 1.0,
     shields: upgrades.bonusShields,
-    speed: VM_CONFIG.playerSpeed * upgrades.speedMultiplier,
+    speed: VM_CONFIG.playerSpeed * upgrades.speedMultiplier * megaShipStats.speed,
     extraCannons: upgrades.extraCannons,
   };
 }
 
 export function getInitialHealth(): number {
   const upgrades = getComputedStats();
-  return Math.floor(VM_CONFIG.playerMaxHealth * upgrades.healthMultiplier);
+  
+  // Get mega ship stats for health multiplier
+  const megaShipId = getStoredMegaShipId();
+  const megaShipStats = getMegaShipStats(megaShipId);
+  
+  return Math.floor(VM_CONFIG.playerMaxHealth * upgrades.healthMultiplier * megaShipStats.maxHealth);
+}
+
+// Calculate effective damage taken (applies defense multiplier)
+export function calculateDamageTaken(baseDamage: number): number {
+  const megaShipId = getStoredMegaShipId();
+  const megaShipStats = getMegaShipStats(megaShipId);
+  // Higher defense = less damage taken
+  return Math.round(baseDamage / megaShipStats.defense);
 }
 
 export function getRandomWavesForMap(): number {

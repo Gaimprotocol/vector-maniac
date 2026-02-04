@@ -20,42 +20,42 @@ export const MEGA_SHIPS: MegaShip[] = [
     id: 'original',
     name: 'GRID CORE',
     description: 'Standard vector fighter',
-    ability: 'Balanced stats',
+    ability: 'Balanced stats across all attributes',
     colors: { primary: '#ffffff', secondary: '#cccccc', accent: '#ffaa00', glow: '#00ddff', cockpit: '#00ddff' }
   },
   {
     id: 'blue_hawk',
     name: 'PHOTON EDGE',
     description: 'Precision beam cutter',
-    ability: 'Shoots laser beams instead of bullets',
+    ability: 'Piercing laser beams with high damage',
     colors: { primary: '#2255cc', secondary: '#1144aa', accent: '#00ffff', glow: '#44aaff', cockpit: '#88ddff' }
   },
   {
     id: 'arctic_wolf',
     name: 'CRYO BLAST',
-    description: 'Heavy payload bomber',
-    ability: 'Blinking wing lights, drops double bombs',
+    description: 'Heavy armored tank',
+    ability: 'Maximum armor and health - survives longest',
     colors: { primary: '#aaddee', secondary: '#88bbcc', accent: '#ffffff', glow: '#ccffff', cockpit: '#ffffff' }
   },
   {
     id: 'delta_prime',
     name: 'HYPER SYNC',
     description: 'Overclocked interceptor',
-    ability: 'Flies, shoots and bombs 30% faster',
+    ability: 'Extreme speed and fire rate - dodge everything',
     colors: { primary: '#33aa55', secondary: '#228844', accent: '#88ff88', glow: '#44ff66', cockpit: '#aaffaa' }
   },
   {
     id: 'crimson_hawk',
     name: 'MULTI VECTOR',
     description: 'Omni-directional assault',
-    ability: 'Extra shots: up, down and backward',
+    ability: 'Fires in 4 directions - excellent vs swarms',
     colors: { primary: '#cc2222', secondary: '#991111', accent: '#ff6644', glow: '#ff4444', cockpit: '#ffaa88' }
   },
   {
     id: 'valkyrie_prime',
     name: 'NULL PHASE',
     description: 'Phantom stealth striker',
-    ability: '50% faster, blue projectiles, stealth mode',
+    ability: 'High burst damage with superior mobility',
     colors: { primary: '#3344aa', secondary: '#222288', accent: '#88aaff', glow: '#6688ff', cockpit: '#aaccff' }
   }
 ];

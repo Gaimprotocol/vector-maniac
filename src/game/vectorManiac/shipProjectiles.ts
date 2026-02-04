@@ -474,7 +474,24 @@ export const SHIP_PROJECTILE_STYLES: Record<string, ShipProjectileStyle> = {
   },
 };
 
+// Map mega ship IDs to their projectile style IDs
+const MEGA_SHIP_PROJECTILE_MAP: Record<string, string> = {
+  'original': 'default',
+  'blue_hawk': 'bluehawk',
+  'arctic_wolf': 'arctic',
+  'delta_prime': 'needle',
+  'crimson_hawk': 'phoenix',
+  'valkyrie_prime': 'phantom',
+};
+
 // Get projectile style for a ship (returns default if not found)
+// Handles both ship model IDs and mega ship IDs
 export function getShipProjectileStyle(shipId: string): ShipProjectileStyle {
+  // First check if it's a mega ship ID that needs mapping
+  const mappedId = MEGA_SHIP_PROJECTILE_MAP[shipId];
+  if (mappedId) {
+    return SHIP_PROJECTILE_STYLES[mappedId] || DEFAULT_STYLE;
+  }
+  // Otherwise use the shipId directly
   return SHIP_PROJECTILE_STYLES[shipId] || DEFAULT_STYLE;
 }

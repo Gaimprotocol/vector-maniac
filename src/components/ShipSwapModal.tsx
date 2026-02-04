@@ -174,7 +174,7 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
                 { label: 'Speed', value: getMegaShipStats(selectedShip).speed },
                 { label: 'Defense', value: getMegaShipStats(selectedShip).defense },
                 { label: 'Health', value: getMegaShipStats(selectedShip).maxHealth },
-                { label: 'Bomb Power', value: getMegaShipStats(selectedShip).bombDamage },
+                { label: 'Proj. Speed', value: getMegaShipStats(selectedShip).projectileSpeed },
               ].map(stat => (
                 <div key={stat.label} className="flex justify-between">
                   <span style={{ color: '#888' }}>{stat.label}</span>

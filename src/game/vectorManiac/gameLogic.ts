@@ -22,7 +22,7 @@ import {
   createHyperspacePowerUp
 } from './entities';
 import { createAnomaly, createSplitAnomaly, decodeDNA, getAnomalyColor } from './anomalyGenerator';
-import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap, getNextHyperspaceMapTarget, shouldTriggerHyperspace } from './state';
+import { getEnemiesForWave, isLastWaveInMap, isFinalMap, getRandomWavesForMap, getNextHyperspaceMapTarget, shouldTriggerHyperspace, calculateDamageTaken } from './state';
 import { distance, lerp, lerpAngle, clamp, normalize } from './utils';
 import { playVectorSound, playGameStartVoice, resetGameStartVoice } from './sounds';
 import { getStoredMegaShipId } from '@/hooks/useMegaShips';
@@ -2249,7 +2249,7 @@ function checkCollisions(state: VectorState): VectorState {
             newState.particles = [...newState.particles, ...particles];
           }
         } else {
-          newState.health -= 2; // Continuous damage
+          newState.health -= calculateDamageTaken(2); // Continuous damage (reduced by defense)
           // Play damage sound occasionally (not every frame)
           if (newState.gameTime % 15 === 0) {
             newState.soundQueue = [...newState.soundQueue, 'damage'];
@@ -2331,6 +2331,9 @@ function checkCollisions(state: VectorState): VectorState {
 function damagePlayer(state: VectorState, damage: number): VectorState {
   let newState = { ...state };
   
+  // Apply ship defense multiplier to incoming damage
+  const effectiveDamage = calculateDamageTaken(damage);
+  
   if (newState.shields > 0) {
     newState.shields--;
     newState.invulnerableTimer = 60;
@@ -2340,7 +2343,7 @@ function damagePlayer(state: VectorState, damage: number): VectorState {
     const particles = createParticle(newState.playerX, newState.playerY, '#00aaff', 10);
     newState.particles = [...newState.particles, ...particles];
   } else {
-    newState.health -= damage;
+    newState.health -= effectiveDamage;
     newState.invulnerableTimer = 90;
     newState.soundQueue = [...newState.soundQueue, 'damage'];
     

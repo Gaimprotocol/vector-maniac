@@ -78,7 +78,7 @@ const MegaShipCard: React.FC<{
     <button
       onClick={isLocked ? undefined : onSelect}
       disabled={isLocked}
-      className={`relative rounded border p-2 transition-all ${
+      className={`relative rounded border p-1.5 transition-all ${
         isLocked 
           ? 'border-[#00ff88]/10 opacity-50 cursor-not-allowed'
           : isActive 
@@ -88,21 +88,21 @@ const MegaShipCard: React.FC<{
     >
       <canvas ref={canvasRef} width={80} height={50} className="w-full rounded" />
       <p 
-        className={`text-sm mt-1.5 truncate font-bold ${
+        className={`text-[8px] mt-1 truncate font-bold ${
           isLocked ? 'text-[#00ff88]/30' : isActive ? 'text-[#00ff88]' : 'text-[#00ff88]/70'
         }`}
-        style={{ fontFamily: 'Orbitron, monospace', textShadow: isActive ? '0 0 10px #00ff88' : 'none' }}
+        style={{ fontFamily: 'Orbitron, monospace', textShadow: isActive ? '0 0 8px #00ff88' : 'none' }}
       >
         {ship.name}
       </p>
       <p 
-        className="text-xs text-[#00ff88]/50 line-clamp-2 leading-tight mt-0.5"
+        className="text-[10px] text-[#00ff88]/60 line-clamp-2 leading-tight mt-0.5"
         style={{ fontFamily: 'Rajdhani, sans-serif' }}
       >
         {ship.ability}
       </p>
-      {isActive && <span className="absolute top-1 right-1"><CheckIcon size={12} /></span>}
-      {isLocked && <span className="absolute top-1 right-1"><LockIcon size={14} /></span>}
+      {isActive && <span className="absolute top-1 right-1"><CheckIcon size={10} /></span>}
+      {isLocked && <span className="absolute top-1 right-1"><LockIcon size={12} /></span>}
     </button>
   );
 };
