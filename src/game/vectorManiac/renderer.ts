@@ -2085,6 +2085,10 @@ function renderPlayer(ctx: CanvasRenderingContext2D, state: VectorState): void {
   ctx.save();
   ctx.translate(state.playerX, state.playerY);
   ctx.rotate(state.playerAngle);
+  // Offset the pivot point: move it forward (toward nose) by shifting rendering down.
+  // This makes the ship rotate around a point between center and back, for smoother feel.
+  const pivotOffset = VM_CONFIG.playerSize * 0.25; // 25% forward from center
+  ctx.translate(0, pivotOffset);
   
   // Invulnerability flash
   if (state.invulnerableTimer > 0 && Math.floor(state.invulnerableTimer / 4) % 2 === 0) {
