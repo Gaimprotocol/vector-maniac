@@ -841,6 +841,22 @@ export function drawValkyrieShip(ctx: CanvasRenderingContext2D, centerX: number,
   ctx.fillRect(centerX - 16, centerY - 3 * boostMultiplier, 4, 6 * boostMultiplier);
 }
 
+// Map MEGA_SHIPS IDs to SHIP_MODELS IDs for rendering with Vector Maniac designs
+const MEGA_SHIP_TO_MODEL_MAP: Record<string, string> = {
+  'original': 'default',      // GRID CORE -> ZERO POINT
+  'blue_hawk': 'bluehawk',    // PHOTON EDGE -> COMPILE TIME
+  'arctic_wolf': 'arctic',    // CRYO BLAST -> COLD BOOT
+  'delta_prime': 'delta',     // HYPER SYNC -> DELTA MERGE
+  'crimson_hawk': 'crimson',  // MULTI VECTOR -> ERROR STATE
+  'valkyrie_prime': 'valkyrie', // NULL PHASE -> CHROME CAST
+  'omega_prime': 'omega_prime', // Keep as is
+  // Arena ships use their own IDs directly
+  'hex_phantom': 'hex_phantom',
+  'pulse_wraith': 'pulse_wraith',
+  'grid_reaper': 'grid_reaper',
+  'null_striker': 'null_striker',
+};
+
 // Main function to draw the selected mega ship with optional skin colors
 export function drawMegaShip(
   ctx: CanvasRenderingContext2D,
@@ -858,37 +874,24 @@ export function drawMegaShip(
   // Draw BACK layer upgrade visuals first (shields, magnet field)
   drawUpgradeVisualsBack(ctx, centerX, centerY, time, upgrades, stats, quality);
   
-  // Draw the ship itself (with built-in scaling from upgrades)
-  switch (megaShipId) {
-    case 'blue_hawk':
-      drawBlueHawkShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
-      break;
-    case 'arctic_wolf':
-      drawArcticWolfShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
-      break;
-    case 'delta_prime':
-      drawDeltaShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
-      break;
-    case 'crimson_hawk':
-      drawCrimsonHawkShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
-      break;
-    case 'valkyrie_prime':
-      drawValkyrieShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
-      break;
-    case 'omega_prime':
-      // Omega Prime uses the custom renderer from shipModels with quality param
-      drawShipModel(ctx, 'omega_prime', 60, 30, time * 1000, quality);
-      break;
-    case 'original':
-    default:
-      // Check if this is one of the 40 custom ship models
-      const customShip = SHIP_MODELS.find(m => m.id === megaShipId);
-      if (customShip) {
-        drawShipModel(ctx, megaShipId, 60, 30, time * 1000, quality);
-      } else {
-        drawFalconShip(ctx, centerX, centerY, time, skinColors, upgrades, quality);
-      }
-      break;
+  // Map mega ship ID to ship model ID
+  const modelId = MEGA_SHIP_TO_MODEL_MAP[megaShipId] || megaShipId;
+  
+  // Check if this is a valid ship model
+  const validShip = SHIP_MODELS.find(m => m.id === modelId);
+  
+  if (validShip) {
+    // Use Vector Maniac design from shipModels.ts
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    drawShipModel(ctx, modelId, 60, 30, time * 1000, quality);
+    ctx.restore();
+  } else {
+    // Fallback to default ship
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    drawShipModel(ctx, 'default', 60, 30, time * 1000, quality);
+    ctx.restore();
   }
   
   // Draw FRONT layer upgrade visuals (cannons, weapons, armor)
