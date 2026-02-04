@@ -148,6 +148,8 @@ export const VM_CONFIG = {
     formationBreaker: '#ff8800', // Orange - clears screen
     timeWarp: '#aa00ff',         // Purple - slows enemies
     magnetPulse: '#ffff00',      // Gold - attracts all salvage
+    // Rare power-ups
+    chainLightning: '#88ffff',   // Electric cyan - chain damage
   },
   
   // Hyperspace mode configuration

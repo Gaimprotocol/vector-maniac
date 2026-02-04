@@ -82,7 +82,7 @@ export type VectorSoundType =
   | 'shoot' | 'shoot_shoot' | 'shoot_laser' | 'shoot_plasma' | 'shoot_energy' | 'shoot_pulse' | 'shoot_fire' | 'shoot_ice'
   | 'hit' | 'explosion' | 'salvage' | 'damage' | 'shield' | 'waveComplete' | 'powerup' | 'rareSalvage' | 'bossWarning' | 'bossEnraged' | 'screenShakeHaptic'
   | 'hyperspaceEnter' | 'hyperspaceExit' | 'hyperspaceLoop' | 'warpShield' | 'formationBreaker' | 'timeWarp' | 'magnetPulse'
-  | 'anomalySpawn' | 'playerDeath';
+  | 'anomalySpawn' | 'playerDeath' | 'chainLightning' | 'chainLightningHit';
 
 export function playVectorSound(type: VectorSoundType): void {
   try {
@@ -988,6 +988,73 @@ export function playVectorSound(type: VectorSoundType): void {
         
         // Light haptic feedback
         triggerHapticFeedback('light');
+        break;
+      }
+      
+      case 'chainLightning': {
+        // Electric activation sound - crackling energy buildup
+        const duration = 0.4;
+        
+        // Rising electric charge
+        const charge = ctx.createOscillator();
+        const chargeGain = ctx.createGain();
+        charge.connect(chargeGain);
+        chargeGain.connect(ctx.destination);
+        charge.type = 'sawtooth';
+        charge.frequency.setValueAtTime(400, ctx.currentTime);
+        charge.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.15);
+        charge.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + duration);
+        chargeGain.gain.setValueAtTime(0.2, ctx.currentTime);
+        chargeGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        charge.start(ctx.currentTime);
+        charge.stop(ctx.currentTime + duration);
+        
+        // Crackling overlay
+        for (let i = 0; i < 6; i++) {
+          const crackle = ctx.createOscillator();
+          const crackleGain = ctx.createGain();
+          crackle.connect(crackleGain);
+          crackleGain.connect(ctx.destination);
+          const crackleTime = ctx.currentTime + i * 0.04 + Math.random() * 0.02;
+          crackle.type = 'square';
+          crackle.frequency.setValueAtTime(2000 + Math.random() * 3000, crackleTime);
+          crackleGain.gain.setValueAtTime(0.08, crackleTime);
+          crackleGain.gain.exponentialRampToValueAtTime(0.001, crackleTime + 0.03);
+          crackle.start(crackleTime);
+          crackle.stop(crackleTime + 0.03);
+        }
+        
+        triggerHapticFeedback('light');
+        break;
+      }
+      
+      case 'chainLightningHit': {
+        // Electric arc zap - quick sizzling impact
+        const zap = ctx.createOscillator();
+        const zapGain = ctx.createGain();
+        zap.connect(zapGain);
+        zapGain.connect(ctx.destination);
+        zap.type = 'sawtooth';
+        zap.frequency.setValueAtTime(3000, ctx.currentTime);
+        zap.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.08);
+        zapGain.gain.setValueAtTime(0.15, ctx.currentTime);
+        zapGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        zap.start(ctx.currentTime);
+        zap.stop(ctx.currentTime + 0.08);
+        
+        // Sizzle overlay
+        const sizzle = ctx.createOscillator();
+        const sizzleGain = ctx.createGain();
+        sizzle.connect(sizzleGain);
+        sizzleGain.connect(ctx.destination);
+        sizzle.type = 'square';
+        sizzle.frequency.setValueAtTime(4000, ctx.currentTime);
+        sizzle.frequency.setValueAtTime(2000, ctx.currentTime + 0.02);
+        sizzle.frequency.setValueAtTime(5000, ctx.currentTime + 0.04);
+        sizzleGain.gain.setValueAtTime(0.06, ctx.currentTime);
+        sizzleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        sizzle.start(ctx.currentTime);
+        sizzle.stop(ctx.currentTime + 0.06);
         break;
       }
     }

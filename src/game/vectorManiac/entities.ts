@@ -442,8 +442,20 @@ export function createSalvage(x: number, y: number, value: number, forceRare?: b
 }
 
 export function createPowerUp(x: number, y: number, type?: PowerUpType): VectorPowerUp {
-  const types: PowerUpType[] = ['shield', 'nuke', 'doublePoints', 'doubleShot', 'speedBoost'];
-  const powerUpType = type || types[Math.floor(Math.random() * types.length)];
+  // Chain Lightning is rare (3% chance), other power-ups are common
+  const roll = Math.random();
+  let powerUpType: PowerUpType;
+  
+  if (type) {
+    powerUpType = type;
+  } else if (roll < 0.03) {
+    // 3% chance for chain lightning (rare)
+    powerUpType = 'chainLightning';
+  } else {
+    // Regular power-ups
+    const types: PowerUpType[] = ['shield', 'nuke', 'doublePoints', 'doubleShot', 'speedBoost'];
+    powerUpType = types[Math.floor(Math.random() * types.length)];
+  }
   
   const angle = Math.random() * Math.PI * 2;
   const speed = 0.5;
