@@ -110,13 +110,13 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
                   />
                   <div className="flex-1 min-w-0">
                     <div 
-                      className="text-[10px] font-bold truncate"
+                      className="text-xs font-bold truncate"
                       style={{ fontFamily: 'Orbitron, monospace', color: '#00ff88' }}
                     >
                       {megaShip?.name || stats.name}
                     </div>
                     <div 
-                      className="text-[8px] opacity-70"
+                      className="text-[10px] opacity-70"
                       style={{ fontFamily: 'monospace', color: '#88ffaa' }}
                     >
                       {stats.projectileType.toUpperCase()}
@@ -125,7 +125,7 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
                 </div>
                 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-1 text-[7px]" style={{ fontFamily: 'monospace' }}>
+                <div className="grid grid-cols-3 gap-1 text-[9px]" style={{ fontFamily: 'monospace' }}>
                   <div className="flex justify-between">
                     <span style={{ color: '#888' }}>DMG</span>
                     <span style={{ color: getStatColor(stats.damage) }}>{formatStatChange(stats.damage)}</span>
@@ -154,20 +154,20 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
             }}
           >
             <div 
-              className="text-xs mb-2"
+              className="text-sm mb-2"
               style={{ fontFamily: 'Orbitron, monospace', color: '#00ff88' }}
             >
               {getMegaShipStats(selectedShip).name}
             </div>
             <div 
-              className="text-[9px] mb-2 opacity-80"
+              className="text-xs mb-3 opacity-90 leading-relaxed"
               style={{ color: '#88ffaa' }}
             >
               {getMegaShipStats(selectedShip).specialAbility}
             </div>
             
             {/* Detailed Stats */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[8px]" style={{ fontFamily: 'monospace' }}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]" style={{ fontFamily: 'monospace' }}>
               {[
                 { label: 'Damage', value: getMegaShipStats(selectedShip).damage },
                 { label: 'Fire Rate', value: getMegaShipStats(selectedShip).fireRate },
