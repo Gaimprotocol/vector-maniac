@@ -2573,24 +2573,82 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.fillText(statusTexts[phase], centerX, centerY - 20);
   ctx.restore();
   
-  // Bottom status bar
+  // Bottom status bar - neon green style matching game aesthetic
   const barY = arenaHeight - 60;
-  ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
-  ctx.fillRect(60, barY, arenaWidth - 120, 30);
-  ctx.strokeStyle = '#00ffff';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(60, barY, arenaWidth - 120, 30);
-  
-  // Loading bar animation
+  const barWidth = arenaWidth - 120;
+  const barHeight = 30;
   const loadProgress = Math.min(1, t / 120);
-  ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-  ctx.fillRect(62, barY + 2, (arenaWidth - 124) * loadProgress, 26);
   
-  // Status text
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '10px monospace';
+  // Dark background with subtle green tint
+  ctx.fillStyle = 'rgba(0, 40, 0, 0.8)';
+  ctx.fillRect(60, barY, barWidth, barHeight);
+  
+  // Neon green border with glow
+  ctx.shadowColor = '#00ff00';
+  ctx.shadowBlur = 8;
+  ctx.strokeStyle = '#00ff00';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(60, barY, barWidth, barHeight);
+  ctx.shadowBlur = 0;
+  
+  // Progress bar with gradient
+  const progressWidth = (barWidth - 4) * loadProgress;
+  if (progressWidth > 0) {
+    const gradient = ctx.createLinearGradient(62, barY, 62 + progressWidth, barY);
+    gradient.addColorStop(0, 'rgba(0, 180, 0, 0.9)');
+    gradient.addColorStop(0.5, 'rgba(0, 255, 0, 0.9)');
+    gradient.addColorStop(1, 'rgba(100, 255, 100, 0.9)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(62, barY + 2, progressWidth, barHeight - 4);
+    
+    // Scanline effect on progress bar
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    for (let i = 0; i < barHeight - 4; i += 4) {
+      ctx.fillRect(62, barY + 2 + i, progressWidth, 2);
+    }
+    
+    // Bright edge on progress bar
+    ctx.fillStyle = 'rgba(180, 255, 180, 0.6)';
+    ctx.fillRect(62, barY + 2, progressWidth, 2);
+  }
+  
+  // Corner accents
+  const cornerSize = 6;
+  ctx.strokeStyle = '#00ff00';
+  ctx.lineWidth = 2;
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(60, barY + cornerSize);
+  ctx.lineTo(60, barY);
+  ctx.lineTo(60 + cornerSize, barY);
+  ctx.stroke();
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(60 + barWidth - cornerSize, barY);
+  ctx.lineTo(60 + barWidth, barY);
+  ctx.lineTo(60 + barWidth, barY + cornerSize);
+  ctx.stroke();
+  // Bottom-left
+  ctx.beginPath();
+  ctx.moveTo(60, barY + barHeight - cornerSize);
+  ctx.lineTo(60, barY + barHeight);
+  ctx.lineTo(60 + cornerSize, barY + barHeight);
+  ctx.stroke();
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(60 + barWidth - cornerSize, barY + barHeight);
+  ctx.lineTo(60 + barWidth, barY + barHeight);
+  ctx.lineTo(60 + barWidth, barY + barHeight - cornerSize);
+  ctx.stroke();
+  
+  // Status text with glow
+  ctx.shadowColor = '#00ff00';
+  ctx.shadowBlur = 4;
+  ctx.fillStyle = '#00ff00';
+  ctx.font = 'bold 10px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('DRAG TO NAVIGATE // MOVEMENT = FIRE', centerX, barY + 18);
+  ctx.fillText('▶ DRAG TO NAVIGATE // MOVEMENT = FIRE ▶', centerX, barY + 18);
+  ctx.shadowBlur = 0;
   
   // Data streams removed for cleaner look
 }
