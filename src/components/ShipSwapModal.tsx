@@ -37,12 +37,12 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       
-      ctx.clearRect(0, 0, 80, 60);
+      ctx.clearRect(0, 0, 160, 120);
       
       const modelId = MEGA_SHIP_TO_MODEL_MAP[shipId] || shipId;
       ctx.save();
-      ctx.translate(40, 30);
-      ctx.scale(0.8, 0.8);
+      ctx.translate(80, 60);
+      ctx.scale(1.6, 1.6);
       drawShipModel(ctx, modelId, 60, 30, time, 'preview');
       ctx.restore();
     });
@@ -99,14 +99,13 @@ export const ShipSwapModal: React.FC<ShipSwapModalProps> = ({ isOpen, onClose, o
                   boxShadow: isSelected ? '0 0 20px rgba(0, 255, 136, 0.3)' : 'none',
                 }}
               >
-                {/* Ship Preview */}
+                {/* Ship Preview - no inner box, transparent bg */}
                 <div className="flex items-center gap-2 mb-1">
                   <canvas
                     ref={el => canvasRefs.current[shipId] = el}
-                    width={80}
-                    height={60}
-                    className="rounded"
-                    style={{ background: 'rgba(0, 10, 20, 0.5)' }}
+                    width={160}
+                    height={120}
+                    style={{ width: '60px', height: '45px' }}
                   />
                   <div className="flex-1 min-w-0">
                     <div 
