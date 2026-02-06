@@ -138,7 +138,7 @@ export function createVectorManiacState(): VectorState {
     
     // Map transition display
     showMapName: true,
-    mapNameTimer: 156, // ~2.6 seconds (same as wave complete)
+    mapNameTimer: 240, // ~4 seconds with smooth fade in/out
     
     enemiesSpawned: 0,
     enemiesDefeated: 0,

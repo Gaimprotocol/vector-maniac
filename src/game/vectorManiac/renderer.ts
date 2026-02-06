@@ -2342,14 +2342,33 @@ function renderHUD(ctx: CanvasRenderingContext2D, state: VectorState): void {
     ctx.shadowBlur = 0;
   }
   
-  // Map name display (when starting a new map)
-  if (state.showMapName && state.mapNameTimer > 0) {
+  // Map name display (when starting a new map) - NOT during entering phase
+  if (state.showMapName && state.mapNameTimer > 0 && state.phase !== 'entering') {
     const theme = getMapTheme(state.currentMap);
-    // Quick fade: show for ~2.6 seconds, fade out in last 0.4 seconds
-    const displayTime = 156; // ~2.6 seconds total display
-    const effectiveTimer = Math.min(state.mapNameTimer, displayTime);
-    const fadeOutStart = 24; // Start fading at ~0.4 seconds remaining
-    const alpha = effectiveTimer < fadeOutStart ? effectiveTimer / fadeOutStart : 1;
+    // Smooth fade in → stay visible → smooth fade out
+    // Total display: ~4 seconds (240 frames)
+    // Fade in: first 48 frames (~0.8s)
+    // Visible: middle portion
+    // Fade out: last 48 frames (~0.8s)
+    const totalDisplayTime = 240;
+    const fadeInDuration = 48;
+    const fadeOutDuration = 48;
+    
+    const effectiveTimer = Math.min(state.mapNameTimer, totalDisplayTime);
+    const elapsed = totalDisplayTime - effectiveTimer;
+    
+    let alpha: number;
+    if (elapsed < fadeInDuration) {
+      // Fade in phase - smooth ease-out curve
+      const progress = elapsed / fadeInDuration;
+      alpha = progress * progress * (3 - 2 * progress); // smoothstep
+    } else if (effectiveTimer <= fadeOutDuration) {
+      // Fade out phase - smooth ease-in curve
+      const progress = effectiveTimer / fadeOutDuration;
+      alpha = progress * progress * (3 - 2 * progress); // smoothstep
+    } else {
+      alpha = 1;
+    }
     
     ctx.save();
     ctx.globalAlpha = alpha * 0.95;
