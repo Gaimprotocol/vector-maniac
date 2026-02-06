@@ -18,8 +18,10 @@ import {
   ArenaConsumable, 
   calculateBoosts,
   addConsumable,
+  addSpecialBooster,
   rewardToConsumable,
   ConsumableType,
+  ConsumableRarity,
 } from '@/hooks/useArenaConsumables';
 import { addArenaUnlock } from '@/hooks/useArenaUnlocks';
 import { BoosterSelectionModal } from './arena/BoosterSelectionModal';
@@ -241,7 +243,7 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
               setScraps(getStoredScraps());
             }
             
-            // Process non-scrap rewards
+            // Process non-scrap rewards - add as one-time consumables!
             const otherRewards = newState.earnedRewards.filter(r => r.type !== 'scraps');
             for (const reward of otherRewards) {
               if (reward.type === 'consumable') {
@@ -251,35 +253,32 @@ export const ArenaScreen: React.FC<ArenaScreenProps> = ({ onBack }) => {
                   addConsumable(consumableType);
                 }
               } else if (reward.type === 'ship_unlock') {
-                // Permanent ship unlock for main game!
-                addArenaUnlock({
-                  id: reward.id,
-                  type: 'ship',
-                  name: reward.name,
-                  description: reward.description,
-                  rarity: reward.rarity as 'rare' | 'epic' | 'legendary',
-                  shipId: reward.unlockData?.shipId,
-                });
+                // Add as one-time ship booster (not permanent!)
+                addSpecialBooster(
+                  'ship_boost',
+                  reward.name,
+                  `Use ${reward.name} for one arena battle`,
+                  reward.rarity as ConsumableRarity,
+                  { shipId: reward.unlockData?.shipId, shipName: reward.name }
+                );
               } else if (reward.type === 'skin_unlock') {
-                // Permanent skin unlock
-                addArenaUnlock({
-                  id: reward.id,
-                  type: 'skin',
-                  name: reward.name,
-                  description: reward.description,
-                  rarity: reward.rarity as 'rare' | 'epic' | 'legendary',
-                  skinId: reward.unlockData?.skinId,
-                });
+                // Add as one-time skin booster (not permanent!)
+                addSpecialBooster(
+                  'skin_boost',
+                  reward.name,
+                  `Apply ${reward.name} skin for one arena battle`,
+                  reward.rarity as ConsumableRarity,
+                  { skinId: reward.unlockData?.skinId, skinName: reward.name }
+                );
               } else if (reward.type === 'companion_unlock') {
-                // Permanent companion for main game!
-                addArenaUnlock({
-                  id: reward.id,
-                  type: 'companion',
-                  name: reward.name,
-                  description: reward.description,
-                  rarity: reward.rarity as 'rare' | 'epic' | 'legendary',
-                  companionData: reward.unlockData?.companionData,
-                });
+                // Add as one-time companion booster (not permanent!)
+                addSpecialBooster(
+                  'companion_boost',
+                  reward.name,
+                  `${reward.name} assists for one arena battle`,
+                  reward.rarity as ConsumableRarity,
+                  { companionData: reward.unlockData?.companionData }
+                );
               }
             }
           }

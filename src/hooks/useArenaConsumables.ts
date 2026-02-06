@@ -18,6 +18,19 @@ export interface ArenaConsumable {
   fireRateBoost?: number; // Percentage
   startingShield?: boolean;
   powerUpDuration?: number; // Percentage multiplier
+  // Special booster data (for ship/companion/skin boosts)
+  specialData?: {
+    shipId?: string;
+    shipName?: string;
+    companionData?: {
+      name: string;
+      color: string;
+      shape: string;
+      level: number;
+    };
+    skinId?: string;
+    skinName?: string;
+  };
 }
 
 export type ConsumableType = 
@@ -27,7 +40,28 @@ export type ConsumableType =
   | 'fire_rate_boost'
   | 'starting_shield'
   | 'extended_powerups'
-  | 'double_scraps';
+  | 'double_scraps'
+  // Arena-won special boosters (one-time use)
+  | 'ship_boost'
+  | 'companion_boost'
+  | 'skin_boost';
+
+// Extended consumable interface for special boosters
+export interface SpecialBoosterData {
+  // For ship_boost
+  shipId?: string;
+  shipName?: string;
+  // For companion_boost
+  companionData?: {
+    name: string;
+    color: string;
+    shape: string;
+    level: number;
+  };
+  // For skin_boost
+  skinId?: string;
+  skinName?: string;
+}
 
 // All possible consumable definitions - using geometric symbols, NO emojis
 export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable, 'id'>> = {
@@ -86,6 +120,28 @@ export const CONSUMABLE_DEFINITIONS: Record<ConsumableType, Omit<ArenaConsumable
     rarity: 'legendary',
     icon: '◆',
   },
+  // Special boosters (dynamic - filled when created)
+  ship_boost: {
+    type: 'ship_boost',
+    name: 'Arena Ship',
+    description: 'Use arena-exclusive ship for this battle',
+    rarity: 'legendary',
+    icon: '⬢',
+  },
+  companion_boost: {
+    type: 'companion_boost',
+    name: 'Arena Companion',
+    description: 'Arena companion assists this battle',
+    rarity: 'epic',
+    icon: '◎',
+  },
+  skin_boost: {
+    type: 'skin_boost',
+    name: 'Arena Skin',
+    description: 'Arena-exclusive skin for this battle',
+    rarity: 'epic',
+    icon: '◐',
+  },
 };
 
 const STORAGE_KEY = 'arena_consumables';
@@ -122,6 +178,33 @@ export function addConsumable(type: ConsumableType): ArenaConsumable {
   saveConsumables(current);
   
   // Dispatch event for syncing
+  window.dispatchEvent(new CustomEvent('arena_consumables_changed'));
+  
+  return newConsumable;
+}
+
+// Add a special booster (ship/companion/skin) with custom data
+export function addSpecialBooster(
+  type: 'ship_boost' | 'companion_boost' | 'skin_boost',
+  name: string,
+  description: string,
+  rarity: ConsumableRarity,
+  specialData: ArenaConsumable['specialData']
+): ArenaConsumable {
+  const definition = CONSUMABLE_DEFINITIONS[type];
+  const newConsumable: ArenaConsumable = {
+    ...definition,
+    id: `consumable_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    name,
+    description,
+    rarity,
+    specialData,
+  };
+  
+  const current = getStoredConsumables();
+  current.push(newConsumable);
+  saveConsumables(current);
+  
   window.dispatchEvent(new CustomEvent('arena_consumables_changed'));
   
   return newConsumable;

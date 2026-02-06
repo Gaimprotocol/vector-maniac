@@ -32,14 +32,22 @@ export const BoosterSelectionModal: React.FC<BoosterSelectionModalProps> = ({
   onCancel,
   maxSelections = 3,
 }) => {
-  // Group consumables by type for cleaner display
-  const grouped = consumables.reduce((acc, c) => {
-    if (!acc[c.type]) acc[c.type] = [];
-    acc[c.type].push(c);
-    return acc;
-  }, {} as Record<ConsumableType, ArenaConsumable[]>);
+  // Group consumables - special boosters are shown individually, others by type
+  const specialTypes: ConsumableType[] = ['ship_boost', 'companion_boost', 'skin_boost'];
   
-  const types = Object.keys(grouped) as ConsumableType[];
+  // Regular boosters grouped by type
+  const regularGrouped = consumables
+    .filter(c => !specialTypes.includes(c.type))
+    .reduce((acc, c) => {
+      if (!acc[c.type]) acc[c.type] = [];
+      acc[c.type].push(c);
+      return acc;
+    }, {} as Record<ConsumableType, ArenaConsumable[]>);
+  
+  // Special boosters shown individually (each is unique)
+  const specialBoosters = consumables.filter(c => specialTypes.includes(c.type));
+  
+  const regularTypes = Object.keys(regularGrouped) as ConsumableType[];
   const selectedCount = selectedIds.length;
   
   return (
@@ -79,8 +87,9 @@ export const BoosterSelectionModal: React.FC<BoosterSelectionModalProps> = ({
         </div>
       ) : (
         <div className="w-full max-w-sm px-4 mb-4 max-h-[50vh] overflow-y-auto space-y-2">
-          {types.map(type => {
-            const items = grouped[type];
+          {/* Regular boosters grouped by type */}
+          {regularTypes.map(type => {
+            const items = regularGrouped[type];
             const definition = CONSUMABLE_DEFINITIONS[type];
             const count = items.length;
             const selectedFromType = items.filter(i => selectedIds.includes(i.id)).length;
@@ -90,7 +99,6 @@ export const BoosterSelectionModal: React.FC<BoosterSelectionModalProps> = ({
               <button
                 key={type}
                 onClick={() => {
-                  // Find first unselected item of this type, or toggle off if one is selected
                   const selectedItem = items.find(i => selectedIds.includes(i.id));
                   if (selectedItem) {
                     onToggle(selectedItem.id);
@@ -149,6 +157,82 @@ export const BoosterSelectionModal: React.FC<BoosterSelectionModalProps> = ({
                     x{count}
                   </span>
                   {selectedFromType > 0 && (
+                    <span 
+                      className="text-xs"
+                      style={{ color: '#00ff88' }}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+          
+          {/* Special boosters shown individually */}
+          {specialBoosters.map(booster => {
+            const isSelected = selectedIds.includes(booster.id);
+            const displayIcon = booster.type === 'ship_boost' ? '⬢' 
+              : booster.type === 'companion_boost' ? '◎' : '◐';
+            
+            return (
+              <button
+                key={booster.id}
+                onClick={() => {
+                  if (isSelected) {
+                    onToggle(booster.id);
+                  } else if (selectedCount < maxSelections) {
+                    onToggle(booster.id);
+                  }
+                }}
+                disabled={!isSelected && selectedCount >= maxSelections}
+                className={`w-full px-4 py-3 rounded border-2 transition-all duration-200
+                           flex items-center justify-between
+                           ${isSelected ? 'scale-[1.02]' : ''}
+                           ${!isSelected && selectedCount >= maxSelections ? 'opacity-40' : ''}`}
+                style={{
+                  fontFamily: 'Orbitron, monospace',
+                  borderColor: isSelected 
+                    ? RARITY_COLORS[booster.rarity] 
+                    : `${RARITY_COLORS[booster.rarity]}50`,
+                  background: isSelected 
+                    ? RARITY_GLOW[booster.rarity] 
+                    : 'rgba(0, 0, 0, 0.3)',
+                  boxShadow: isSelected 
+                    ? `0 0 20px ${RARITY_GLOW[booster.rarity]}` 
+                    : 'none',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span 
+                    className="text-lg"
+                    style={{ color: RARITY_COLORS[booster.rarity] }}
+                  >
+                    {displayIcon}
+                  </span>
+                  <div className="text-left">
+                    <p 
+                      className="text-xs"
+                      style={{ color: RARITY_COLORS[booster.rarity] }}
+                    >
+                      {booster.name}
+                    </p>
+                    <p 
+                      className="text-[9px]"
+                      style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                    >
+                      {booster.description}
+                    </p>
+                    <p 
+                      className="text-[8px] mt-1"
+                      style={{ color: '#ffaa00' }}
+                    >
+                      ★ ONE-TIME USE
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isSelected && (
                     <span 
                       className="text-xs"
                       style={{ color: '#00ff88' }}
