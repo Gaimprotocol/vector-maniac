@@ -22,7 +22,11 @@ export interface VectorEnemy {
   size: number;
   health: number;
   maxHealth: number;
-  type: 'drone' | 'shooter' | 'elite' | 'bounty' | 'boss' | 'miniboss' | 'dasher' | 'splitter' | 'orbiter' | 'sniper' | 'anomaly';
+  type: 'drone' | 'shooter' | 'elite' | 'bounty' | 'boss' | 'miniboss' | 'dasher' | 'splitter' | 'orbiter' | 'sniper' | 'anomaly' 
+    // New enemy types (15 total)
+    | 'bomber' | 'shielder' | 'teleporter' | 'leech' | 'mirror' 
+    | 'pulsar' | 'swarm' | 'charger' | 'phaser' | 'vortex'
+    | 'replicator' | 'stealth' | 'titan' | 'parasite' | 'nova';
   fireTimer: number;
   behaviorTimer: number;
   targetAngle: number;
