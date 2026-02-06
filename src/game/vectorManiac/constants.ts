@@ -71,6 +71,124 @@ export const VM_CONFIG = {
   sniperAimTime: 60, // Frames to aim before shooting
   sniperUnlockMap: 20,
   
+  // ========== NEW ENEMY TYPES (15 total) ==========
+  
+  // Bomber: slow but explodes on death dealing area damage (Map 6)
+  bomberSpeed: 1.0,
+  bomberHealth: 35,
+  bomberSize: 20,
+  bomberExplosionRadius: 80,
+  bomberExplosionDamage: 15,
+  bomberUnlockMap: 6,
+  
+  // Shielder: has a frontal shield that blocks bullets (Map 8)
+  shielderSpeed: 1.5,
+  shielderHealth: 25,
+  shielderSize: 18,
+  shielderShieldArc: Math.PI * 0.6, // 108 degrees
+  shielderUnlockMap: 8,
+  
+  // Teleporter: blinks around the arena unpredictably (Map 12)
+  teleporterSpeed: 0.8,
+  teleporterHealth: 18,
+  teleporterSize: 15,
+  teleporterBlinkInterval: 90, // Frames between teleports
+  teleporterFireRate: 100,
+  teleporterUnlockMap: 12,
+  
+  // Leech: attaches to player and drains health (Map 14)
+  leechSpeed: 2.8,
+  leechHealth: 12,
+  leechSize: 12,
+  leechDrainRate: 0.5, // HP per frame when attached
+  leechUnlockMap: 14,
+  
+  // Mirror: copies player movement with delay (Map 16)
+  mirrorSpeed: 1.8,
+  mirrorHealth: 30,
+  mirrorSize: 20,
+  mirrorFireRate: 80,
+  mirrorUnlockMap: 16,
+  
+  // Pulsar: periodically emits damaging shockwaves (Map 18)
+  pulsarSpeed: 0.5,
+  pulsarHealth: 45,
+  pulsarSize: 22,
+  pulsarPulseInterval: 150, // Frames between pulses
+  pulsarPulseRadius: 100,
+  pulsarPulseDamage: 8,
+  pulsarUnlockMap: 18,
+  
+  // Swarm: tiny enemies that spawn in groups of 5 (Map 22)
+  swarmSpeed: 3.5,
+  swarmHealth: 5,
+  swarmSize: 8,
+  swarmGroupSize: 5,
+  swarmUnlockMap: 22,
+  
+  // Charger: charges up then rushes in a straight line (Map 24)
+  chargerSpeed: 0.3,
+  chargerChargeSpeed: 12,
+  chargerHealth: 28,
+  chargerSize: 19,
+  chargerChargeTime: 60, // Frames to charge
+  chargerUnlockMap: 24,
+  
+  // Phaser: phases through bullets periodically (Map 26)
+  phaserSpeed: 1.6,
+  phaserHealth: 22,
+  phaserSize: 16,
+  phaserPhaseInterval: 120,
+  phaserPhaseDuration: 40,
+  phaserFireRate: 90,
+  phaserUnlockMap: 26,
+  
+  // Vortex: pulls player and projectiles toward it (Map 28)
+  vortexSpeed: 0.4,
+  vortexHealth: 50,
+  vortexSize: 25,
+  vortexPullStrength: 0.8,
+  vortexPullRadius: 120,
+  vortexUnlockMap: 28,
+  
+  // Replicator: spawns a copy of itself at 50% health (Map 32)
+  replicatorSpeed: 1.4,
+  replicatorHealth: 35,
+  replicatorSize: 17,
+  replicatorFireRate: 110,
+  replicatorUnlockMap: 32,
+  
+  // Stealth: invisible until close to player (Map 36)
+  stealthSpeed: 2.2,
+  stealthHealth: 15,
+  stealthSize: 14,
+  stealthRevealRadius: 100,
+  stealthUnlockMap: 36,
+  
+  // Titan: huge slow enemy with massive health (Map 40)
+  titanSpeed: 0.3,
+  titanHealth: 150,
+  titanSize: 40,
+  titanFireRate: 60,
+  titanUnlockMap: 40,
+  
+  // Parasite: on death releases 3 homing mini-parasites (Map 44)
+  parasiteSpeed: 1.8,
+  parasiteHealth: 25,
+  parasiteSize: 16,
+  parasiteMiniSpeed: 4.0,
+  parasiteMiniHealth: 8,
+  parasiteMiniSize: 8,
+  parasiteUnlockMap: 44,
+  
+  // Nova: explodes into a ring of bullets on death (Map 48)
+  novaSpeed: 1.2,
+  novaHealth: 30,
+  novaSize: 18,
+  novaBulletCount: 12,
+  novaBulletSpeed: 6,
+  novaUnlockMap: 48,
+  
   // Boss config
   bossHealth: 400,
   bossSize: 60,
@@ -98,30 +216,62 @@ export const VM_CONFIG = {
   
   // Salvage - ECONOMY REBALANCE v3: Reduced rewards to encourage IAP
   salvageDropChance: {
-    drone: 0.12,                // Was 0.20 - rare drops
-    shooter: 0.12,              // Was 0.20
-    elite: 0.25,                // Was 0.40
-    bounty: 0.80,               // Was 1.0 - not guaranteed
+    drone: 0.12,
+    shooter: 0.12,
+    elite: 0.25,
+    bounty: 0.80,
     boss: 1.0,
-    miniboss: 0.80,             // Was 1.0
-    dasher: 0.08,               // Was 0.15 - fast but weak
-    splitter: 0.18,             // Was 0.30
-    orbiter: 0.15,              // Was 0.25
-    sniper: 0.20,               // Was 0.35
-    anomaly: 0.35,              // Was 0.60 - still best drop rate
+    miniboss: 0.80,
+    dasher: 0.08,
+    splitter: 0.18,
+    orbiter: 0.15,
+    sniper: 0.20,
+    anomaly: 0.35,
+    // New enemies
+    bomber: 0.20,
+    shielder: 0.18,
+    teleporter: 0.15,
+    leech: 0.10,
+    mirror: 0.22,
+    pulsar: 0.25,
+    swarm: 0.05,     // Very low per enemy, but many spawn
+    charger: 0.18,
+    phaser: 0.15,
+    vortex: 0.28,
+    replicator: 0.20,
+    stealth: 0.12,
+    titan: 0.50,     // High value target
+    parasite: 0.18,
+    nova: 0.22,
   },
   salvageValue: {
-    drone: 3,                   // Was 8
-    shooter: 4,                 // Was 12
-    elite: 8,                   // Was 25
-    bounty: 25,                 // Was 80
-    boss: 40,                   // Was 150 - major nerf
-    miniboss: 15,               // Was 50
-    dasher: 2,                  // Was 6
-    splitter: 6,                // Was 18
-    orbiter: 5,                 // Was 14
-    sniper: 6,                  // Was 16
-    anomaly: 12,                // Was 30 - still best value
+    drone: 3,
+    shooter: 4,
+    elite: 8,
+    bounty: 25,
+    boss: 40,
+    miniboss: 15,
+    dasher: 2,
+    splitter: 6,
+    orbiter: 5,
+    sniper: 6,
+    anomaly: 12,
+    // New enemies
+    bomber: 5,
+    shielder: 5,
+    teleporter: 4,
+    leech: 3,
+    mirror: 6,
+    pulsar: 7,
+    swarm: 1,        // Low value individually
+    charger: 5,
+    phaser: 4,
+    vortex: 8,
+    replicator: 6,
+    stealth: 3,
+    titan: 20,       // High value
+    parasite: 5,
+    nova: 6,
   },
   salvageDriftSpeed: 0.3,
   
