@@ -5,15 +5,15 @@ import { VM_CONFIG } from './constants';
 import { createPlayerProjectile } from './entities';
 import { distance, normalize } from './utils';
 
-// Evolution-based stat multipliers
+// Evolution-based stat multipliers - NERFED v2: Reduced power scaling
 export function getEvolutionStats(evolutionLevel: number) {
   return {
-    healthMultiplier: 1 + (evolutionLevel - 1) * 1.0, // 2x, 3x, 4x... health per level
-    damageMultiplier: 1 + (evolutionLevel - 1) * 0.25, // +25% damage per level
-    fireRateMultiplier: 1 - (evolutionLevel - 1) * 0.1, // 10% faster per level (min 0.5)
-    bulletSpeedMultiplier: 1 + (evolutionLevel - 1) * 0.15, // +15% bullet speed per level
-    pierceBonus: Math.floor((evolutionLevel - 1) / 2), // +1 pierce every 2 levels
-    sizeMultiplier: 1 + (evolutionLevel - 1) * 0.12, // 12% bigger per level
+    healthMultiplier: 1 + (evolutionLevel - 1) * 0.5, // Was 1.0 -> 1.5x, 2x, 2.5x... (not 2x, 3x, 4x)
+    damageMultiplier: 1 + (evolutionLevel - 1) * 0.12, // Was 0.25 -> +12% per level (not 25%)
+    fireRateMultiplier: 1 - (evolutionLevel - 1) * 0.05, // Was 0.1 -> 5% faster per level (not 10%)
+    bulletSpeedMultiplier: 1 + (evolutionLevel - 1) * 0.08, // Was 0.15 -> +8% per level (not 15%)
+    pierceBonus: Math.floor((evolutionLevel - 1) / 3), // Was /2 -> +1 pierce every 3 levels (not 2)
+    sizeMultiplier: 1 + (evolutionLevel - 1) * 0.08, // Was 0.12 -> 8% bigger per level
   };
 }
 
@@ -183,25 +183,27 @@ function findNearestEnemy(x: number, y: number, enemies: VectorEnemy[]): VectorE
   return nearest;
 }
 
+// Companion fire rate - NERFED: Slower base fire rates
 function getCompanionFireRate(ability: string): number {
   switch (ability) {
-    case 'shooter': return 22; // Fast fire
-    case 'leech': return 38;
-    case 'phaser': return 30;
-    case 'shield': return 45;
-    case 'splitter': return 40;
-    default: return 35;
+    case 'shooter': return 30; // Was 22
+    case 'leech': return 48; // Was 38
+    case 'phaser': return 40; // Was 30
+    case 'shield': return 55; // Was 45
+    case 'splitter': return 50; // Was 40
+    default: return 45; // Was 35
   }
 }
 
+// Companion damage - NERFED: Lower base damage
 function getCompanionDamage(ability: string): number {
   switch (ability) {
-    case 'shooter': return 10;
-    case 'leech': return 8;
-    case 'phaser': return 14;
-    case 'shield': return 6;
-    case 'splitter': return 9;
-    default: return 8;
+    case 'shooter': return 6; // Was 10
+    case 'leech': return 5; // Was 8
+    case 'phaser': return 8; // Was 14
+    case 'shield': return 4; // Was 6
+    case 'splitter': return 5; // Was 9
+    default: return 5; // Was 8
   }
 }
 
