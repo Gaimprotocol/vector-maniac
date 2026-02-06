@@ -2441,110 +2441,51 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   const centerY = arenaHeight / 2;
   const t = state.gameTime;
   
-  // Dark overlay
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
+  // Dark overlay with subtle gradient
+  const bgGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, arenaHeight * 0.7);
+  bgGrad.addColorStop(0, 'rgba(5, 15, 10, 0.95)');
+  bgGrad.addColorStop(1, 'rgba(0, 0, 0, 0.98)');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
   
-  // Animated horizontal scanlines (CRT effect)
-  ctx.strokeStyle = 'rgba(0, 255, 255, 0.02)';
-  ctx.lineWidth = 1;
-  for (let y = (t * 2) % 3; y < arenaHeight; y += 3) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(arenaWidth, y);
-    ctx.stroke();
-  }
-  
-  // Large faded map name in background
-  const mapNames = ['NEON ABYSS', 'CYBER VOID', 'QUANTUM DRIFT', 'DATA STORM', 'GRID SECTOR'];
-  const mapName = mapNames[state.currentWave % mapNames.length] || 'NEON ABYSS';
+  // Subtle horizontal scan lines
   ctx.save();
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = '#ff00ff';
-  ctx.font = 'bold 72px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(mapName.toUpperCase(), centerX, centerY + 20);
-  ctx.restore();
-  
-  // Level/Wave info faded in background
-  ctx.save();
-  ctx.globalAlpha = 0.06;
-  ctx.fillStyle = '#00ffff';
-  ctx.font = 'bold 24px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(`LEVEL ${state.currentWave || 1}  ·  WAVE`, centerX, centerY + 70);
-  ctx.restore();
-  
-  // TRON-style perspective grid floor at bottom
-  ctx.save();
-  const horizonY = arenaHeight - 120;
-  const gridPulse = Math.sin(t * 0.03) * 0.3 + 0.7;
-  
-  // Horizontal lines (receding toward horizon)
-  ctx.strokeStyle = `rgba(255, 0, 255, ${0.5 * gridPulse})`;
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 8; i++) {
-    const yOffset = i * 15;
-    const fadeAlpha = 1 - (i / 8);
-    ctx.globalAlpha = fadeAlpha * gridPulse * 0.6;
-    ctx.beginPath();
-    ctx.moveTo(0, horizonY + yOffset);
-    ctx.lineTo(arenaWidth, horizonY + yOffset);
-    ctx.stroke();
-  }
-  
-  // Vertical converging lines
-  ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 * gridPulse})`;
-  for (let i = -8; i <= 8; i++) {
-    const startX = centerX + i * 50;
-    const endX = centerX + i * 10;
-    ctx.globalAlpha = (1 - Math.abs(i) / 10) * gridPulse * 0.5;
-    ctx.beginPath();
-    ctx.moveTo(startX, arenaHeight);
-    ctx.lineTo(endX, horizonY);
-    ctx.stroke();
+  ctx.globalAlpha = 0.03;
+  for (let y = (t * 1.5) % 4; y < arenaHeight; y += 4) {
+    ctx.fillStyle = '#00ff88';
+    ctx.fillRect(0, y, arenaWidth, 1);
   }
   ctx.restore();
   
-  // Player ship silhouette at bottom center
+  // Floating particles in background
   ctx.save();
-  ctx.translate(centerX, arenaHeight - 70);
-  ctx.scale(0.6, 0.6);
+  for (let i = 0; i < 30; i++) {
+    const seed = i * 73.7;
+    const x = ((Math.sin(seed + t * 0.01) * 10000) % 1) * arenaWidth;
+    const baseY = ((Math.sin(seed * 2) * 10000) % 1) * arenaHeight;
+    const y = (baseY + t * 0.5) % arenaHeight;
+    const size = 1 + (i % 3);
+    const alpha = 0.1 + Math.sin(t * 0.05 + i) * 0.05;
+    
+    ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  
+  // Single rotating hexagon frame - simple and clean
+  ctx.save();
+  ctx.translate(centerX, centerY - 60);
+  ctx.rotate(t * 0.006);
+  
+  const hexSize = 100 + Math.sin(t * 0.03) * 5;
   ctx.strokeStyle = '#00ff88';
-  ctx.fillStyle = 'rgba(0, 255, 136, 0.2)';
-  ctx.lineWidth = 1.5;
-  ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 10;
-  // Simple triangular ship shape
-  ctx.beginPath();
-  ctx.moveTo(0, -20);
-  ctx.lineTo(-12, 15);
-  ctx.lineTo(0, 8);
-  ctx.lineTo(12, 15);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  // Engine glow
-  const enginePulse = Math.sin(t * 0.2) * 0.3 + 0.7;
-  ctx.fillStyle = `rgba(0, 255, 200, ${enginePulse * 0.6})`;
-  ctx.beginPath();
-  ctx.moveTo(-6, 12);
-  ctx.lineTo(0, 25 + Math.sin(t * 0.3) * 3);
-  ctx.lineTo(6, 12);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-  
-  // Animated rotating hexagon frame
-  ctx.save();
-  ctx.translate(centerX, centerY - 100);
-  ctx.rotate(t * 0.008);
-  const hexSize = 110 + Math.sin(t * 0.04) * 8;
-  ctx.strokeStyle = '#ff00ff';
   ctx.lineWidth = 2;
-  ctx.shadowColor = '#ff00ff';
-  ctx.shadowBlur = 25;
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 20;
+  ctx.globalAlpha = 0.8;
+  
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
@@ -2556,117 +2497,117 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.closePath();
   ctx.stroke();
   
-  // Inner counter-rotating hexagon
-  ctx.rotate(-t * 0.016);
-  const innerHexSize = 75 + Math.sin(t * 0.06) * 6;
-  ctx.strokeStyle = '#00ffff';
-  ctx.shadowColor = '#00ffff';
-  ctx.beginPath();
+  // Inner dots at each vertex
+  ctx.fillStyle = '#00ff88';
   for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2;
-    const x = Math.cos(angle) * innerHexSize;
-    const y = Math.sin(angle) * innerHexSize;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * hexSize;
+    const y = Math.sin(angle) * hexSize;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
   }
-  ctx.closePath();
-  ctx.stroke();
   ctx.restore();
   
-  // Title: "VECTOR" with gradient-like effect (magenta to cyan)
+  // Title: "VECTOR MANIAC" - clean neon green
   ctx.save();
-  ctx.shadowColor = '#ff00ff';
-  ctx.shadowBlur = 35;
-  ctx.font = 'bold 44px monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
-  // Gradient simulation for VECTOR
-  const vectorGrad = ctx.createLinearGradient(centerX - 80, 0, centerX + 80, 0);
-  vectorGrad.addColorStop(0, '#ff44aa');
-  vectorGrad.addColorStop(0.5, '#ff00ff');
-  vectorGrad.addColorStop(1, '#aa44ff');
-  ctx.fillStyle = vectorGrad;
-  ctx.fillText('VECTOR', centerX, centerY - 130);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.lineWidth = 0.5;
-  ctx.strokeText('VECTOR', centerX, centerY - 130);
+  // Main title with glow
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 42px monospace';
+  ctx.fillText('VECTOR', centerX, centerY - 90);
+  ctx.fillText('MANIAC', centerX, centerY - 40);
   
-  // "MANIAC" with cyan gradient
-  ctx.shadowColor = '#00ffff';
-  ctx.shadowBlur = 35;
-  const maniacGrad = ctx.createLinearGradient(centerX - 80, 0, centerX + 80, 0);
-  maniacGrad.addColorStop(0, '#00ffff');
-  maniacGrad.addColorStop(0.5, '#44ffff');
-  maniacGrad.addColorStop(1, '#00aaff');
-  ctx.fillStyle = maniacGrad;
-  ctx.fillText('MANIAC', centerX, centerY - 80);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.strokeText('MANIAC', centerX, centerY - 80);
+  // White outline for depth
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.lineWidth = 0.5;
+  ctx.strokeText('VECTOR', centerX, centerY - 90);
+  ctx.strokeText('MANIAC', centerX, centerY - 40);
   ctx.restore();
   
-  // Subtitle with tech style
-  ctx.fillStyle = '#666666';
-  ctx.font = '9px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('[ TACTICAL ARENA COMBAT SYSTEM v2.0 ]', centerX, centerY - 40);
+  // Minimal corner accents
+  ctx.save();
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 10;
+  ctx.globalAlpha = 0.6;
   
-  // Animated status text with neon green
-  const phase = Math.floor(t / 70) % 3;
-  const blink = Math.sin(t * 0.12) > 0;
+  const cornerSize = 30;
+  const margin = 40;
+  
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(margin, margin + cornerSize);
+  ctx.lineTo(margin, margin);
+  ctx.lineTo(margin + cornerSize, margin);
+  ctx.stroke();
+  
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(arenaWidth - margin - cornerSize, margin);
+  ctx.lineTo(arenaWidth - margin, margin);
+  ctx.lineTo(arenaWidth - margin, margin + cornerSize);
+  ctx.stroke();
+  
+  // Bottom-left
+  ctx.beginPath();
+  ctx.moveTo(margin, arenaHeight - margin - cornerSize);
+  ctx.lineTo(margin, arenaHeight - margin);
+  ctx.lineTo(margin + cornerSize, arenaHeight - margin);
+  ctx.stroke();
+  
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(arenaWidth - margin - cornerSize, arenaHeight - margin);
+  ctx.lineTo(arenaWidth - margin, arenaHeight - margin);
+  ctx.lineTo(arenaWidth - margin, arenaHeight - margin - cornerSize);
+  ctx.stroke();
+  ctx.restore();
+  
+  // Status text - cycling through states
+  const phase = Math.floor(t / 60) % 3;
+  const blink = Math.sin(t * 0.15) > 0;
   
   ctx.save();
+  ctx.textAlign = 'center';
   ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = blink ? 15 : 5;
+  ctx.shadowBlur = blink ? 12 : 4;
   ctx.fillStyle = blink ? '#00ff88' : 'rgba(0, 255, 136, 0.5)';
-  ctx.font = 'bold 16px monospace';
+  ctx.font = 'bold 14px monospace';
   
-  const statusTexts = ['>> SYSTEMS ONLINE <<', '>> WEAPONS HOT <<', '>> ENGAGE <<'];
-  ctx.fillText(statusTexts[phase], centerX, centerY + 10);
+  const statusTexts = ['INITIALIZING...', 'SYSTEMS ONLINE', 'READY'];
+  ctx.fillText(statusTexts[phase], centerX, centerY + 30);
   ctx.restore();
   
-  // Bottom progress bar - magenta style
-  const barY = arenaHeight - 35;
-  const barWidth = arenaWidth - 80;
-  const barHeight = 6;
+  // Simple progress bar at bottom
+  const barY = arenaHeight - 50;
+  const barWidth = 200;
+  const barHeight = 4;
+  const barX = centerX - barWidth / 2;
   const loadProgress = Math.min(1, t / 120);
   
-  // Thin magenta line at very bottom
-  ctx.strokeStyle = '#ff00ff';
-  ctx.lineWidth = 2;
-  ctx.shadowColor = '#ff00ff';
+  // Bar background
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.2)';
+  ctx.fillRect(barX, barY, barWidth, barHeight);
+  
+  // Bar fill
+  ctx.fillStyle = '#00ff88';
+  ctx.shadowColor = '#00ff88';
   ctx.shadowBlur = 8;
-  ctx.beginPath();
-  ctx.moveTo(40, arenaHeight - 8);
-  ctx.lineTo(arenaWidth - 40, arenaHeight - 8);
-  ctx.stroke();
+  ctx.fillRect(barX, barY, barWidth * loadProgress, barHeight);
   ctx.shadowBlur = 0;
   
-  // Progress bar background
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-  ctx.fillRect(40, barY, barWidth, barHeight);
-  
-  // Progress bar border
-  ctx.strokeStyle = '#00ff88';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(40, barY, barWidth, barHeight);
-  
-  // Progress bar fill
-  const progressWidth = (barWidth - 2) * loadProgress;
-  if (progressWidth > 0) {
-    const gradient = ctx.createLinearGradient(41, barY, 41 + progressWidth, barY);
-    gradient.addColorStop(0, '#00aa66');
-    gradient.addColorStop(0.5, '#00ff88');
-    gradient.addColorStop(1, '#66ffaa');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(41, barY + 1, progressWidth, barHeight - 2);
-  }
-  
-  // Status text
-  ctx.fillStyle = '#00ff88';
-  ctx.font = '8px monospace';
+  // Instructions text
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.6)';
+  ctx.font = '10px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('DRAG TO NAVIGATE // MOVEMENT = FIRE', centerX, barY - 8);
+  ctx.fillText('DRAG TO MOVE • AUTO-FIRE', centerX, barY + 20);
 }
 
 function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
