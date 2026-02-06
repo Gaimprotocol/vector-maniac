@@ -2580,7 +2580,7 @@ function completeWave(state: VectorState): VectorState {
     
     // Show new map name
     newState.showMapName = true;
-    newState.mapNameTimer = 156; // ~2.6 seconds (same as wave complete)
+    newState.mapNameTimer = 240; // ~4 seconds with smooth fade in/out
     
     // Visual anomaly chance - procedurally generated backgrounds (starts map 5+, increases with progression)
     const bgAnomalyChance = newState.currentMap >= 5 ? Math.min(0.25, 0.05 + newState.currentMap * 0.004) : 0;
