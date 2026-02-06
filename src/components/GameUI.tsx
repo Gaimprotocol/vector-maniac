@@ -37,31 +37,48 @@ export const GameUI: React.FC<GameUIProps> = ({
 }) => {
   const { player, score, highScore, rescuedCount, state } = gameData;
   const [activationEffects, setActivationEffects] = useState<ActivationEffect[]>([]);
-  const [mapNameVisible, setMapNameVisible] = useState(false);
+  const [mapNamePhase, setMapNamePhase] = useState<'hidden' | 'fading-in' | 'visible' | 'fading-out'>('hidden');
   const [lastMapId, setLastMapId] = useState<number | null>(null);
   
   // Get current map info
   const currentMap = MAPS.find(m => m.id === gameData.currentMapId) || MAPS[0];
   const mapNameColor = MAP_NAME_COLORS[(gameData.currentMapId - 1) % MAP_NAME_COLORS.length];
   
-  // Pop-in animation when map changes - delay after entering phase
+  // Map name animation: fade in → stay visible → fade out
   useEffect(() => {
     // Hide during entering phase
     if (state !== 'playing') {
-      setMapNameVisible(false);
+      setMapNamePhase('hidden');
       setLastMapId(null);
       return;
     }
     
-    // Fade in after entering animation is complete (with delay)
+    // Trigger animation when map changes
     if (gameData.currentMapId !== lastMapId && state === 'playing') {
-      setMapNameVisible(false);
-      // Longer delay to ensure entering overlay is gone (enters for ~2 seconds)
-      const timer = setTimeout(() => {
-        setMapNameVisible(true);
-        setLastMapId(gameData.currentMapId);
-      }, 500);
-      return () => clearTimeout(timer);
+      setMapNamePhase('hidden');
+      setLastMapId(gameData.currentMapId);
+      
+      // Delay before starting fade-in (after entering overlay is gone)
+      const fadeInDelay = setTimeout(() => {
+        setMapNamePhase('fading-in');
+        
+        // After fade-in completes, set to visible
+        setTimeout(() => {
+          setMapNamePhase('visible');
+          
+          // Stay visible for 2.5 seconds, then fade out
+          setTimeout(() => {
+            setMapNamePhase('fading-out');
+            
+            // After fade-out, hide completely
+            setTimeout(() => {
+              setMapNamePhase('hidden');
+            }, 800); // fade-out duration
+          }, 2500); // visible duration
+        }, 800); // fade-in duration
+      }, 500); // initial delay
+      
+      return () => clearTimeout(fadeInDelay);
     }
   }, [gameData.currentMapId, lastMapId, state]);
   
@@ -108,8 +125,10 @@ export const GameUI: React.FC<GameUIProps> = ({
         {/* Center - Map Name */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
           <div 
-            className={`transition-all duration-300 ${
-              mapNameVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+            className={`transition-all duration-[800ms] ease-in-out ${
+              mapNamePhase === 'fading-in' || mapNamePhase === 'visible'
+                ? 'opacity-100 scale-100' 
+                : 'opacity-0 scale-90'
             }`}
             style={{
               color: mapNameColor,
