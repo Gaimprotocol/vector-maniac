@@ -251,16 +251,18 @@ export function useBestiaryRewards() {
     });
   }, []);
 
-  // Calculate evolution cost - ECONOMY v3: Increased costs
+  // Calculate evolution cost - ECONOMY v4: Exponential costs to prevent easy power creep
   const getEvolutionCost = useCallback((seeds: number[]): number => {
     if (seeds.length !== 2) return 0;
     const comps = seeds.map(s => companions.find(c => c.seed === s)).filter(Boolean) as Companion[];
     if (comps.length !== 2) return 0;
     
-    // Base cost + bonus for evolution levels (was 150 + 50/level)
-    const baseCost = 300;
-    const levelBonus = comps.reduce((sum, c) => sum + (c.evolutionLevel || 1) * 100, 0);
-    return baseCost + levelBonus;
+    // Base cost with exponential scaling for higher levels
+    const maxLevel = Math.max(comps[0].evolutionLevel || 1, comps[1].evolutionLevel || 1);
+    const baseCost = 500; // Was 300
+    // Exponential: 500, 1000, 2000, 4000, 8000... for each level
+    const levelMultiplier = Math.pow(2, maxLevel - 1);
+    return Math.floor(baseCost * levelMultiplier);
   }, [companions]);
 
   // Evolve two companions into a stronger one

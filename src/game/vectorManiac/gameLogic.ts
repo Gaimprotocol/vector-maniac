@@ -361,7 +361,13 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
         newState.bossWarningTimer--;
       } else if (shouldSpawnBossNow) {
         const boss = createBoss(newState.currentMap, newState.currentLevel);
-        boss.health *= newState.difficultyMultiplier;
+        // Scale boss health with companion evolution level (if companion exists)
+        let companionScaling = 1.0;
+        if (newState.companion) {
+          // Bosses get +15% health per companion evolution level
+          companionScaling = 1 + (newState.companion.evolutionLevel - 1) * 0.15;
+        }
+        boss.health *= newState.difficultyMultiplier * companionScaling;
         boss.maxHealth = boss.health;
         newState.enemies = [...newState.enemies, boss];
         newState.bossActive = true;
@@ -370,10 +376,14 @@ function updatePlayingPhaseCore(state: VectorState, input: VectorInput, spawnEne
       } else if (shouldSpawnMiniBoss) {
         // Spawn mini-boss in middle of longer maps
         const miniboss = createMiniBoss(newState.playerX, newState.playerY, newState.currentMap);
-        // Scale with difficulty
+        // Scale with difficulty + companion scaling
         const levelScaling = 1 + (newState.currentLevel - 1) * (VM_CONFIG.levelDifficultyMultiplier - 1);
         const mapScaling = 1 + (newState.currentMap - 1) * VM_CONFIG.enemyHealthPerMap;
-        miniboss.health *= newState.difficultyMultiplier * levelScaling * mapScaling;
+        let companionScaling = 1.0;
+        if (newState.companion) {
+          companionScaling = 1 + (newState.companion.evolutionLevel - 1) * 0.15;
+        }
+        miniboss.health *= newState.difficultyMultiplier * levelScaling * mapScaling * companionScaling;
         miniboss.maxHealth = miniboss.health;
         newState.enemies = [...newState.enemies, miniboss];
         newState.soundQueue = [...newState.soundQueue, 'elite']; // Use elite sound as warning
