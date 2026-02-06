@@ -44,14 +44,23 @@ export const GameUI: React.FC<GameUIProps> = ({
   const currentMap = MAPS.find(m => m.id === gameData.currentMapId) || MAPS[0];
   const mapNameColor = MAP_NAME_COLORS[(gameData.currentMapId - 1) % MAP_NAME_COLORS.length];
   
-  // Pop-in animation when map changes
+  // Pop-in animation when map changes - delay after entering phase
   useEffect(() => {
+    // Hide during entering phase
+    if (state !== 'playing') {
+      setMapNameVisible(false);
+      setLastMapId(null);
+      return;
+    }
+    
+    // Fade in after entering animation is complete (with delay)
     if (gameData.currentMapId !== lastMapId && state === 'playing') {
       setMapNameVisible(false);
+      // Longer delay to ensure entering overlay is gone (enters for ~2 seconds)
       const timer = setTimeout(() => {
         setMapNameVisible(true);
         setLastMapId(gameData.currentMapId);
-      }, 50);
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [gameData.currentMapId, lastMapId, state]);
