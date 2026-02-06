@@ -185,7 +185,11 @@ export const BestiaryScreen: React.FC = () => {
   const [selectedForEvolution, setSelectedForEvolution] = useState<number[]>([]);
   const [insufficientPopup, setInsufficientPopup] = useState<{ itemName: string; cost: number } | null>(null);
   
-  const sortedEnemyEntries = [...enemyEntries].sort((a, b) => b.discoveredAt - a.discoveredAt);
+  // Filter out creatures that have been recruited as companions
+  const companionSeeds = new Set(companions.map(c => c.seed));
+  const sortedEnemyEntries = [...enemyEntries]
+    .filter(e => !companionSeeds.has(e.seed)) // Exclude recruited allies
+    .sort((a, b) => b.discoveredAt - a.discoveredAt);
   const sortedBackgroundEntries = [...visualEntries].filter(e => e.type === 'background').sort((a, b) => b.discoveredAt - a.discoveredAt);
   const sortedHyperspaceEntries = [...visualEntries].filter(e => e.type === 'hyperspace').sort((a, b) => b.discoveredAt - a.discoveredAt);
 
