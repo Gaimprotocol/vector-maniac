@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePurchases } from '@/hooks/usePurchases';
-import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, CheckIcon, BestiaryIcon, ArenaIcon } from './VectorIcons';
+import { StoreIcon, SettingsIcon, InfoIcon, ShipIcon, BestiaryIcon, ArenaIcon } from './VectorIcons';
 import { DailyBonusButton } from './DailyBonusButton';
 
 interface MenuScreenProps {
@@ -21,9 +21,6 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
   });
   const [showContent, setShowContent] = useState(() => {
     return sessionStorage.getItem('menuEntered') === 'true';
-  });
-  const [bonusMapsEnabled, setBonusMapsEnabled] = useState(() => {
-    return localStorage.getItem('bonusMapsEnabled') !== 'false';
   });
   const fadeIntervalRef = useRef<number | null>(null);
   
@@ -85,12 +82,6 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
     }
   };
 
-  const toggleBonusMaps = () => {
-    if (!hasGoldenSkin()) return;
-    const newValue = !bonusMapsEnabled;
-    setBonusMapsEnabled(newValue);
-    localStorage.setItem('bonusMapsEnabled', String(newValue));
-  };
 
   return (
     <div 
@@ -266,32 +257,6 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({ highScore, onStart, onSt
           </button>
         </div>
 
-        {/* Bonus Maps Toggle */}
-        <button
-          className={`text-[9px] border rounded px-5 py-2 mb-4
-                      transition-all duration-300 flex items-center gap-2 ${
-                        !hasGoldenSkin()
-                          ? 'text-[#00ff88]/30 border-[#00ff88]/15 cursor-not-allowed opacity-50'
-                          : bonusMapsEnabled 
-                            ? 'text-[#00ff88] border-[#00ff88]/50 hover:border-[#00ff88] hover:bg-[#00ff88]/10' 
-                            : 'text-[#00ff88]/50 border-[#00ff88]/30 hover:border-[#00ff88]/60'
-                      }`}
-          style={{ 
-            fontFamily: 'Orbitron, monospace',
-            boxShadow: hasGoldenSkin() && bonusMapsEnabled ? '0 0 15px rgba(0, 255, 136, 0.15)' : 'none',
-          }}
-          onClick={toggleBonusMaps}
-          disabled={!hasGoldenSkin()}
-          title={!hasGoldenSkin() ? 'Requires Ultimate Edition' : undefined}
-        >
-          {!hasGoldenSkin() ? (
-            <>BONUS MAPS</>
-          ) : bonusMapsEnabled ? (
-            <><CheckIcon size={10} /> BONUS MAPS ON</>
-          ) : (
-            <>BONUS MAPS OFF</>
-          )}
-        </button>
 
         {/* Daily Bonus */}
         <div className="mb-4">
