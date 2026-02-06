@@ -2441,50 +2441,96 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   const centerY = arenaHeight / 2;
   const t = state.gameTime;
   
-  // Dark overlay with subtle gradient
-  const bgGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, arenaHeight * 0.7);
-  bgGrad.addColorStop(0, 'rgba(5, 15, 10, 0.95)');
-  bgGrad.addColorStop(1, 'rgba(0, 0, 0, 0.98)');
+  // Deep space background with radial gradient
+  const bgGrad = ctx.createRadialGradient(centerX, centerY - 100, 0, centerX, centerY, arenaHeight);
+  bgGrad.addColorStop(0, 'rgba(0, 30, 20, 0.98)');
+  bgGrad.addColorStop(0.5, 'rgba(0, 10, 8, 0.99)');
+  bgGrad.addColorStop(1, 'rgba(0, 0, 0, 1)');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, arenaWidth, arenaHeight);
   
-  // Subtle horizontal scan lines
+  // Animated star field
   ctx.save();
-  ctx.globalAlpha = 0.03;
-  for (let y = (t * 1.5) % 4; y < arenaHeight; y += 4) {
-    ctx.fillStyle = '#00ff88';
-    ctx.fillRect(0, y, arenaWidth, 1);
-  }
-  ctx.restore();
-  
-  // Floating particles in background
-  ctx.save();
-  for (let i = 0; i < 30; i++) {
-    const seed = i * 73.7;
-    const x = ((Math.sin(seed + t * 0.01) * 10000) % 1) * arenaWidth;
-    const baseY = ((Math.sin(seed * 2) * 10000) % 1) * arenaHeight;
-    const y = (baseY + t * 0.5) % arenaHeight;
-    const size = 1 + (i % 3);
-    const alpha = 0.1 + Math.sin(t * 0.05 + i) * 0.05;
+  for (let i = 0; i < 80; i++) {
+    const seed = i * 137.5;
+    const x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+    const y = ((Math.cos(seed * 0.7) * 10000) % 1) * arenaHeight;
+    const twinkle = Math.sin(t * 0.1 + i * 0.5) * 0.5 + 0.5;
+    const size = 1 + (i % 3) * 0.5;
     
-    ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+    ctx.fillStyle = `rgba(0, 255, 136, ${0.2 + twinkle * 0.4})`;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
   
-  // Single rotating hexagon frame - simple and clean
+  // Horizontal scan lines (CRT effect)
   ctx.save();
-  ctx.translate(centerX, centerY - 60);
-  ctx.rotate(t * 0.006);
+  ctx.globalAlpha = 0.04;
+  for (let y = (t * 2) % 3; y < arenaHeight; y += 3) {
+    ctx.fillStyle = '#00ff88';
+    ctx.fillRect(0, y, arenaWidth, 1);
+  }
+  ctx.restore();
   
-  const hexSize = 100 + Math.sin(t * 0.03) * 5;
+  // Rising energy particles
+  ctx.save();
+  for (let i = 0; i < 25; i++) {
+    const seed = i * 97.3;
+    const x = ((Math.sin(seed) * 10000) % 1) * arenaWidth;
+    const speed = 0.5 + (i % 5) * 0.3;
+    const y = arenaHeight - ((t * speed + seed * 100) % arenaHeight);
+    const size = 2 + Math.sin(t * 0.1 + i) * 1;
+    const alpha = 0.3 * (1 - y / arenaHeight);
+    
+    ctx.fillStyle = `rgba(0, 255, 200, ${alpha})`;
+    ctx.shadowColor = '#00ffaa';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  
+  // Outer rotating ring with segments
+  ctx.save();
+  ctx.translate(centerX, centerY - 40);
+  ctx.rotate(t * 0.004);
+  
+  const outerRadius = 160;
+  ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(0, 0, outerRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Rotating dashes on outer ring
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const pulse = Math.sin(t * 0.08 + i) * 0.3 + 0.7;
+    ctx.strokeStyle = `rgba(0, 255, 136, ${pulse * 0.6})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, outerRadius, angle, angle + 0.15);
+    ctx.stroke();
+  }
+  ctx.restore();
+  
+  // Main hexagon - pulsing and rotating
+  ctx.save();
+  ctx.translate(centerX, centerY - 40);
+  ctx.rotate(-t * 0.008);
+  
+  const hexPulse = Math.sin(t * 0.04) * 8;
+  const hexSize = 100 + hexPulse;
+  
+  // Outer glow hexagon
   ctx.strokeStyle = '#00ff88';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
   ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 20;
-  ctx.globalAlpha = 0.8;
+  ctx.shadowBlur = 40;
+  ctx.globalAlpha = 0.9;
   
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
@@ -2497,40 +2543,75 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.closePath();
   ctx.stroke();
   
-  // Inner dots at each vertex
-  ctx.fillStyle = '#00ff88';
+  // Inner hexagon
+  ctx.rotate(t * 0.012);
+  const innerHex = 60 + hexPulse * 0.5;
+  ctx.strokeStyle = '#00ffaa';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 25;
+  ctx.beginPath();
   for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
+    const angle = (i / 6) * Math.PI * 2;
+    const x = Math.cos(angle) * innerHex;
+    const y = Math.sin(angle) * innerHex;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  
+  // Vertex dots with trails
+  ctx.fillStyle = '#00ff88';
+  ctx.shadowBlur = 15;
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 - Math.PI / 2 - t * 0.008;
     const x = Math.cos(angle) * hexSize;
     const y = Math.sin(angle) * hexSize;
+    const dotSize = 5 + Math.sin(t * 0.1 + i) * 2;
     ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.arc(x, y, dotSize, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
   
-  // Title: "VECTOR MANIAC" - clean neon green
+  // Center core - pulsing energy
+  ctx.save();
+  ctx.translate(centerX, centerY - 40);
+  const corePulse = Math.sin(t * 0.06) * 0.3 + 0.7;
+  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 40);
+  coreGrad.addColorStop(0, `rgba(0, 255, 200, ${corePulse * 0.4})`);
+  coreGrad.addColorStop(0.5, `rgba(0, 255, 136, ${corePulse * 0.2})`);
+  coreGrad.addColorStop(1, 'rgba(0, 255, 136, 0)');
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  
+  // Title: "VECTOR MANIAC" - epic glow
   ctx.save();
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
-  // Main title with glow
-  ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 30;
-  ctx.fillStyle = '#00ff88';
-  ctx.font = 'bold 42px monospace';
-  ctx.fillText('VECTOR', centerX, centerY - 90);
-  ctx.fillText('MANIAC', centerX, centerY - 40);
+  const titleY = centerY + 100;
+  const titlePulse = Math.sin(t * 0.05) * 5 + 25;
   
-  // White outline for depth
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-  ctx.lineWidth = 0.5;
-  ctx.strokeText('VECTOR', centerX, centerY - 90);
-  ctx.strokeText('MANIAC', centerX, centerY - 40);
+  // Heavy outer glow
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = titlePulse;
+  ctx.fillStyle = '#00ff88';
+  ctx.font = 'bold 52px monospace';
+  ctx.fillText('VECTOR', centerX, titleY);
+  ctx.fillText('MANIAC', centerX, titleY + 55);
+  
+  // Bright core
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = '#aaffcc';
+  ctx.fillText('VECTOR', centerX, titleY);
+  ctx.fillText('MANIAC', centerX, titleY + 55);
   ctx.restore();
   
-  // Minimal corner accents
+  // Decorative lines extending from title
   ctx.save();
   ctx.strokeStyle = '#00ff88';
   ctx.lineWidth = 2;
@@ -2538,8 +2619,44 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.shadowBlur = 10;
   ctx.globalAlpha = 0.6;
   
-  const cornerSize = 30;
-  const margin = 40;
+  const lineY = titleY + 85;
+  const lineWidth = 120 + Math.sin(t * 0.03) * 20;
+  
+  // Left line
+  ctx.beginPath();
+  ctx.moveTo(centerX - 180, lineY);
+  ctx.lineTo(centerX - 180 + lineWidth, lineY);
+  ctx.stroke();
+  
+  // Right line
+  ctx.beginPath();
+  ctx.moveTo(centerX + 180, lineY);
+  ctx.lineTo(centerX + 180 - lineWidth, lineY);
+  ctx.stroke();
+  
+  // Diamond accent in center
+  ctx.fillStyle = '#00ff88';
+  ctx.beginPath();
+  ctx.moveTo(centerX, lineY - 6);
+  ctx.lineTo(centerX + 6, lineY);
+  ctx.lineTo(centerX, lineY + 6);
+  ctx.lineTo(centerX - 6, lineY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  
+  // Corner brackets - animated
+  ctx.save();
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 12;
+  
+  const cornerAnim = Math.sin(t * 0.03) * 5;
+  const cornerSize = 40 + cornerAnim;
+  const margin = 35;
+  
+  ctx.globalAlpha = 0.8;
   
   // Top-left
   ctx.beginPath();
@@ -2570,44 +2687,60 @@ function renderEnteringOverlay(ctx: CanvasRenderingContext2D, state: VectorState
   ctx.stroke();
   ctx.restore();
   
-  // Status text - cycling through states
-  const phase = Math.floor(t / 60) % 3;
-  const blink = Math.sin(t * 0.15) > 0;
+  // Status text - cycling with glitch effect
+  const phase = Math.floor(t / 50) % 4;
+  const blink = Math.sin(t * 0.2) > 0;
+  const glitch = Math.random() > 0.95;
   
   ctx.save();
   ctx.textAlign = 'center';
   ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = blink ? 12 : 4;
-  ctx.fillStyle = blink ? '#00ff88' : 'rgba(0, 255, 136, 0.5)';
-  ctx.font = 'bold 14px monospace';
+  ctx.shadowBlur = blink ? 15 : 6;
+  ctx.fillStyle = blink ? '#00ff88' : 'rgba(0, 255, 136, 0.6)';
+  ctx.font = 'bold 16px monospace';
   
-  const statusTexts = ['INITIALIZING...', 'SYSTEMS ONLINE', 'READY'];
-  ctx.fillText(statusTexts[phase], centerX, centerY + 30);
+  const statusTexts = ['INITIALIZING SYSTEMS...', 'LOADING WEAPONS...', 'CALIBRATING SENSORS...', '>> READY <<'];
+  const statusText = glitch ? '█░▓█░▒▓█░' : statusTexts[phase];
+  ctx.fillText(statusText, centerX, arenaHeight - 100);
   ctx.restore();
   
-  // Simple progress bar at bottom
-  const barY = arenaHeight - 50;
-  const barWidth = 200;
-  const barHeight = 4;
+  // Progress bar - sleek design
+  const barY = arenaHeight - 60;
+  const barWidth = 280;
+  const barHeight = 6;
   const barX = centerX - barWidth / 2;
   const loadProgress = Math.min(1, t / 120);
   
   // Bar background
-  ctx.fillStyle = 'rgba(0, 255, 136, 0.2)';
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.15)';
   ctx.fillRect(barX, barY, barWidth, barHeight);
   
-  // Bar fill
-  ctx.fillStyle = '#00ff88';
+  // Bar border
+  ctx.strokeStyle = 'rgba(0, 255, 136, 0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX, barY, barWidth, barHeight);
+  
+  // Bar fill with gradient
+  const barGrad = ctx.createLinearGradient(barX, 0, barX + barWidth * loadProgress, 0);
+  barGrad.addColorStop(0, '#00aa66');
+  barGrad.addColorStop(0.5, '#00ff88');
+  barGrad.addColorStop(1, '#00ffaa');
+  ctx.fillStyle = barGrad;
   ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 10;
   ctx.fillRect(barX, barY, barWidth * loadProgress, barHeight);
   ctx.shadowBlur = 0;
   
-  // Instructions text
-  ctx.fillStyle = 'rgba(0, 255, 136, 0.6)';
-  ctx.font = '10px monospace';
+  // End caps
+  ctx.fillStyle = '#00ff88';
+  ctx.fillRect(barX - 8, barY - 2, 4, barHeight + 4);
+  ctx.fillRect(barX + barWidth + 4, barY - 2, 4, barHeight + 4);
+  
+  // Instructions
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.5)';
+  ctx.font = '11px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('DRAG TO MOVE • AUTO-FIRE', centerX, barY + 20);
+  ctx.fillText('◆ DRAG TO MOVE • AUTO-FIRE ◆', centerX, arenaHeight - 35);
 }
 
 function renderWaveCompleteOverlay(ctx: CanvasRenderingContext2D, state: VectorState): void {
