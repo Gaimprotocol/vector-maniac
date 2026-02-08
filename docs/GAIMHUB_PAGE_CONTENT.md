@@ -26,7 +26,7 @@ Vector Maniac is a fast-paced mobile arcade game featuring:
 - Endless survival and arena battle modes
 - Deep progression with upgrades and companions
 
-Built using a **human-led AI automation pipeline** — combining Lovable for code generation, Suno for audio, and iterative AI-assisted design refinement.
+Built using a **human-led AI automation pipeline** — combining AI code generation, Suno for audio, and iterative AI-assisted design refinement.
 
 ---
 
@@ -35,7 +35,7 @@ Built using a **human-led AI automation pipeline** — combining Lovable for cod
 ### Human-Led AI Development
 This project explores the frontier of AI-assisted game development:
 
-**Code Generation** — Using Lovable to rapidly prototype and iterate on React/TypeScript codebase
+**Code Generation** — Using AI-assisted tools to rapidly prototype and iterate on React/TypeScript codebase
 
 **Audio Creation** — Soundtrack and sound effects generated with Suno AI
 
