@@ -4,66 +4,84 @@
  * This file initializes all native services (RevenueCat, AdMob) when the app starts.
  * 
  * CONFIGURATION:
- * Before releasing your app, you need to:
- * 1. Replace the RevenueCat API key with your production key
- * 2. Replace AdMob test IDs with your production ad unit IDs
- * 3. Set useTestAds to false
+ * Set environment variables in .env file (see .env.example for template).
+ * The app will work in demo mode if keys are not provided.
  */
 
 import { revenueCatService } from './revenueCat';
 import { adMobService } from './admob';
 
-// Configuration flags
-const IS_PRODUCTION = true; // Production build
-
-// AdMob is enabled - GADApplicationIdentifier must be set in Info.plist
-// App ID: ca-app-pub-3616241599002222~3878458185
-const ENABLE_ADMOB = true;
-
-// RevenueCat API Keys
-const REVENUECAT_API_KEY = {
-  ios: 'appl_WYUgtghbTtNmCRXZbKGhefiaTeO',
-  android: 'test_rJViXzVPJPXDliAvECqwBSLYDfn', // Update when you have Android key
+// Check if we have valid configuration from environment
+const getEnvVar = (key: string): string => {
+  const value = import.meta.env[key];
+  return typeof value === 'string' && value.length > 0 && !value.startsWith('your_') ? value : '';
 };
 
-// AdMob Configuration
-const ADMOB_CONFIG = {
-  useTestAds: false,
-  iosRewardedAdUnitId: 'ca-app-pub-3616241599002222/2301915963',
-  iosInterstitialAdUnitId: '', // Not used
-  androidRewardedAdUnitId: '', // Update when you have Android key
-  androidInterstitialAdUnitId: '', // Not used
+// RevenueCat API Keys from environment
+const REVENUECAT_IOS_KEY = getEnvVar('VITE_REVENUECAT_IOS_KEY');
+const REVENUECAT_ANDROID_KEY = getEnvVar('VITE_REVENUECAT_ANDROID_KEY');
+
+// AdMob Configuration from environment
+const ADMOB_IOS_REWARDED = getEnvVar('VITE_ADMOB_IOS_REWARDED_ID');
+const ADMOB_ANDROID_REWARDED = getEnvVar('VITE_ADMOB_ANDROID_REWARDED_ID');
+const ENABLE_ADS = getEnvVar('VITE_ENABLE_ADS') !== 'false';
+const USE_TEST_ADS = getEnvVar('VITE_USE_TEST_ADS') === 'true';
+
+// Demo mode detection
+export const isDemoMode = (): boolean => {
+  // Demo mode if no RevenueCat keys are configured
+  const hasRevenueCat = REVENUECAT_IOS_KEY || REVENUECAT_ANDROID_KEY;
+  const hasAdMob = ADMOB_IOS_REWARDED || ADMOB_ANDROID_REWARDED;
+  return !hasRevenueCat && !hasAdMob;
 };
 
 /**
  * Initialize all native services
  * Call this once when your app starts (e.g., in App.tsx or main.tsx)
+ * 
+ * Fails gracefully if keys are not configured - app will work in demo mode.
  */
 export async function initializeNativeServices(): Promise<void> {
   console.log('[NativeServices] Initializing...');
-
-  // Initialize RevenueCat
-  try {
-    const platform = revenueCatService.isNativePlatform() 
-      ? (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') ? 'ios' : 'android')
-      : 'android';
-    
-    await revenueCatService.initialize({
-      apiKey: REVENUECAT_API_KEY[platform as 'ios' | 'android'],
-    });
-  } catch (error) {
-    console.error('[NativeServices] RevenueCat initialization failed:', error);
+  
+  if (isDemoMode()) {
+    console.log('[NativeServices] Running in demo mode (no API keys configured)');
+    return;
   }
 
-  // Initialize AdMob
-  if (ENABLE_ADMOB) {
+  // Initialize RevenueCat if key is available
+  const revenueCatKey = navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')
+    ? REVENUECAT_IOS_KEY
+    : REVENUECAT_ANDROID_KEY;
+    
+  if (revenueCatKey) {
     try {
-      await adMobService.initialize(ADMOB_CONFIG);
+      await revenueCatService.initialize({ apiKey: revenueCatKey });
     } catch (error) {
-      console.error('[NativeServices] AdMob initialization failed:', error);
+      console.warn('[NativeServices] RevenueCat initialization skipped:', error);
     }
   } else {
-    console.log('[NativeServices] AdMob disabled (missing iOS GADApplicationIdentifier)');
+    console.log('[NativeServices] RevenueCat: No API key configured');
+  }
+
+  // Initialize AdMob if enabled and keys available
+  if (ENABLE_ADS) {
+    const hasAdMobKeys = ADMOB_IOS_REWARDED || ADMOB_ANDROID_REWARDED;
+    if (hasAdMobKeys) {
+      try {
+        await adMobService.initialize({
+          useTestAds: USE_TEST_ADS,
+          iosRewardedAdUnitId: ADMOB_IOS_REWARDED,
+          androidRewardedAdUnitId: ADMOB_ANDROID_REWARDED,
+        });
+      } catch (error) {
+        console.warn('[NativeServices] AdMob initialization skipped:', error);
+      }
+    } else {
+      console.log('[NativeServices] AdMob: No ad unit IDs configured');
+    }
+  } else {
+    console.log('[NativeServices] AdMob: Disabled via VITE_ENABLE_ADS');
   }
 
   console.log('[NativeServices] Initialization complete');
