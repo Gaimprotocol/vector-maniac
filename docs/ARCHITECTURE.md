@@ -1,53 +1,97 @@
-# Vector Maniac - Architecture Overview
+# Vector Maniac — Technical Architecture
+
+## Overview
+
+Vector Maniac is a mobile-first arcade shooter built with React and Canvas 2D. The game runs at 60fps using requestAnimationFrame with a pure functional state update pattern.
+
+---
 
 ## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      React Application                       │
+│                        React App                            │
 ├─────────────────────────────────────────────────────────────┤
-│  Pages (Index, Shop, Arena, Bestiary, Info, Equipment)      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │   Screens   │  │  Game Loop  │  │   Native Services   │  │
+│  │  (React)    │  │  (Canvas)   │  │  (Capacitor)        │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
+│         │                │                    │             │
+│         ▼                ▼                    ▼             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │    Hooks    │  │   State     │  │  RevenueCat/AdMob   │  │
+│  │ (Business)  │  │  (Game)     │  │  (Monetization)     │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 ├─────────────────────────────────────────────────────────────┤
-│  Components                    │  Contexts                   │
-│  ├── UI (shadcn/radix)        │  └── MusicContext           │
-│  ├── Game (Canvas-based)      │                             │
-│  └── Modals & Screens         │                             │
-├─────────────────────────────────────────────────────────────┤
-│  Hooks                         │  Services                   │
-│  ├── useScrapCurrency         │  ├── RevenueCat (IAP)       │
-│  ├── useShipUpgrades          │  ├── AdMob (Ads)            │
-│  ├── useBestiary              │  └── Native Services        │
-│  └── useArenaConsumables      │                             │
-├─────────────────────────────────────────────────────────────┤
-│  Game Engine (Canvas 2D)                                     │
-│  ├── State Management (vectorManiac/state.ts)               │
-│  ├── Game Logic (vectorManiac/gameLogic.ts)                 │
-│  ├── Renderer (vectorManiac/renderer.ts)                    │
-│  └── Entity Systems (enemies, projectiles, power-ups)       │
-├─────────────────────────────────────────────────────────────┤
-│  Capacitor (Native Bridge)                                   │
-│  └── iOS / Android                                           │
+│                     Local Storage                           │
+│            (Progress, Settings, Purchases)                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Key Components
+---
 
-### Game Loop
+## Core Game Loop
 
-The game uses a custom `useGameLoop` hook that:
-1. Manages requestAnimationFrame timing
-2. Updates game state at 60fps target
-3. Renders to HTML5 Canvas
-4. Handles input from keyboard and touch
+The game uses `requestAnimationFrame` at 60fps with fixed timestep updates:
 
-### State Management
+```typescript
+function gameLoop(timestamp: number) {
+  const deltaTime = timestamp - lastTime;
+  gameState = updateGame(gameState, input, deltaTime);
+  render(ctx, gameState);
+  requestAnimationFrame(gameLoop);
+}
+```
 
-- **Game State**: Managed in `vectorManiac/state.ts` using pure functions
-- **Persistent State**: React hooks with localStorage persistence
-- **UI State**: React Context for global UI state (music, theme)
+### Key Files
+- `src/game/useGameLoop.ts` — Loop orchestration
+- `src/game/gameLogic.ts` — Update logic
+- `src/game/renderer.ts` — Canvas rendering
+- `src/game/vectorManiac/` — Main game mode
 
-### Entity System
+---
 
+## State Management
+
+| Type | Storage | Purpose |
+|------|---------|---------|
+| Game State | Mutable | Player, enemies, projectiles |
+| React State | useState | UI, menus, modals |
+| Persistence | localStorage | Progress, unlocks, purchases |
+
+---
+
+## Demo Mode
+
+When API keys are not configured, the app runs in **demo mode**:
+
+- All native features fail gracefully
+- Game is fully playable
+- Store shows "Demo Build" labels
+- No crashes or errors
+
+```typescript
+if (isDemoMode()) {
+  console.log('[NativeServices] Running in demo mode');
+  return; // Skip initialization
+}
+```
+
+---
+
+## Environment Configuration
+
+All secrets via `VITE_*` environment variables (see `.env.example`):
+
+| Variable | Purpose |
+|----------|---------|
+| `VITE_REVENUECAT_IOS_KEY` | RevenueCat iOS API key |
+| `VITE_ADMOB_IOS_REWARDED_ID` | AdMob rewarded ad unit |
+| `VITE_ENABLE_ADS` | Enable/disable ads |
+
+---
+
+## Entity System
 Enemies, projectiles, and power-ups are managed as typed objects:
 - Factory functions create new entities
 - Update functions modify state immutably

@@ -1,135 +1,105 @@
 # Vector Maniac
 
-A fast-paced arcade space shooter built with modern web technologies. Features procedurally generated enemies, multiple ship types, arena battles, and an extensive upgrade system.
+A fast-paced arcade space shooter with procedurally generated enemies, neon vector aesthetics, and deep progression systems. Built as a mobile-first experience using modern web technologies.
 
-## Overview
+## What It Is
 
-Vector Maniac is a minimalist neon-vector aesthetic arcade game where players pilot ships through endless waves of enemies. The game features:
+Vector Maniac is an endless survival shooter where players pilot vector-styled spacecraft through waves of increasingly challenging enemies. The game features:
 
-- **Endless Mode**: Survive as long as possible against increasingly difficult waves
-- **Arena Mode**: Compete in structured battles with special rewards
-- **Ship Collection**: Unlock and upgrade 44+ unique ships
-- **Bestiary System**: Discover and evolve enemy companions
-- **Power-ups**: Collect temporary boosts during gameplay
+- **Endless Survival Mode** — Survive as long as possible with escalating difficulty
+- **Arena Battles** — Compete in structured challenges with unique modifiers
+- **44+ Unique Ships** — Each with distinct stats and visual designs
+- **Bestiary System** — Discover, collect, and evolve enemy companions
+- **Deep Upgrade System** — Permanent ship upgrades using in-game currency
+- **Procedural Enemies** — 15+ enemy types that unlock progressively
 
 ## Tech Stack
 
-- **Frontend**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **UI Components**: Radix UI / shadcn-ui
-- **Mobile**: Capacitor (iOS/Android)
-- **State Management**: React Query + React Context
-- **In-App Purchases**: RevenueCat
-- **Ads**: Google AdMob
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18 + TypeScript |
+| Build | Vite |
+| Styling | Tailwind CSS |
+| UI Components | Radix UI / shadcn-ui |
+| Mobile | Capacitor (iOS/Android) |
+| State | React Query + Context |
+| Monetization | RevenueCat (IAP), AdMob (Ads) |
+| Rendering | Canvas 2D (60fps game loop) |
 
-## Prerequisites
-
-- Node.js 18+ or Bun
-- npm, yarn, or bun package manager
-- For mobile builds:
-  - Xcode (iOS)
-  - Android Studio (Android)
-
-## Getting Started
-
-### Install Dependencies
+## Running Locally
 
 ```bash
+# Install dependencies
 npm install
-# or
-bun install
+
+# Start development server
+npm run dev
 ```
 
-### Development Server
+The app runs at `http://localhost:8080`. **No API keys required** — the app works in demo mode without monetization configuration.
+
+## Building
 
 ```bash
-npm run dev
-# or
-bun dev
+# Production web build
+npm run build
+
+# Mobile (after Capacitor setup)
+npx cap sync
+npx cap run ios     # Requires Xcode
+npx cap run android # Requires Android Studio
 ```
 
-The app will be available at `http://localhost:8080`
+## Environment Variables
 
-### Environment Variables
-
-Copy the example environment file and configure as needed:
+Copy `.env.example` to `.env` for production builds:
 
 ```bash
 cp .env.example .env
 ```
 
-See `.env.example` for available configuration options.
+See `.env.example` for available configuration. The app functions fully without these keys (demo mode).
 
-## Building for Production
+## World Integration Roadmap
 
-### Web Build
+This project is being prepared for World ecosystem integration:
 
-```bash
-npm run build
-```
+### Phase 1: World ID Authentication
+- Replace anonymous sessions with World ID verification
+- Human-proof leaderboards and competitive modes
+- Sybil-resistant daily rewards
 
-Output will be in the `dist/` directory.
+### Phase 2: WLD Payments
+- Cosmetic purchases using WLD tokens
+- Ship skins and visual upgrades
+- Premium arena access
 
-### Mobile Build (Capacitor)
+### Phase 3: World Mini App
+- Deploy as World mini app
+- Native World wallet integration
+- Social features (challenges, gifting)
 
-```bash
-# Build web assets
-npm run build
-
-# Sync to native platforms
-npx cap sync
-
-# Run on iOS
-npx cap run ios
-
-# Run on Android
-npx cap run android
-```
-
-## Deployment
-
-### Web Deployment
-
-The `dist/` folder can be deployed to any static hosting service:
-
-- Vercel
-- Netlify
-- Cloudflare Pages
-- GitHub Pages
-- AWS S3 + CloudFront
-
-### Mobile Deployment
-
-1. Configure app signing in Xcode/Android Studio
-2. Build release versions
-3. Submit to App Store / Google Play
+See `/docs/WORLD_INTEGRATION.md` for detailed implementation plans.
 
 ## Project Structure
 
 ```
 src/
-├── components/      # React components
-│   ├── ui/          # Reusable UI components
-│   ├── arena/       # Arena mode components
-│   └── bestiary/    # Bestiary components
-├── contexts/        # React contexts
-├── game/            # Game logic
+├── components/      # React UI components
+├── game/            # Core game logic
 │   ├── vectorManiac/  # Main game mode
-│   └── arena/         # Arena game mode
-├── hooks/           # Custom React hooks
-├── pages/           # Route pages
-├── services/        # External services (RevenueCat, AdMob)
-└── utils/           # Utility functions
+│   └── arena/         # Arena battle mode
+├── hooks/           # React hooks
+├── services/        # External integrations
+└── contexts/        # React contexts
 ```
 
 ## Documentation
 
-See the `/docs` folder for:
-
-- Architecture overview
-- Game mechanics documentation
-- Screenshot placeholders
+- `/docs/ARCHITECTURE.md` — Technical architecture
+- `/docs/ROADMAP_90_DAYS.md` — Development roadmap
+- `/docs/WORLD_INTEGRATION.md` — World ecosystem plans
+- `/docs/SCREENSHOTS.md` — Visual documentation guide
 
 ## License
 

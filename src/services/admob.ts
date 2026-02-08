@@ -10,14 +10,13 @@
  * 4. Add the App ID to your native app configuration:
  *    - iOS: Add GADApplicationIdentifier to Info.plist
  *    - Android: Add meta-data to AndroidManifest.xml
- * 5. Replace test IDs below with your production IDs before release
+ * 5. Set environment variables in .env (see .env.example)
  */
 
 import { Capacitor } from '@capacitor/core';
 
-// Test Ad Unit IDs (replace with production IDs before release!)
-// These are official Google test IDs that always return test ads
-export const AD_UNIT_IDS = {
+// Test Ad Unit IDs (official Google test IDs that always return test ads)
+export const TEST_AD_UNIT_IDS = {
   // iOS Test IDs
   IOS_REWARDED: 'ca-app-pub-3940256099942544/1712485313',
   IOS_INTERSTITIAL: 'ca-app-pub-3940256099942544/4411468910',
@@ -29,17 +28,9 @@ export const AD_UNIT_IDS = {
   ANDROID_BANNER: 'ca-app-pub-3940256099942544/6300978111',
 } as const;
 
-// Production Ad Unit IDs
-export const PRODUCTION_AD_UNIT_IDS = {
-  IOS_REWARDED: 'ca-app-pub-3616241599002222/2301915963',
-  IOS_INTERSTITIAL: 'YOUR_IOS_INTERSTITIAL_AD_UNIT_ID', // TODO: Add when created
-  ANDROID_REWARDED: 'YOUR_ANDROID_REWARDED_AD_UNIT_ID', // TODO: Add when created
-  ANDROID_INTERSTITIAL: 'YOUR_ANDROID_INTERSTITIAL_AD_UNIT_ID', // TODO: Add when created
-};
-
 export interface AdMobConfig {
   useTestAds?: boolean;
-  // Your production ad unit IDs
+  // Your production ad unit IDs (from environment variables)
   iosRewardedAdUnitId?: string;
   iosInterstitialAdUnitId?: string;
   androidRewardedAdUnitId?: string;
@@ -100,20 +91,20 @@ class AdMobService {
     if (platform === 'ios') {
       switch (type) {
         case 'rewarded':
-          return useTest ? AD_UNIT_IDS.IOS_REWARDED : (this.config.iosRewardedAdUnitId || AD_UNIT_IDS.IOS_REWARDED);
+          return useTest ? TEST_AD_UNIT_IDS.IOS_REWARDED : (this.config.iosRewardedAdUnitId || TEST_AD_UNIT_IDS.IOS_REWARDED);
         case 'interstitial':
-          return useTest ? AD_UNIT_IDS.IOS_INTERSTITIAL : (this.config.iosInterstitialAdUnitId || AD_UNIT_IDS.IOS_INTERSTITIAL);
+          return useTest ? TEST_AD_UNIT_IDS.IOS_INTERSTITIAL : (this.config.iosInterstitialAdUnitId || TEST_AD_UNIT_IDS.IOS_INTERSTITIAL);
         case 'banner':
-          return AD_UNIT_IDS.IOS_BANNER;
+          return TEST_AD_UNIT_IDS.IOS_BANNER;
       }
     } else {
       switch (type) {
         case 'rewarded':
-          return useTest ? AD_UNIT_IDS.ANDROID_REWARDED : (this.config.androidRewardedAdUnitId || AD_UNIT_IDS.ANDROID_REWARDED);
+          return useTest ? TEST_AD_UNIT_IDS.ANDROID_REWARDED : (this.config.androidRewardedAdUnitId || TEST_AD_UNIT_IDS.ANDROID_REWARDED);
         case 'interstitial':
-          return useTest ? AD_UNIT_IDS.ANDROID_INTERSTITIAL : (this.config.androidInterstitialAdUnitId || AD_UNIT_IDS.ANDROID_INTERSTITIAL);
+          return useTest ? TEST_AD_UNIT_IDS.ANDROID_INTERSTITIAL : (this.config.androidInterstitialAdUnitId || TEST_AD_UNIT_IDS.ANDROID_INTERSTITIAL);
         case 'banner':
-          return AD_UNIT_IDS.ANDROID_BANNER;
+          return TEST_AD_UNIT_IDS.ANDROID_BANNER;
       }
     }
     return '';
