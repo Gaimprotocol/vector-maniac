@@ -14,6 +14,7 @@ import { BestiaryScreen } from "./components/BestiaryScreen";
 import { ArenaScreen } from "./components/ArenaScreen";
 import { MusicProvider } from "./contexts/MusicContext";
 import { initializeNativeServices } from "./services/nativeServices";
+import bannerImg from "./assets/vector-maniac-banner.png";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => {
               <Route path="/ships" element={<ShipSelector />} />
               <Route path="/bestiary" element={<BestiaryScreen />} />
               <Route path="/arena" element={<ArenaScreen onBack={() => window.history.back()} />} />
+              <Route path="/banner" element={<div className="w-full h-full flex items-center justify-center bg-black p-4"><img src={bannerImg} alt="Vector Maniac Banner" className="max-w-full max-h-full object-contain" /></div>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
