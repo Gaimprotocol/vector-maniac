@@ -14,7 +14,7 @@ import { BestiaryScreen } from "./components/BestiaryScreen";
 import { ArenaScreen } from "./components/ArenaScreen";
 import { MusicProvider } from "./contexts/MusicContext";
 import { initializeNativeServices } from "./services/nativeServices";
-import bannerImg from "./assets/vector-maniac-banner.png";
+import bannerImg from "./assets/vector-maniac-banner-v2.png";
 
 const queryClient = new QueryClient();
 
